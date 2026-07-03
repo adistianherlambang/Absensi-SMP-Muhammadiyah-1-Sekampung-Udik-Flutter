@@ -23,7 +23,7 @@ class AppTheme {
         seedColor: primaryColor,
         primary: primaryColor,
         secondary: secondaryColor,
-        background: backgroundColor,
+        surface: backgroundColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
       appBarTheme: const AppBarTheme(
@@ -37,7 +37,7 @@ class AppTheme {
           fontSize: 18,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(

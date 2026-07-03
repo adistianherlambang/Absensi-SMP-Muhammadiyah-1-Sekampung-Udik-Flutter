@@ -47,9 +47,9 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                 children: [
                   // Dropdown pilih kelas 9
                   if (class9List.isEmpty)
-                    const Card(
-                      color: Colors.amberContainer,
-                      child: Padding(
+                    Card(
+                      color: Colors.amber.shade100,
+                      child: const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: Text(
                           'Peringatan: Belum ada kelas 9 (berawalan "IX" atau mengandung "9") yang dibuat di sistem. Hubungi administrator/tambahkan kelas terlebih dahulu.',
