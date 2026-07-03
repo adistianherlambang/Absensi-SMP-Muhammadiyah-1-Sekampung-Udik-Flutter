@@ -1,0 +1,49 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        // Hanya admin yang bisa mengubah profile user secara penuh. User biasa hanya bisa mengubah data dasar jika diizinkan, tetapi role dikunci.
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (auth.uid === $uid && !newData.child('role').exists() && !newData.child('qr_code_id').exists()))"
+      }
+    },
+    "classes": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
+    "sessions": {
+      ".read": "auth != null",
+      // Admin, guru_piket, dan guru_mapel bisa menulis sesi.
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket' || root.child('users').child(auth.uid).child('role').val() === 'guru_mapel')"
+    },
+    "attendances": {
+      "$session_id": {
+        ".read": "auth != null",
+        "$student_id": {
+          // Siswa hanya bisa mencatat kehadiran mereka sendiri.
+          // Guru piket, guru mapel, dan admin punya hak penuh untuk mengubah kehadiran siapa pun di sesi tersebut.
+          ".write": "auth != null && (auth.uid === $student_id || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket' || root.child('users').child(auth.uid).child('role').val() === 'guru_mapel')"
+        }
+      }
+    },
+    "presence": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "leave_requests": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket' || root.child('users').child(auth.uid).child('role').val() === 'guru_mapel')",
+      "$request_id": {
+        // Siswa bisa membaca dan menulis request izin miliknya sendiri.
+        ".read": "auth != null && (data.child('student_id').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket')",
+        ".write": "auth != null && (newData.child('student_id').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket')"
+      }
+    },
+    "reports": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket')",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'guru_piket')"
+    }
+  }
+}
