@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "117767145737",
+    "project_id": "absensi-smp-muhi-flutter",
+    "storage_bucket": "absensi-smp-muhi-flutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117767145737:android:7f2461a65cb3d5d16d2bd8",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXn5rzzjd6ST5Ia229vafGi7SzBjaEKO8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../app/routes.dart';
+import '../../core/utils/db_seeder.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -144,6 +145,33 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _handleLogin,
                         child: const Text('Login'),
                       ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Sedang mengisi data uji coba ke Firebase...')),
+                    );
+                    try {
+                      await DatabaseSeeder.seedTestData();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Berhasil mengisi data uji coba! Silakan login.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Gagal mengisi data: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Isi Data Uji Coba (Firebase)'),
+                ),
               ],
             ),
           ),
