@@ -9,6 +9,13 @@ import '../../models/report_model.dart';
 class DBService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
+  Future<DataSnapshot> _getWithTimeout(Query query) async {
+    return await query.get().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => throw Exception("Koneksi database Firebase timeout. Periksa koneksi internet Anda atau status database di Firebase Console."),
+    );
+  }
+
   // ==========================================
   // MANAJEMEN PENGGUNA (USERS)
   // ==========================================
@@ -20,7 +27,7 @@ class DBService {
 
   // Ambil semua pengguna berdasarkan peran
   Future<List<UserModel>> getUsers({String? role}) async {
-    final snapshot = await _dbRef.child('users').get();
+    final snapshot = await _getWithTimeout(_dbRef.child('users'));
     if (!snapshot.exists || snapshot.value == null) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -50,7 +57,7 @@ class DBService {
 
   // Ambil daftar kelas
   Future<List<ClassModel>> getClasses() async {
-    final snapshot = await _dbRef.child('classes').get();
+    final snapshot = await _getWithTimeout(_dbRef.child('classes'));
     if (!snapshot.exists || snapshot.value == null) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -77,7 +84,7 @@ class DBService {
 
   // Ambil daftar sesi (Filter kelas/tipe jika dibutuhkan)
   Future<List<SessionModel>> getSessions({String? classId, String? type, bool activeOnly = false}) async {
-    final snapshot = await _dbRef.child('sessions').get();
+    final snapshot = await _getWithTimeout(_dbRef.child('sessions'));
     if (!snapshot.exists || snapshot.value == null) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -118,7 +125,7 @@ class DBService {
 
   // Ambil Kehadiran per Sesi
   Future<List<AttendanceModel>> getAttendances(String sessionId) async {
-    final snapshot = await _dbRef.child('attendances').child(sessionId).get();
+    final snapshot = await _getWithTimeout(_dbRef.child('attendances').child(sessionId));
     if (!snapshot.exists || snapshot.value == null) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -131,7 +138,7 @@ class DBService {
 
   // Ambil Kehadiran Siswa di Semua Sesi
   Future<Map<String, AttendanceModel>> getStudentAttendanceHistory(String studentId) async {
-    final snapshot = await _dbRef.child('attendances').get();
+    final snapshot = await _getWithTimeout(_dbRef.child('attendances'));
     if (!snapshot.exists || snapshot.value == null) return {};
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -159,7 +166,7 @@ class DBService {
 
   // Ambil Semua Pengajuan Izin
   Future<List<LeaveRequestModel>> getLeaveRequests({String? studentId}) async {
-    final snapshot = await _dbRef.child('leave_requests').get();
+    final snapshot = await _getWithTimeout(_dbRef.child('leave_requests'));
     if (!snapshot.exists || snapshot.value == null) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;
@@ -192,7 +199,7 @@ class DBService {
 
   // Ambil Daftar Laporan
   Future<List<ReportModel>> getReports({String? classId}) async {
-    final snapshot = await _dbRef.child('reports').get();
+    final snapshot = await _getWithTimeout(_dbRef.child('reports'));
     if (!snapshot.exists || snapshot.value == null) return [];
 
     final data = snapshot.value as Map<dynamic, dynamic>;

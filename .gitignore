@@ -44,4 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Additional Flutter/Android ignores
+/android/build/
+/android/.gradle/
+.flutter-plugins
+.flutter-plugins-dependencies
+
 agent.md

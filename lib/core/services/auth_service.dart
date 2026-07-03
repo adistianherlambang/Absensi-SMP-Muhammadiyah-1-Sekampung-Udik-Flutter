@@ -30,7 +30,13 @@ class AuthService {
   // Mengambil UserModel berdasarkan UID
   Future<UserModel?> getUserProfile(String uid) async {
     try {
-      final snapshot = await _dbRef.child('users').child(uid).get();
+      final snapshot = await _dbRef
+          .child('users')
+          .child(uid)
+          .get()
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        throw Exception("Koneksi ke Firebase Database timeout. Pastikan database Anda sudah dibuat dan diaktifkan di Firebase Console.");
+      });
       if (snapshot.exists && snapshot.value != null) {
         final data = snapshot.value as Map<dynamic, dynamic>;
         return UserModel.fromMap(uid, data);
