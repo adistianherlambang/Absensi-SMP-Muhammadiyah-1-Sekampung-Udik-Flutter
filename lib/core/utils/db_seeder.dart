@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -64,7 +65,12 @@ class DatabaseSeeder {
         homeroomTeacherId: '', // Diisi setelah uid guru piket diketahui
         studentIds: [],
       );
-      await dbRef.child('classes').child('CLASS-IX-A').set(classModel.toMap());
+      await dbRef.child('classes').child('CLASS-IX-A').set(classModel.toMap()).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => throw TimeoutException(
+          'Koneksi ke Firebase Realtime Database timeout. Pastikan Anda telah membuat/mengaktifkan Realtime Database di Firebase Console dan aturan keamanan (Rules) mengizinkan penulisan.',
+        ),
+      );
 
       String guruPiketUid = '';
       List<String> studentUids = [];
@@ -108,7 +114,12 @@ class DatabaseSeeder {
           status: 'active',
         );
 
-        await dbRef.child('users').child(uid).set(userProfile.toMap());
+        await dbRef.child('users').child(uid).set(userProfile.toMap()).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => throw TimeoutException(
+            'Gagal menyimpan profil pengguna ke database (Timeout).',
+          ),
+        );
       }
 
       // 3. Update Kelas IX-A dengan data wali kelas dan daftar siswa yang valid
@@ -118,7 +129,12 @@ class DatabaseSeeder {
         homeroomTeacherId: guruPiketUid,
         studentIds: studentUids,
       );
-      await dbRef.child('classes').child('CLASS-IX-A').set(updatedClass.toMap());
+      await dbRef.child('classes').child('CLASS-IX-A').set(updatedClass.toMap()).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw TimeoutException(
+          'Gagal memperbarui data kelas ke database (Timeout).',
+        ),
+      );
 
     } finally {
       await tempApp.delete();
