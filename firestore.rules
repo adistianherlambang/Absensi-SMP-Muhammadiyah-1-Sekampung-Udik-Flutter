@@ -1,0 +1,82 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Cek status login
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper: Ambil data profile user dari koleksi 'users'
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Helper: Cek peran user
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+    
+    // Helper: Cek apakah user adalah Admin
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    // ==========================================
+    // KOLEKSI: USERS
+    // ==========================================
+    match /users/{userId} {
+      // Admin bebas membaca dan menulis semua profil
+      // Guru Piket dan Guru Mapel dapat membaca semua profil
+      allow read: if isAuthenticated() && (isAdmin() || hasRole('guru_piket') || hasRole('guru_mapel') || request.auth.uid == userId);
+      allow write: if isAuthenticated() && isAdmin();
+    }
+
+    // ==========================================
+    // KOLEKSI: CLASSES
+    // ==========================================
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isAdmin();
+    }
+
+    // ==========================================
+    // KOLEKSI: SESSIONS
+    // ==========================================
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      // Hanya Admin, Guru Piket, dan Guru Mapel yang dapat membuat/mengedit sesi
+      allow write: if isAuthenticated() && (isAdmin() || hasRole('guru_piket') || hasRole('guru_mapel'));
+    }
+
+    // ==========================================
+    // KOLEKSI: ATTENDANCES
+    // ==========================================
+    match /attendances/{sessionId} {
+      allow read: if isAuthenticated();
+      // Siswa dapat melakukan presensi mandiri (menulis field miliknya sendiri pada dokumen sesi)
+      // Guru Piket, Guru Mapel, dan Admin dapat menulis rekam kehadiran
+      allow write: if isAuthenticated();
+    }
+
+    // ==========================================
+    // KOLEKSI: LEAVE REQUESTS
+    // ==========================================
+    match /leave_requests/{requestId} {
+      allow read: if isAuthenticated();
+      // Siswa dapat membuat pengajuan izin, Guru Piket dapat menyetujui/mengulas pengajuan
+      allow create: if isAuthenticated() && (hasRole('siswa') || isAdmin());
+      allow update: if isAuthenticated() && (hasRole('guru_piket') || isAdmin());
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // ==========================================
+    // KOLEKSI: REPORTS
+    // ==========================================
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() && (isAdmin() || hasRole('guru_piket'));
+      allow write: if isAuthenticated() && (isAdmin() || hasRole('guru_piket'));
+    }
+  }
+}

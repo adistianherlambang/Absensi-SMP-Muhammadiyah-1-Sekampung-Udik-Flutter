@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_model.dart';
 import '../../models/class_model.dart';
 
@@ -16,9 +16,7 @@ class DatabaseSeeder {
     );
 
     final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
-    final DatabaseReference dbRef = FirebaseDatabase.instanceFor(
-      app: primaryApp, // Hubungkan ke database utama
-    ).ref();
+    final FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: primaryApp);
 
     // Data Pengguna yang Akan Dibuat
     final List<Map<String, dynamic>> testUsers = [
@@ -65,17 +63,17 @@ class DatabaseSeeder {
         homeroomTeacherId: '', // Diisi setelah uid guru piket diketahui
         studentIds: [],
       );
-      await dbRef.child('classes').child('CLASS-IX-A').set(classModel.toMap()).timeout(
+      await firestore.collection('classes').doc('CLASS-IX-A').set(classModel.toMap()).timeout(
         const Duration(seconds: 8),
         onTimeout: () => throw TimeoutException(
-          'Koneksi ke Firebase Realtime Database timeout. Pastikan Anda telah membuat/mengaktifkan Realtime Database di Firebase Console dan aturan keamanan (Rules) mengizinkan penulisan.',
+          'Koneksi ke Firestore timeout. Pastikan Anda telah mengaktifkan Firestore di Firebase Console dan aturan keamanan mengizinkan penulisan.',
         ),
       );
 
       String guruPiketUid = '';
       List<String> studentUids = [];
 
-      // 2. Buat akun Auth dan tulis profil pengguna di Realtime Database
+      // 2. Buat akun Auth dan tulis profil pengguna di Firestore
       for (var u in testUsers) {
         UserCredential creds;
         try {
@@ -114,10 +112,10 @@ class DatabaseSeeder {
           status: 'active',
         );
 
-        await dbRef.child('users').child(uid).set(userProfile.toMap()).timeout(
+        await firestore.collection('users').doc(uid).set(userProfile.toMap()).timeout(
           const Duration(seconds: 5),
           onTimeout: () => throw TimeoutException(
-            'Gagal menyimpan profil pengguna ke database (Timeout).',
+            'Gagal menyimpan profil pengguna ke Firestore (Timeout).',
           ),
         );
       }
@@ -129,10 +127,10 @@ class DatabaseSeeder {
         homeroomTeacherId: guruPiketUid,
         studentIds: studentUids,
       );
-      await dbRef.child('classes').child('CLASS-IX-A').set(updatedClass.toMap()).timeout(
+      await firestore.collection('classes').doc('CLASS-IX-A').set(updatedClass.toMap()).timeout(
         const Duration(seconds: 5),
         onTimeout: () => throw TimeoutException(
-          'Gagal memperbarui data kelas ke database (Timeout).',
+          'Gagal memperbarui data kelas ke Firestore (Timeout).',
         ),
       );
 

@@ -1,4 +1,4 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_model.dart';
 import '../../models/class_model.dart';
 import '../../models/session_model.dart';
@@ -7,12 +7,21 @@ import '../../models/leave_request_model.dart';
 import '../../models/report_model.dart';
 
 class DBService {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<DataSnapshot> _getWithTimeout(Query query) async {
+  // Helper untuk menambahkan timeout pada query get()
+  Future<QuerySnapshot> _getWithTimeout(Query query) async {
     return await query.get().timeout(
       const Duration(seconds: 10),
-      onTimeout: () => throw Exception("Koneksi database Firebase timeout. Periksa koneksi internet Anda atau status database di Firebase Console."),
+      onTimeout: () => throw Exception("Koneksi Firestore timeout. Periksa internet atau status database di Firebase Console."),
+    );
+  }
+
+  // Helper untuk menambahkan timeout pada DocumentReference get()
+  Future<DocumentSnapshot> _getDocWithTimeout(DocumentReference docRef) async {
+    return await docRef.get().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => throw Exception("Koneksi Firestore timeout. Periksa internet atau status database di Firebase Console."),
     );
   }
 
@@ -22,28 +31,24 @@ class DBService {
 
   // Simpan / Perbarui profil user
   Future<void> saveUserProfile(UserModel user) async {
-    await _dbRef.child('users').child(user.uid).set(user.toMap());
+    await _firestore.collection('users').doc(user.uid).set(user.toMap(), SetOptions(merge: true));
   }
 
   // Ambil semua pengguna berdasarkan peran
   Future<List<UserModel>> getUsers({String? role}) async {
-    final snapshot = await _getWithTimeout(_dbRef.child('users'));
-    if (!snapshot.exists || snapshot.value == null) return [];
-
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    final List<UserModel> list = [];
-    data.forEach((key, value) {
-      final user = UserModel.fromMap(key.toString(), value as Map<dynamic, dynamic>);
-      if (role == null || user.role == role) {
-        list.add(user);
-      }
-    });
-    return list;
+    Query query = _firestore.collection('users');
+    if (role != null) {
+      query = query.where('role', isEqualTo: role);
+    }
+    final snapshot = await _getWithTimeout(query);
+    return snapshot.docs.map((doc) {
+      return UserModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+    }).toList();
   }
 
   // Hapus pengguna
   Future<void> deleteUser(String uid) async {
-    await _dbRef.child('users').child(uid).remove();
+    await _firestore.collection('users').doc(uid).delete();
   }
 
   // ==========================================
@@ -52,25 +57,20 @@ class DBService {
 
   // Simpan / Perbarui kelas
   Future<void> saveClass(ClassModel classModel) async {
-    await _dbRef.child('classes').child(classModel.id).set(classModel.toMap());
+    await _firestore.collection('classes').doc(classModel.id).set(classModel.toMap(), SetOptions(merge: true));
   }
 
   // Ambil daftar kelas
   Future<List<ClassModel>> getClasses() async {
-    final snapshot = await _getWithTimeout(_dbRef.child('classes'));
-    if (!snapshot.exists || snapshot.value == null) return [];
-
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    final List<ClassModel> list = [];
-    data.forEach((key, value) {
-      list.add(ClassModel.fromMap(key.toString(), value as Map<dynamic, dynamic>));
-    });
-    return list;
+    final snapshot = await _getWithTimeout(_firestore.collection('classes'));
+    return snapshot.docs.map((doc) {
+      return ClassModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+    }).toList();
   }
 
   // Hapus kelas
   Future<void> deleteClass(String classId) async {
-    await _dbRef.child('classes').child(classId).remove();
+    await _firestore.collection('classes').doc(classId).delete();
   }
 
   // ==========================================
@@ -79,32 +79,30 @@ class DBService {
 
   // Buka Sesi Presensi Baru
   Future<void> createSession(SessionModel session) async {
-    await _dbRef.child('sessions').child(session.id).set(session.toMap());
+    await _firestore.collection('sessions').doc(session.id).set(session.toMap(), SetOptions(merge: true));
   }
 
   // Ambil daftar sesi (Filter kelas/tipe jika dibutuhkan)
   Future<List<SessionModel>> getSessions({String? classId, String? type, bool activeOnly = false}) async {
-    final snapshot = await _getWithTimeout(_dbRef.child('sessions'));
-    if (!snapshot.exists || snapshot.value == null) return [];
-
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    final List<SessionModel> list = [];
-    data.forEach((key, value) {
-      final session = SessionModel.fromMap(key.toString(), value as Map<dynamic, dynamic>);
-      bool match = true;
-      if (classId != null && session.classId != classId) match = false;
-      if (type != null && session.type != type) match = false;
-      if (activeOnly && session.status != 'active') match = false;
-      if (match) {
-        list.add(session);
-      }
-    });
-    return list;
+    Query query = _firestore.collection('sessions');
+    if (classId != null) {
+      query = query.where('class_id', isEqualTo: classId);
+    }
+    if (type != null) {
+      query = query.where('type', isEqualTo: type);
+    }
+    if (activeOnly) {
+      query = query.where('status', isEqualTo: 'active');
+    }
+    final snapshot = await _getWithTimeout(query);
+    return snapshot.docs.map((doc) {
+      return SessionModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+    }).toList();
   }
 
   // Tutup Sesi Presensi
   Future<void> closeSession(String sessionId, String timeEnd) async {
-    await _dbRef.child('sessions').child(sessionId).update({
+    await _firestore.collection('sessions').doc(sessionId).update({
       'status': 'closed',
       'time_end': timeEnd,
     });
@@ -116,19 +114,18 @@ class DBService {
 
   // Rekam Kehadiran Siswa
   Future<void> recordAttendance(String sessionId, String studentId, AttendanceModel attendance) async {
-    await _dbRef
-        .child('attendances')
-        .child(sessionId)
-        .child(studentId)
-        .set(attendance.toMap());
+    await _firestore
+        .collection('attendances')
+        .doc(sessionId)
+        .set({studentId: attendance.toMap()}, SetOptions(merge: true));
   }
 
   // Ambil Kehadiran per Sesi
   Future<List<AttendanceModel>> getAttendances(String sessionId) async {
-    final snapshot = await _getWithTimeout(_dbRef.child('attendances').child(sessionId));
-    if (!snapshot.exists || snapshot.value == null) return [];
+    final doc = await _getDocWithTimeout(_firestore.collection('attendances').doc(sessionId));
+    if (!doc.exists || doc.data() == null) return [];
 
-    final data = snapshot.value as Map<dynamic, dynamic>;
+    final data = doc.data() as Map<dynamic, dynamic>;
     final List<AttendanceModel> list = [];
     data.forEach((key, value) {
       list.add(AttendanceModel.fromMap(key.toString(), value as Map<dynamic, dynamic>));
@@ -138,20 +135,17 @@ class DBService {
 
   // Ambil Kehadiran Siswa di Semua Sesi
   Future<Map<String, AttendanceModel>> getStudentAttendanceHistory(String studentId) async {
-    final snapshot = await _getWithTimeout(_dbRef.child('attendances'));
-    if (!snapshot.exists || snapshot.value == null) return {};
-
-    final data = snapshot.value as Map<dynamic, dynamic>;
+    final snapshot = await _getWithTimeout(_firestore.collection('attendances'));
     final Map<String, AttendanceModel> history = {};
-    data.forEach((sessionId, value) {
-      final sessionData = value as Map<dynamic, dynamic>;
-      if (sessionData.containsKey(studentId)) {
-        history[sessionId.toString()] = AttendanceModel.fromMap(
+    for (var doc in snapshot.docs) {
+      final data = doc.data() as Map<dynamic, dynamic>? ?? {};
+      if (data.containsKey(studentId)) {
+        history[doc.id] = AttendanceModel.fromMap(
           studentId,
-          sessionData[studentId] as Map<dynamic, dynamic>,
+          data[studentId] as Map<dynamic, dynamic>,
         );
       }
-    });
+    }
     return history;
   }
 
@@ -161,28 +155,24 @@ class DBService {
 
   // Ajukan Izin
   Future<void> submitLeaveRequest(LeaveRequestModel request) async {
-    await _dbRef.child('leave_requests').child(request.id).set(request.toMap());
+    await _firestore.collection('leave_requests').doc(request.id).set(request.toMap());
   }
 
   // Ambil Semua Pengajuan Izin
   Future<List<LeaveRequestModel>> getLeaveRequests({String? studentId}) async {
-    final snapshot = await _getWithTimeout(_dbRef.child('leave_requests'));
-    if (!snapshot.exists || snapshot.value == null) return [];
-
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    final List<LeaveRequestModel> list = [];
-    data.forEach((key, value) {
-      final req = LeaveRequestModel.fromMap(key.toString(), value as Map<dynamic, dynamic>);
-      if (studentId == null || req.studentId == studentId) {
-        list.add(req);
-      }
-    });
-    return list;
+    Query query = _firestore.collection('leave_requests');
+    if (studentId != null) {
+      query = query.where('student_id', isEqualTo: studentId);
+    }
+    final snapshot = await _getWithTimeout(query);
+    return snapshot.docs.map((doc) {
+      return LeaveRequestModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+    }).toList();
   }
 
   // Tinjau Pengajuan Izin (Setujui / Tolak)
   Future<void> reviewLeaveRequest(String requestId, String status, String reviewedBy) async {
-    await _dbRef.child('leave_requests').child(requestId).update({
+    await _firestore.collection('leave_requests').doc(requestId).update({
       'status': status,
       'reviewed_by': reviewedBy,
     });
@@ -194,22 +184,18 @@ class DBService {
 
   // Simpan Laporan
   Future<void> saveReport(ReportModel report) async {
-    await _dbRef.child('reports').child(report.id).set(report.toMap());
+    await _firestore.collection('reports').doc(report.id).set(report.toMap());
   }
 
   // Ambil Daftar Laporan
   Future<List<ReportModel>> getReports({String? classId}) async {
-    final snapshot = await _getWithTimeout(_dbRef.child('reports'));
-    if (!snapshot.exists || snapshot.value == null) return [];
-
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    final List<ReportModel> list = [];
-    data.forEach((key, value) {
-      final report = ReportModel.fromMap(key.toString(), value as Map<dynamic, dynamic>);
-      if (classId == null || report.classId == classId) {
-        list.add(report);
-      }
-    });
-    return list;
+    Query query = _firestore.collection('reports');
+    if (classId != null) {
+      query = query.where('class_id', isEqualTo: classId);
+    }
+    final snapshot = await _getWithTimeout(query);
+    return snapshot.docs.map((doc) {
+      return ReportModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+    }).toList();
   }
 }

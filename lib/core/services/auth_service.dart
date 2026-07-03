@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Aliran status auth
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -30,16 +30,9 @@ class AuthService {
   // Mengambil UserModel berdasarkan UID
   Future<UserModel?> getUserProfile(String uid) async {
     try {
-      final snapshot = await _dbRef
-          .child('users')
-          .child(uid)
-          .get()
-          .timeout(const Duration(seconds: 10), onTimeout: () {
-        throw Exception("Koneksi ke Firebase Database timeout. Pastikan database Anda sudah dibuat dan diaktifkan di Firebase Console.");
-      });
-      if (snapshot.exists && snapshot.value != null) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        return UserModel.fromMap(uid, data);
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists && doc.data() != null) {
+        return UserModel.fromMap(uid, doc.data()!);
       }
       return null;
     } catch (e) {
