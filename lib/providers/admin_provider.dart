@@ -143,6 +143,42 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
+  // Hapus Beberapa User (Batch)
+  Future<void> deleteUsersBatch(List<UserModel> usersToDelete) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      for (final user in usersToDelete) {
+        await _dbService.deleteUser(user.uid);
+
+        // Jika siswa, hapus juga dari list siswa di kelasnya
+        if (user.role == 'siswa' && user.classId != null) {
+          try {
+            final cl = _classes.firstWhere((c) => c.id == user.classId);
+            final updatedStudentIds = List<String>.from(cl.studentIds)..remove(user.uid);
+            final updatedClass = ClassModel(
+              id: cl.id,
+              name: cl.name,
+              homeroomTeacherId: cl.homeroomTeacherId,
+              studentIds: updatedStudentIds,
+            );
+            await _dbService.saveClass(updatedClass);
+          } catch (e) {
+            // Abaikan jika kelas tidak ditemukan
+          }
+        }
+      }
+
+      await fetchData();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Tambah Kelas baru
   Future<void> createClass(String name, String homeroomTeacherId) async {
     _isLoading = true;

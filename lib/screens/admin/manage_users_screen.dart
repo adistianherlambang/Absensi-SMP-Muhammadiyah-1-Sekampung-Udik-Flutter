@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:excel/excel.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
 
@@ -20,6 +24,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   String _selectedRole = 'siswa'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
   String? _selectedClassId;
 
+  // Set untuk menyimpan UID dari pengguna yang dipilih (checkbox)
+  final Set<UserModel> _selectedUsers = {};
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -27,6 +34,126 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     _passwordController.dispose();
     _subjectController.dispose();
     super.dispose();
+  }
+
+  Future<void> _downloadTemplate() async {
+    try {
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Sheet1'];
+      sheetObject.appendRow([
+        TextCellValue('Nama Lengkap'), 
+        TextCellValue('Email'), 
+        TextCellValue('Password'), 
+        TextCellValue('Role'), 
+        TextCellValue('Info Tambahan')
+      ]);
+      
+      // Memberikan contoh isi
+      sheetObject.appendRow([
+        TextCellValue('Siswa Contoh'), 
+        TextCellValue('siswa@contoh.com'), 
+        TextCellValue('123456'), 
+        TextCellValue('siswa'), 
+        TextCellValue('ID_KELAS_DISINI')
+      ]);
+
+      var fileBytes = excel.save();
+      if (fileBytes != null) {
+        if (Platform.isAndroid || Platform.isIOS) {
+          Directory? directory = await getExternalStorageDirectory();
+          directory ??= await getApplicationDocumentsDirectory();
+          
+          String path = '${directory.path}/Template_Pengguna.xlsx';
+          File(path)
+            ..createSync(recursive: true)
+            ..writeAsBytesSync(fileBytes);
+            
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Template tersimpan di: $path')));
+        } else {
+          String? outputFile = await FilePicker.platform.saveFile(
+            dialogTitle: 'Pilih lokasi penyimpanan template:',
+            fileName: 'Template_Pengguna.xlsx',
+          );
+          if (outputFile != null) {
+            File(outputFile)
+              ..createSync(recursive: true)
+              ..writeAsBytesSync(fileBytes);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Template tersimpan di: $outputFile')));
+          }
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal membuat template: $e')));
+    }
+  }
+
+  Future<void> _importExcel() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (result != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Memproses import pengguna...'))
+        );
+
+        var fileBytes = result.files.single.bytes;
+        if (fileBytes == null) {
+          File file = File(result.files.single.path!);
+          fileBytes = file.readAsBytesSync();
+        }
+        
+        var excel = Excel.decodeBytes(fileBytes);
+        final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+        
+        int importedCount = 0;
+        
+        for (var table in excel.tables.keys) {
+          var sheet = excel.tables[table]!;
+          for (int i = 1; i < sheet.maxRows; i++) {
+            var row = sheet.rows[i];
+            if (row.isEmpty) continue;
+            
+            String name = row[0]?.value.toString() ?? '';
+            String email = row[1]?.value.toString() ?? '';
+            String password = row[2]?.value.toString() ?? '';
+            String role = row[3]?.value.toString().toLowerCase() ?? 'siswa';
+            String info = row[4]?.value.toString() ?? '';
+            
+            if (name.isEmpty || email.isEmpty || password.isEmpty) continue;
+            
+            String? classId = (role == 'siswa') ? info : null;
+            List<String>? subjects = (role == 'guru_mapel') ? info.split(',').map((e) => e.trim()).toList() : null;
+            
+            try {
+              await adminProvider.createUser(
+                name: name,
+                email: email,
+                password: password,
+                role: role,
+                classId: classId,
+                subjects: subjects,
+              );
+              importedCount++;
+            } catch (e) {
+              debugPrint("Error importing row $i: $e");
+            }
+          }
+        }
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$importedCount pengguna berhasil diimport!'))
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal import file: $e')));
+    }
   }
 
   void _showAddUserDialog() {
@@ -208,101 +335,45 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  String _formatRoleText(String role) {
-    switch (role) {
-      case 'admin':
-        return 'Administrator';
-      case 'guru_piket':
-        return 'Guru Piket';
-      case 'guru_mapel':
-        return 'Guru Mapel';
-      case 'siswa':
-        return 'Siswa';
-      default:
-        return role;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final adminProvider = context.watch<AdminProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kelola Pengguna'),
-      ),
-      body: adminProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => adminProvider.fetchData(),
-              child: adminProvider.users.isEmpty
-                  ? const Center(child: Text('Tidak ada pengguna.'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: adminProvider.users.length,
-                      itemBuilder: (context, index) {
-                        final user = adminProvider.users[index];
-                        final isSiswa = user.role == 'siswa';
-                        final isMapel = user.role == 'guru_mapel';
-
-                        // Mengambil nama kelas jika siswa
-                        String extraInfo = '';
-                        if (isSiswa && user.classId != null) {
-                          try {
-                            final cl = adminProvider.classes.firstWhere((c) => c.id == user.classId);
-                            extraInfo = ' • Kelas: ${cl.name}';
-                          } catch (e) {
-                            extraInfo = ' • Kelas: Tidak diketahui';
-                          }
-                        } else if (isMapel && user.subjects != null) {
-                          extraInfo = ' • Mapel: ${user.subjects!.join(', ')}';
-                        }
-
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                              child: Text(
-                                user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              user.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(user.email),
-                                const SizedBox(height: 4),
-                                // Menampilkan teks peran yang bersih tanpa styling badge
-                                Text(
-                                  'Peran: ${_formatRoleText(user.role)}$extraInfo',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: () => _confirmDeleteUser(user),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+  void _confirmDeleteSelectedUsers() {
+    if (_selectedUsers.isEmpty) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Hapus Pengguna Terpilih'),
+          content: Text('Apakah Anda yakin ingin menghapus ${_selectedUsers.length} pengguna terpilih?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddUserDialog,
-        child: const Icon(Icons.add),
-      ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+                try {
+                  await adminProvider.deleteUsersBatch(_selectedUsers.toList());
+                  setState(() {
+                    _selectedUsers.clear();
+                  });
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pengguna berhasil dihapus.')),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Gagal menghapus pengguna: $e')),
+                  );
+                }
+              },
+              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -343,6 +414,142 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildUserList(List<UserModel> users, AdminProvider adminProvider) {
+    if (users.isEmpty) {
+      return const Center(child: Text('Tidak ada pengguna.'));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: users.length,
+      itemBuilder: (context, index) {
+        final user = users[index];
+        final isSiswa = user.role == 'siswa';
+        final isMapel = user.role == 'guru_mapel';
+
+        String extraInfo = '';
+        if (isSiswa && user.classId != null) {
+          try {
+            final cl = adminProvider.classes.firstWhere((c) => c.id == user.classId);
+            extraInfo = ' • Kelas: ${cl.name}';
+          } catch (e) {
+            extraInfo = ' • Kelas: Tidak diketahui';
+          }
+        } else if (isMapel && user.subjects != null) {
+          extraInfo = ' • Mapel: ${user.subjects!.join(', ')}';
+        }
+
+        final isSelected = _selectedUsers.contains(user);
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: CheckboxListTile(
+            value: isSelected,
+            onChanged: (bool? checked) {
+              setState(() {
+                if (checked == true) {
+                  _selectedUsers.add(user);
+                } else {
+                  _selectedUsers.remove(user);
+                }
+              });
+            },
+            secondary: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: () => _confirmDeleteUser(user),
+            ),
+            title: Text(
+              user.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(user.email),
+                const SizedBox(height: 4),
+                Text(
+                  'Peran: ${user.role}$extraInfo',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final adminProvider = context.watch<AdminProvider>();
+    final adminUsers = adminProvider.users.where((u) => u.role == 'admin').toList();
+    final guruPiketUsers = adminProvider.users.where((u) => u.role == 'guru_piket').toList();
+    final guruMapelUsers = adminProvider.users.where((u) => u.role == 'guru_mapel').toList();
+    final siswaUsers = adminProvider.users.where((u) => u.role == 'siswa').toList();
+
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Kelola Pengguna'),
+          actions: [
+            if (_selectedUsers.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                tooltip: 'Hapus Terpilih',
+                onPressed: _confirmDeleteSelectedUsers,
+              ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'download') {
+                  _downloadTemplate();
+                } else if (value == 'import') {
+                  _importExcel();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'download',
+                  child: Text('Unduh Template Excel'),
+                ),
+                const PopupMenuItem(
+                  value: 'import',
+                  child: Text('Import Data (Excel)'),
+                ),
+              ],
+            ),
+          ],
+          bottom: const TabBar(
+            isScrollable: true,
+            tabs: [
+              Tab(text: 'Admin'),
+              Tab(text: 'Guru Piket'),
+              Tab(text: 'Guru Mapel'),
+              Tab(text: 'Siswa'),
+            ],
+          ),
+        ),
+        body: adminProvider.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  _buildUserList(adminUsers, adminProvider),
+                  _buildUserList(guruPiketUsers, adminProvider),
+                  _buildUserList(guruMapelUsers, adminProvider),
+                  _buildUserList(siswaUsers, adminProvider),
+                ],
+              ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showAddUserDialog,
+          child: const Icon(Icons.add),
+        ),
+      ),
     );
   }
 }
