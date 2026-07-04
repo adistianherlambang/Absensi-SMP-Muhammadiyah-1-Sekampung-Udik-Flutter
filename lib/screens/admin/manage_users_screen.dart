@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
 
@@ -423,7 +424,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
@@ -444,42 +445,77 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
         final isSelected = _selectedUsers.contains(user);
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: CheckboxListTile(
-            value: isSelected,
-            onChanged: (bool? checked) {
-              setState(() {
-                if (checked == true) {
-                  _selectedUsers.add(user);
-                } else {
-                  _selectedUsers.remove(user);
-                }
-              });
-            },
-            secondary: IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => _confirmDeleteUser(user),
-            ),
-            title: Text(
-              user.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(user.email),
-                const SizedBox(height: 4),
-                Text(
-                  'Peran: ${user.role}$extraInfo',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6849EF).withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+            clipBehavior: Clip.antiAlias,
+            child: CheckboxListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              activeColor: const Color(0xFF6849EF),
+              value: isSelected,
+              onChanged: (bool? checked) {
+                setState(() {
+                  if (checked == true) {
+                    _selectedUsers.add(user);
+                  } else {
+                    _selectedUsers.remove(user);
+                  }
+                });
+              },
+              secondary: IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                onPressed: () => _confirmDeleteUser(user),
+              ),
+              title: Text(
+                user.name,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text(user.email, style: TextStyle(color: Colors.grey[600])),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6849EF).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${user.role.toUpperCase()}$extraInfo',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF6849EF),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+        ).animate().slideY(
+          begin: 0.2, end: 0, 
+          duration: 400.ms, 
+          curve: Curves.easeOut,
+          delay: Duration(milliseconds: 50 * index)
+        ).fade(
+          duration: 400.ms,
+          delay: Duration(milliseconds: 50 * index)
         );
       },
     );
@@ -496,16 +532,24 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
+        backgroundColor: const Color(0xFFD2C7EC), // Warna ungu lembut dari screenshot
         appBar: AppBar(
-          title: const Text('Kelola Pengguna'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Kelola Pengguna',
+            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          ),
+          iconTheme: const IconThemeData(color: Colors.black87),
           actions: [
             if (_selectedUsers.isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: const Icon(Icons.delete, color: Colors.redAccent),
                 tooltip: 'Hapus Terpilih',
                 onPressed: _confirmDeleteSelectedUsers,
               ),
             PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.black87),
               onSelected: (value) {
                 if (value == 'download') {
                   _downloadTemplate();
@@ -525,13 +569,41 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               ],
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             isScrollable: true,
-            tabs: [
-              Tab(text: 'Admin'),
-              Tab(text: 'Guru Piket'),
-              Tab(text: 'Guru Mapel'),
-              Tab(text: 'Siswa'),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.black54,
+            indicatorSize: TabBarIndicatorSize.label,
+            indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              color: const Color(0xFF6849EF), // Ungu gelap untuk indicator
+            ),
+            splashBorderRadius: BorderRadius.circular(50),
+            tabs: const [
+              Tab(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Admin'),
+                ),
+              ),
+              Tab(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Guru Piket'),
+                ),
+              ),
+              Tab(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Guru Mapel'),
+                ),
+              ),
+              Tab(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Siswa'),
+                ),
+              ),
             ],
           ),
         ),
@@ -546,8 +618,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 ],
               ),
         floatingActionButton: FloatingActionButton(
+          backgroundColor: const Color(0xFF6849EF),
           onPressed: _showAddUserDialog,
-          child: const Icon(Icons.add),
+          child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
     );
