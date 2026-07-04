@@ -5,6 +5,7 @@ import 'package:excel/excel.dart' hide Border;
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../widgets/searchable_select.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
 
@@ -21,8 +22,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _subjectController = TextEditingController();
-  
-  String _selectedRole = 'siswa'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
+
+  String _selectedRole =
+      'siswa'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
   String? _selectedClassId;
 
   // Set untuk menyimpan UID dari pengguna yang dipilih (checkbox)
@@ -42,20 +44,20 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Sheet1'];
       sheetObject.appendRow([
-        TextCellValue('Nama Lengkap'), 
-        TextCellValue('Email'), 
-        TextCellValue('Password'), 
-        TextCellValue('Role'), 
-        TextCellValue('Info Tambahan')
+        TextCellValue('Nama Lengkap'),
+        TextCellValue('Email'),
+        TextCellValue('Password'),
+        TextCellValue('Role'),
+        TextCellValue('Info Tambahan'),
       ]);
-      
+
       // Memberikan contoh isi
       sheetObject.appendRow([
-        TextCellValue('Siswa Contoh'), 
-        TextCellValue('siswa@contoh.com'), 
-        TextCellValue('123456'), 
-        TextCellValue('siswa'), 
-        TextCellValue('ID_KELAS_DISINI')
+        TextCellValue('Siswa Contoh'),
+        TextCellValue('siswa@contoh.com'),
+        TextCellValue('123456'),
+        TextCellValue('siswa'),
+        TextCellValue('ID_KELAS_DISINI'),
       ]);
 
       var fileBytes = excel.save();
@@ -63,14 +65,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         if (Platform.isAndroid || Platform.isIOS) {
           Directory? directory = await getExternalStorageDirectory();
           directory ??= await getApplicationDocumentsDirectory();
-          
+
           String path = '${directory.path}/Template_Pengguna.xlsx';
           File(path)
             ..createSync(recursive: true)
             ..writeAsBytesSync(fileBytes);
-            
+
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Template tersimpan di: $path')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Template tersimpan di: $path')),
+          );
         } else {
           String? outputFile = await FilePicker.platform.saveFile(
             dialogTitle: 'Pilih lokasi penyimpanan template:',
@@ -81,12 +85,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               ..createSync(recursive: true)
               ..writeAsBytesSync(fileBytes);
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Template tersimpan di: $outputFile')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Template tersimpan di: $outputFile')),
+            );
           }
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal membuat template: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal membuat template: $e')));
     }
   }
 
@@ -99,7 +107,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Memproses import pengguna...'))
+          const SnackBar(content: Text('Memproses import pengguna...')),
         );
 
         var fileBytes = result.files.single.bytes;
@@ -107,29 +115,34 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           File file = File(result.files.single.path!);
           fileBytes = file.readAsBytesSync();
         }
-        
+
         var excel = Excel.decodeBytes(fileBytes);
-        final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-        
+        final adminProvider = Provider.of<AdminProvider>(
+          context,
+          listen: false,
+        );
+
         int importedCount = 0;
-        
+
         for (var table in excel.tables.keys) {
           var sheet = excel.tables[table]!;
           for (int i = 1; i < sheet.maxRows; i++) {
             var row = sheet.rows[i];
             if (row.isEmpty) continue;
-            
+
             String name = row[0]?.value.toString() ?? '';
             String email = row[1]?.value.toString() ?? '';
             String password = row[2]?.value.toString() ?? '';
             String role = row[3]?.value.toString().toLowerCase() ?? 'siswa';
             String info = row[4]?.value.toString() ?? '';
-            
+
             if (name.isEmpty || email.isEmpty || password.isEmpty) continue;
-            
+
             String? classId = (role == 'siswa') ? info : null;
-            List<String>? subjects = (role == 'guru_mapel') ? info.split(',').map((e) => e.trim()).toList() : null;
-            
+            List<String>? subjects = (role == 'guru_mapel')
+                ? info.split(',').map((e) => e.trim()).toList()
+                : null;
+
             try {
               await adminProvider.createUser(
                 name: name,
@@ -145,15 +158,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             }
           }
         }
-        
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$importedCount pengguna berhasil diimport!'))
+          SnackBar(content: Text('$importedCount pengguna berhasil diimport!')),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal import file: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal import file: $e')));
     }
   }
 
@@ -165,7 +180,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     _subjectController.clear();
     setState(() {
       _selectedRole = 'siswa';
-      _selectedClassId = adminProvider.classes.isNotEmpty ? adminProvider.classes.first.id : null;
+      _selectedClassId = adminProvider.classes.isNotEmpty
+          ? adminProvider.classes.first.id
+          : null;
     });
 
     showModalBottomSheet(
@@ -201,8 +218,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                       // Input Nama
                       TextFormField(
                         controller: _nameController,
-                        decoration: const InputDecoration(labelText: 'Nama Lengkap'),
-                        validator: (v) => v == null || v.isEmpty ? 'Nama tidak boleh kosong' : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Nama Lengkap',
+                        ),
+                        validator: (v) => v == null || v.isEmpty
+                            ? 'Nama tidak boleh kosong'
+                            : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -211,32 +232,44 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(labelText: 'Email'),
-                        validator: (v) => v == null || v.isEmpty ? 'Email tidak boleh kosong' : null,
+                        validator: (v) => v == null || v.isEmpty
+                            ? 'Email tidak boleh kosong'
+                            : null,
                       ),
                       const SizedBox(height: 16),
 
                       // Input Password
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(labelText: 'Password'),
-                        validator: (v) => v == null || v.length < 6 ? 'Password minimal 6 karakter' : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                        ),
+                        validator: (v) => v == null || v.length < 6
+                            ? 'Password minimal 6 karakter'
+                            : null,
                       ),
                       const SizedBox(height: 16),
 
-                      // Pilihan Peran / Role (Teks biasa dalam Dropdown)
-                      DropdownButtonFormField<String>(
-                        value: _selectedRole,
-                        decoration: const InputDecoration(labelText: 'Peran / Role'),
+                      // Pilihan Peran / Role (SearchableSelect)
+                      SearchableSelect<Map<String, String>>(
+                        labelText: 'Peran / Role',
                         items: const [
-                          DropdownMenuItem(value: 'admin', child: Text('Administrator')),
-                          DropdownMenuItem(value: 'guru_piket', child: Text('Guru Piket')),
-                          DropdownMenuItem(value: 'guru_mapel', child: Text('Guru Mata Pelajaran')),
-                          DropdownMenuItem(value: 'siswa', child: Text('Siswa')),
+                          {'value': 'admin', 'label': 'Administrator'},
+                          {'value': 'guru_piket', 'label': 'Guru Piket'},
+                          {'value': 'guru_mapel', 'label': 'Guru Mata Pelajaran'},
+                          {'value': 'siswa', 'label': 'Siswa'},
                         ],
+                        itemLabel: (item) => item['label']!,
+                        selectedValue: {
+                          'value': _selectedRole,
+                          'label': _selectedRole == 'admin' ? 'Administrator' : 
+                                   _selectedRole == 'guru_piket' ? 'Guru Piket' :
+                                   _selectedRole == 'guru_mapel' ? 'Guru Mata Pelajaran' : 'Siswa'
+                        },
                         onChanged: (val) {
                           if (val != null) {
                             setModalState(() {
-                              _selectedRole = val;
+                              _selectedRole = val['value']!;
                             });
                           }
                         },
@@ -245,21 +278,25 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
                       // Kondisional khusus Siswa: Pilih Kelas
                       if (_selectedRole == 'siswa') ...[
-                        DropdownButtonFormField<String>(
-                          value: _selectedClassId,
-                          decoration: const InputDecoration(labelText: 'Pilih Kelas (Khusus Siswa)'),
-                          items: adminProvider.classes.map((c) {
-                            return DropdownMenuItem(
-                              value: c.id,
-                              child: Text(c.name),
-                            );
-                          }).toList(),
+                        SearchableSelect<dynamic>(
+                          labelText: 'Pilih Kelas (Khusus Siswa)',
+                          items: adminProvider.classes,
+                          itemLabel: (c) => c.name as String,
+                          selectedValue: _selectedClassId != null
+                              ? adminProvider.classes.firstWhere(
+                                  (c) => c.id == _selectedClassId,
+                                  orElse: () => adminProvider.classes.first,
+                                )
+                              : null,
                           onChanged: (val) {
                             setModalState(() {
-                              _selectedClassId = val;
+                              _selectedClassId = val?.id;
                             });
                           },
-                          validator: (v) => _selectedRole == 'siswa' && v == null ? 'Pilih kelas siswa' : null,
+                          validator: (v) =>
+                              _selectedRole == 'siswa' && v == null
+                              ? 'Pilih kelas siswa'
+                              : null,
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -272,7 +309,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             labelText: 'Mata Pelajaran (pisahkan dengan koma)',
                             helperText: 'Contoh: Matematika, Fisika, IPA',
                           ),
-                          validator: (v) => _selectedRole == 'guru_mapel' && (v == null || v.isEmpty)
+                          validator: (v) =>
+                              _selectedRole == 'guru_mapel' &&
+                                  (v == null || v.isEmpty)
                               ? 'Masukkan minimal 1 mata pelajaran'
                               : null,
                         ),
@@ -286,12 +325,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Memproses penambahan user baru...')),
+                            const SnackBar(
+                              content: Text(
+                                'Memproses penambahan user baru...',
+                              ),
+                            ),
                           );
 
                           try {
                             List<String>? subjectsList;
-                            if (_selectedRole == 'guru_mapel' && _subjectController.text.isNotEmpty) {
+                            if (_selectedRole == 'guru_mapel' &&
+                                _subjectController.text.isNotEmpty) {
                               subjectsList = _subjectController.text
                                   .split(',')
                                   .map((s) => s.trim())
@@ -304,13 +348,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                               email: _emailController.text.trim(),
                               password: _passwordController.text.trim(),
                               role: _selectedRole,
-                              classId: _selectedRole == 'siswa' ? _selectedClassId : null,
+                              classId: _selectedRole == 'siswa'
+                                  ? _selectedClassId
+                                  : null,
                               subjects: subjectsList,
                             );
 
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('User berhasil ditambahkan!')),
+                              const SnackBar(
+                                content: Text('User berhasil ditambahkan!'),
+                              ),
                             );
                           } catch (e) {
                             if (!mounted) return;
@@ -338,13 +386,15 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   void _confirmDeleteSelectedUsers() {
     if (_selectedUsers.isEmpty) return;
-    
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Hapus Pengguna Terpilih'),
-          content: Text('Apakah Anda yakin ingin menghapus ${_selectedUsers.length} pengguna terpilih?'),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus ${_selectedUsers.length} pengguna terpilih?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -353,7 +403,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+                final adminProvider = Provider.of<AdminProvider>(
+                  context,
+                  listen: false,
+                );
                 try {
                   await adminProvider.deleteUsersBatch(_selectedUsers.toList());
                   setState(() {
@@ -384,7 +437,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Hapus Pengguna'),
-          content: Text('Apakah Anda yakin ingin menghapus "${user.name}"? Tindakan ini tidak dapat dibatalkan.'),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus "${user.name}"? Tindakan ini tidak dapat dibatalkan.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -394,11 +449,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               onPressed: () async {
                 Navigator.pop(context);
                 try {
-                  await Provider.of<AdminProvider>(context, listen: false).deleteUser(
-                    user.uid,
-                    user.role,
-                    user.classId,
-                  );
+                  await Provider.of<AdminProvider>(
+                    context,
+                    listen: false,
+                  ).deleteUser(user.uid, user.role, user.classId);
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Pengguna berhasil dihapus.')),
@@ -428,7 +482,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             const SizedBox(height: 16),
             Text(
               'Tidak ada pengguna.',
-              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16),
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 16,
+              ),
             ),
           ],
         ),
@@ -446,7 +503,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         String extraInfo = '';
         if (isSiswa && user.classId != null) {
           try {
-            final cl = adminProvider.classes.firstWhere((c) => c.id == user.classId);
+            final cl = adminProvider.classes.firstWhere(
+              (c) => c.id == user.classId,
+            );
             extraInfo = ' • ${cl.name}';
           } catch (e) {
             extraInfo = ' • Kelas ?';
@@ -467,176 +526,194 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         final colorPair = colors[user.name.length % colors.length];
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: colorPair[0].withOpacity(0.15),
-                blurRadius: 24,
-                spreadRadius: -4,
-                offset: const Offset(0, 12),
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorPair[0].withOpacity(0.15),
+                    blurRadius: 24,
+                    spreadRadius: -4,
+                    offset: const Offset(0, 12),
+                  ),
+                  const BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-              const BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              )
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(24),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedUsers.remove(user);
-                  } else {
-                    _selectedUsers.add(user);
-                  }
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Checkbox Custom
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedUsers.remove(user);
-                          } else {
-                            _selectedUsers.add(user);
-                          }
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected ? const Color(0xFF6849EF) : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFF6849EF) : Colors.grey.shade400,
-                            width: 2,
-                          ),
-                        ),
-                        child: isSelected 
-                            ? const Icon(Icons.check, size: 16, color: Colors.white)
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    
-                    // Avatar dengan Gradient
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: colorPair,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorPair[0].withOpacity(0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          )
-                        ]
-                      ),
-                      child: Center(
-                        child: Text(
-                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    
-                    // Info Pengguna
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800, 
-                              fontSize: 16,
-                              color: Color(0xFF2D3142)
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.email,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          // Badge Role
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(24),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedUsers.remove(user);
+                      } else {
+                        _selectedUsers.add(user);
+                      }
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        // Checkbox Custom
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                _selectedUsers.remove(user);
+                              } else {
+                                _selectedUsers.add(user);
+                              }
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 24,
+                            height: 24,
                             decoration: BoxDecoration(
-                              color: colorPair[0].withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              shape: BoxShape.circle,
+                              color: isSelected
+                                  ? const Color(0xFF6849EF)
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFF6849EF)
+                                    : Colors.grey.shade400,
+                                width: 2,
+                              ),
                             ),
+                            child: isSelected
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Avatar dengan Gradient
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: colorPair,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorPair[0].withOpacity(0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Center(
                             child: Text(
-                              '${user.role.toUpperCase()}$extraInfo',
-                              style: TextStyle(
+                              user.name.isNotEmpty
+                                  ? user.name[0].toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                                color: colorPair[0],
+                                fontSize: 20,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Info Pengguna
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                  color: Color(0xFF2D3142),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                user.email,
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              // Badge Role
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorPair[0].withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${user.role.toUpperCase()}$extraInfo',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                    color: colorPair[0],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Tombol Hapus
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          color: Colors.red.shade300,
+                          onPressed: () => _confirmDeleteUser(user),
+                        ),
+                      ],
                     ),
-                    
-                    // Tombol Hapus
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      color: Colors.red.shade300,
-                      onPressed: () => _confirmDeleteUser(user),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        ).animate().slideY(
-          begin: 0.4, end: 0, 
-          duration: 500.ms, 
-          curve: Curves.easeOutQuart,
-          delay: Duration(milliseconds: 70 * index)
-        ).fade(
-          duration: 500.ms,
-          delay: Duration(milliseconds: 70 * index)
-        ).scale(
-          begin: const Offset(0.9, 0.9),
-          end: const Offset(1.0, 1.0),
-          duration: 500.ms,
-          curve: Curves.easeOutQuart,
-          delay: Duration(milliseconds: 70 * index)
-        );
+            )
+            .animate()
+            .slideY(
+              begin: 0.4,
+              end: 0,
+              duration: 500.ms,
+              curve: Curves.easeOutQuart,
+              delay: Duration(milliseconds: 70 * index),
+            )
+            .fade(
+              duration: 500.ms,
+              delay: Duration(milliseconds: 70 * index),
+            )
+            .scale(
+              begin: const Offset(0.9, 0.9),
+              end: const Offset(1.0, 1.0),
+              duration: 500.ms,
+              curve: Curves.easeOutQuart,
+              delay: Duration(milliseconds: 70 * index),
+            );
       },
     );
   }
@@ -644,21 +721,32 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   @override
   Widget build(BuildContext context) {
     final adminProvider = context.watch<AdminProvider>();
-    final adminUsers = adminProvider.users.where((u) => u.role == 'admin').toList();
-    final guruPiketUsers = adminProvider.users.where((u) => u.role == 'guru_piket').toList();
-    final guruMapelUsers = adminProvider.users.where((u) => u.role == 'guru_mapel').toList();
-    final siswaUsers = adminProvider.users.where((u) => u.role == 'siswa').toList();
+    final adminUsers = adminProvider.users
+        .where((u) => u.role == 'admin')
+        .toList();
+    final guruPiketUsers = adminProvider.users
+        .where((u) => u.role == 'guru_piket')
+        .toList();
+    final guruMapelUsers = adminProvider.users
+        .where((u) => u.role == 'guru_mapel')
+        .toList();
+    final siswaUsers = adminProvider.users
+        .where((u) => u.role == 'siswa')
+        .toList();
 
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        backgroundColor: const Color(0xFFD2C7EC), // Warna ungu lembut dari screenshot
+        backgroundColor: Colors.white, // Pure white background
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           title: const Text(
             'Kelola Pengguna',
-            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           iconTheme: const IconThemeData(color: Colors.black87),
           actions: [

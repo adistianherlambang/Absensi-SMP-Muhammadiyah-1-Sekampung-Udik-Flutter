@@ -5,7 +5,7 @@ class AppTheme {
   static const Color primaryColor = Color(0xFF6849EF); // Vibrant Purple
   static const Color secondaryColor = Color(0xFF8E2DE2); // Gradient Purple
   static const Color accentColor = Color(0xFFF37335); // Vibrant Orange
-  static const Color backgroundColor = Color(0xFFD2C7EC); // Soft Pastel Purple
+  static const Color backgroundColor = Colors.white; // Pure White Background
   static const Color cardColor = Colors.white;
   static const Color textColor = Color(0xFF2D3142); // Darker blue-grey
   static const Color textMutedColor = Color(0xFF7A869A); // Soft grey

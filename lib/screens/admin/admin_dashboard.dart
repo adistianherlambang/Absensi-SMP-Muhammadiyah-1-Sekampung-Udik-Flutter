@@ -107,31 +107,36 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ),
                     ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'Total User',
-                            '${adminProvider.users.length}',
-                            Icons.people_alt_rounded,
-                            const Color(0xFF8E2DE2),
-                            0,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(child: _buildStatItem('Total User', '${adminProvider.users.length}', const Color(0xFF8E2DE2))),
+                              Container(width: 1, height: 40, color: Colors.grey.shade200),
+                              Expanded(child: _buildStatItem('Total Kelas', '${adminProvider.classes.length}', const Color(0xFFF37335))),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'Total Kelas',
-                            '${adminProvider.classes.length}',
-                            Icons.class_rounded,
-                            const Color(0xFFF37335),
-                            1,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Divider(color: Colors.grey.shade200, height: 1),
                           ),
-                        ),
-                      ],
-                    ),
+                          Row(
+                            children: [
+                              Expanded(child: _buildStatItem('Siswa Terdaftar', '${adminProvider.users.where((u) => u.role == 'siswa').length}', const Color(0xFF00B4DB))),
+                              Container(width: 1, height: 40, color: Colors.grey.shade200),
+                              Expanded(child: _buildStatItem('Guru / Staf', '${adminProvider.users.where((u) => u.role == 'guru_mapel' || u.role == 'guru_piket').length}', const Color(0xFFFF416C))),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
                     const SizedBox(height: 32),
 
                     // Menu Navigasi
@@ -197,28 +202,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String label, String value, IconData icon, Color color, int index) {
-    return GlassCard(
-      shadowColor: color,
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 28),
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(height: 16),
-          Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF2D3142))),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 13, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    ).animate().slideY(begin: 0.2, end: 0, duration: 400.ms, delay: Duration(milliseconds: 100 + (index * 100))).fadeIn();
+          child: Icon(Icons.circle, color: color, size: 8),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D3142)),
+              ),
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w500),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildMenuCard(
