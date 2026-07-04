@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Warna Primer & Sekunder Premium
-  static const Color primaryColor = Color(0xFF2C5E8A); // Deep Slate Blue
-  static const Color secondaryColor = Color(0xFF1E3A5F); // Dark Navy Blue
-  static const Color accentColor = Color(0xFF8E9AAF); // Calm Grey Accent
-  static const Color backgroundColor = Color(0xFFF8FAFC); // Light Clean Background
+  // Warna Primer & Sekunder Premium (Modern Soft UI)
+  static const Color primaryColor = Color(0xFF6849EF); // Vibrant Purple
+  static const Color secondaryColor = Color(0xFF8E2DE2); // Gradient Purple
+  static const Color accentColor = Color(0xFFF37335); // Vibrant Orange
+  static const Color backgroundColor = Color(0xFFD2C7EC); // Soft Pastel Purple
   static const Color cardColor = Colors.white;
-  static const Color textColor = Color(0xFF1E293B); // Dark Slate for readability
-  static const Color textMutedColor = Color(0xFF64748B); // Muted Slate Grey
+  static const Color textColor = Color(0xFF2D3142); // Darker blue-grey
+  static const Color textMutedColor = Color(0xFF7A869A); // Soft grey
 
   // Warna Status Kehadiran (Tanpa Badge Style, menggunakan teks & ikon berwarna)
   static const Color hadirColor = Color(0xFF10B981); // Hijau Emerald

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' hide Border;
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -420,11 +420,23 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   Widget _buildUserList(List<UserModel> users, AdminProvider adminProvider) {
     if (users.isEmpty) {
-      return const Center(child: Text('Tidak ada pengguna.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.people_outline, size: 64, color: Colors.white54),
+            const SizedBox(height: 16),
+            Text(
+              'Tidak ada pengguna.',
+              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16),
+            ),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
@@ -435,26 +447,41 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         if (isSiswa && user.classId != null) {
           try {
             final cl = adminProvider.classes.firstWhere((c) => c.id == user.classId);
-            extraInfo = ' • Kelas: ${cl.name}';
+            extraInfo = ' • ${cl.name}';
           } catch (e) {
-            extraInfo = ' • Kelas: Tidak diketahui';
+            extraInfo = ' • Kelas ?';
           }
         } else if (isMapel && user.subjects != null) {
-          extraInfo = ' • Mapel: ${user.subjects!.join(', ')}';
+          extraInfo = ' • ${user.subjects!.join(', ')}';
         }
 
         final isSelected = _selectedUsers.contains(user);
 
+        // Generate a pseudo-random color based on user name length or initials
+        final colors = [
+          [const Color(0xFF4A00E0), const Color(0xFF8E2DE2)],
+          [const Color(0xFFFF416C), const Color(0xFFFF4B2B)],
+          [const Color(0xFFFDC830), const Color(0xFFF37335)],
+          [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
+        ];
+        final colorPair = colors[user.name.length % colors.length];
+
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6849EF).withOpacity(0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: colorPair[0].withOpacity(0.15),
+                blurRadius: 24,
+                spreadRadius: -4,
+                offset: const Offset(0, 12),
+              ),
+              const BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: Offset(0, 4),
               )
             ],
           ),
@@ -462,60 +489,153 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(24),
             clipBehavior: Clip.antiAlias,
-            child: CheckboxListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              activeColor: const Color(0xFF6849EF),
-              value: isSelected,
-              onChanged: (bool? checked) {
+            child: InkWell(
+              onTap: () {
                 setState(() {
-                  if (checked == true) {
-                    _selectedUsers.add(user);
-                  } else {
+                  if (isSelected) {
                     _selectedUsers.remove(user);
+                  } else {
+                    _selectedUsers.add(user);
                   }
                 });
               },
-              secondary: IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                onPressed: () => _confirmDeleteUser(user),
-              ),
-              title: Text(
-                user.name,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(user.email, style: TextStyle(color: Colors.grey[600])),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6849EF).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${user.role.toUpperCase()}$extraInfo',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                        color: Color(0xFF6849EF),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Checkbox Custom
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedUsers.remove(user);
+                          } else {
+                            _selectedUsers.add(user);
+                          }
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected ? const Color(0xFF6849EF) : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF6849EF) : Colors.grey.shade400,
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected 
+                            ? const Icon(Icons.check, size: 16, color: Colors.white)
+                            : null,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    
+                    // Avatar dengan Gradient
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: colorPair,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorPair[0].withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          )
+                        ]
+                      ),
+                      child: Center(
+                        child: Text(
+                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    
+                    // Info Pengguna
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800, 
+                              fontSize: 16,
+                              color: Color(0xFF2D3142)
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.email,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          // Badge Role
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: colorPair[0].withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${user.role.toUpperCase()}$extraInfo',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: colorPair[0],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Tombol Hapus
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      color: Colors.red.shade300,
+                      onPressed: () => _confirmDeleteUser(user),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ).animate().slideY(
-          begin: 0.2, end: 0, 
-          duration: 400.ms, 
-          curve: Curves.easeOut,
-          delay: Duration(milliseconds: 50 * index)
+          begin: 0.4, end: 0, 
+          duration: 500.ms, 
+          curve: Curves.easeOutQuart,
+          delay: Duration(milliseconds: 70 * index)
         ).fade(
-          duration: 400.ms,
-          delay: Duration(milliseconds: 50 * index)
+          duration: 500.ms,
+          delay: Duration(milliseconds: 70 * index)
+        ).scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1.0, 1.0),
+          duration: 500.ms,
+          curve: Curves.easeOutQuart,
+          delay: Duration(milliseconds: 70 * index)
         );
       },
     );

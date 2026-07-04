@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../app/routes.dart';
+import '../../widgets/glass_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -51,53 +53,60 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Banner Sambutan
-                    Card(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      elevation: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.admin_panel_settings,
-                              size: 48,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    GlassCard(
+                      shadowColor: const Color(0xFF6849EF),
+                      padding: const EdgeInsets.all(24.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6849EF).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Selamat Datang, Admin!',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    authProvider.currentUser?.name ?? '',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            child: const Icon(
+                              Icons.admin_panel_settings_rounded,
+                              size: 40,
+                              color: Color(0xFF6849EF),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Selamat Datang, Admin!',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  authProvider.currentUser?.name ?? 'Admin Sekolah',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
+                    ).animate().slideY(begin: 0.2, end: 0, duration: 400.ms).fadeIn(),
+                    const SizedBox(height: 32),
 
-                    // Ringkasan Statistik (Tanpa Badge)
+                    // Ringkasan Statistik
                     Text(
                       'Statistik Sistem',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 12),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2D3142),
+                          ),
+                    ).animate().fadeIn(delay: 100.ms),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
@@ -105,7 +114,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             context,
                             'Total User',
                             '${adminProvider.users.length}',
-                            Icons.people_alt_outlined,
+                            Icons.people_alt_rounded,
+                            const Color(0xFF8E2DE2),
+                            0,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -114,57 +125,71 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             context,
                             'Total Kelas',
                             '${adminProvider.classes.length}',
-                            Icons.class_outlined,
+                            Icons.class_rounded,
+                            const Color(0xFFF37335),
+                            1,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
                     // Menu Navigasi
                     Text(
                       'Layanan Administrasi',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 12),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2D3142),
+                          ),
+                    ).animate().fadeIn(delay: 200.ms),
+                    const SizedBox(height: 16),
                     GridView.count(
                       crossAxisCount: 2,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 1.1,
+                      childAspectRatio: 1.0,
                       children: [
                         _buildMenuCard(
                           context,
                           'Kelola Pengguna',
                           'Tambah & edit guru/siswa',
-                          Icons.manage_accounts,
+                          Icons.manage_accounts_rounded,
                           AppRoutes.adminManageUsers,
+                          const Color(0xFF4A00E0),
+                          0,
                         ),
                         _buildMenuCard(
                           context,
                           'Kelola Kelas',
                           'Atur kelas & wali kelas',
-                          Icons.door_sliding_outlined,
+                          Icons.door_sliding_rounded,
                           AppRoutes.adminManageClasses,
+                          const Color(0xFFFF416C),
+                          1,
                         ),
                         _buildMenuCard(
                           context,
                           'Generate QR Siswa',
                           'Buat QR Code kelas IX',
-                          Icons.qr_code_2_outlined,
+                          Icons.qr_code_2_rounded,
                           AppRoutes.adminGenerateQR,
+                          const Color(0xFFFDC830),
+                          2,
                         ),
                         _buildMenuCard(
                           context,
                           'Laporan Presensi',
                           'Unduh rekap kehadiran',
-                          Icons.summarize_outlined,
+                          Icons.summarize_rounded,
                           AppRoutes.adminReports,
+                          const Color(0xFF00B4DB),
+                          3,
                         ),
                       ],
                     ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -172,22 +197,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String label, String value, IconData icon) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
-            const SizedBox(height: 12),
-            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
+  Widget _buildStatCard(BuildContext context, String label, String value, IconData icon, Color color, int index) {
+    return GlassCard(
+      shadowColor: color,
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 16),
+          Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF2D3142))),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 13, fontWeight: FontWeight.w600)),
+        ],
       ),
-    );
+    ).animate().slideY(begin: 0.2, end: 0, duration: 400.ms, delay: Duration(milliseconds: 100 + (index * 100))).fadeIn();
   }
 
   Widget _buildMenuCard(
@@ -196,34 +227,45 @@ class _AdminDashboardState extends State<AdminDashboard> {
     String subtitle,
     IconData icon,
     String route,
+    Color color,
+    int index,
   ) {
-    return Card(
-      child: InkWell(
-        onTap: () => Navigator.pushNamed(context, route),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary, size: 32),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+    return GlassCard(
+      shadowColor: color,
+      onTap: () => Navigator.pushNamed(context, route),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.7), color],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
           ),
-        ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF2D3142)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
-    );
+    ).animate().slideY(begin: 0.2, end: 0, duration: 400.ms, delay: Duration(milliseconds: 200 + (index * 100))).fadeIn().scale(begin: const Offset(0.9, 0.9), delay: Duration(milliseconds: 200 + (index * 100)));
   }
 }
