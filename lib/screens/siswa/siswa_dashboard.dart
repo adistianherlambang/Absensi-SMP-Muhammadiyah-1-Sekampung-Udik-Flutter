@@ -21,7 +21,7 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final siswaProvider = Provider.of<SiswaProvider>(context, listen: false);
-      
+
       // Load data kelas admin untuk menampilkan nama kelas
       Provider.of<AdminProvider>(context, listen: false).fetchData();
 
@@ -43,11 +43,21 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
 
     // Hitung metrik kehadiran
     final totalSessions = siswaProvider.history.length;
-    final totalHadir = siswaProvider.history.values.where((att) => att.status == 'hadir').length;
-    final totalIzin = siswaProvider.history.values.where((att) => att.status == 'izin').length;
-    final totalSakit = siswaProvider.history.values.where((att) => att.status == 'sakit').length;
-    final totalAlpa = siswaProvider.history.values.where((att) => att.status == 'alpa').length;
-    final attendanceRate = totalSessions > 0 ? (totalHadir / totalSessions * 100).toStringAsFixed(0) : '0';
+    final totalHadir = siswaProvider.history.values
+        .where((att) => att.status == 'hadir')
+        .length;
+    final totalIzin = siswaProvider.history.values
+        .where((att) => att.status == 'izin')
+        .length;
+    final totalSakit = siswaProvider.history.values
+        .where((att) => att.status == 'sakit')
+        .length;
+    final totalAlpa = siswaProvider.history.values
+        .where((att) => att.status == 'alpa')
+        .length;
+    final attendanceRate = totalSessions > 0
+        ? (totalHadir / totalSessions * 100).toStringAsFixed(0)
+        : '0';
 
     // Ambil nama kelas siswa
     String className = 'Tidak terdaftar kelas';
@@ -63,7 +73,13 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Dasbor Siswa', style: TextStyle(color: Color(0xFF2D3142), fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Dasbor Siswa',
+          style: TextStyle(
+            color: Color(0xFF2D3142),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         iconTheme: const IconThemeData(color: Color(0xFF2D3142)),
         actions: [
           IconButton(
@@ -74,7 +90,7 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                 Navigator.pushReplacementNamed(context, AppRoutes.login);
               }
             },
-          )
+          ),
         ],
       ),
       body: siswaProvider.isLoading
@@ -93,57 +109,64 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Custom Header
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
-                          child: Icon(Icons.school_rounded, color: AppTheme.primaryColor, size: 28),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Selamat Datang, Siswa',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                user?.name ?? '',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.notifications_outlined, color: AppTheme.textColor, size: 22),
-                        ),
-                      ],
-                    ).animate().fadeIn(),
+                    // Row(
+                    //   children: [
+                    // CircleAvatar(
+                    //   radius: 24,
+                    //   backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                    //   child: Icon(Icons.school_rounded, color: AppTheme.primaryColor, size: 28),
+                    // ),
+                    // const SizedBox(width: 12),
+                    // Expanded(
+                    //   child: Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       Text(
+                    //         'Selamat Datang, Siswa',
+                    //         style: TextStyle(
+                    //           fontSize: 14,
+                    //           color: Colors.grey.shade600,
+                    //           fontWeight: FontWeight.w500,
+                    //         ),
+                    //       ),
+                    //       Text(
+                    //         user?.name ?? '',
+                    //         style: const TextStyle(
+                    //           fontSize: 16,
+                    //           fontWeight: FontWeight.bold,
+                    //           color: AppTheme.textColor,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    // Container(
+                    //   padding: const EdgeInsets.all(10),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.grey.shade100,
+                    //     shape: BoxShape.circle,
+                    //   ),
+                    //   child: Icon(
+                    //     Icons.notifications_outlined,
+                    //     color: AppTheme.textColor,
+                    //     size: 22,
+                    //   ),
+                    // ),
+                    //   ],
+                    // ).animate().fadeIn(),
                     const SizedBox(height: 24),
                     Text(
-                      'Mari Mulai Presensi!\n$className',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.textColor,
-                        height: 1.2,
-                      ),
-                    ).animate().slideY(begin: 0.1, end: 0, duration: 300.ms).fadeIn(),
+                          'Mari Mulai Presensi!\n$className',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.textColor,
+                            height: 1.2,
+                          ),
+                        )
+                        .animate()
+                        .slideY(begin: 0.1, end: 0, duration: 300.ms)
+                        .fadeIn(),
                     const SizedBox(height: 28),
                     const SizedBox(height: 24),
 
@@ -151,79 +174,143 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                     Text(
                       'Ringkasan Kehadiran Anda',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2D3142),
+                      ),
                     ).animate().fadeIn(delay: 50.ms),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Column(
                             children: [
-                              Expanded(child: _buildStatItem('Kehadiran', '$attendanceRate%', AppTheme.hadirColor)),
-                              Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Sakit', '$totalSakit Hari', AppTheme.sakitColor)),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildStatItem(
+                                      'Kehadiran',
+                                      '$attendanceRate%',
+                                      AppTheme.hadirColor,
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 40,
+                                    color: Colors.grey.shade200,
+                                  ),
+                                  Expanded(
+                                    child: _buildStatItem(
+                                      'Sakit',
+                                      '$totalSakit Hari',
+                                      AppTheme.sakitColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                child: Divider(
+                                  color: Colors.grey.shade200,
+                                  height: 1,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildStatItem(
+                                      'Izin',
+                                      '$totalIzin Hari',
+                                      AppTheme.izinColor,
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 40,
+                                    color: Colors.grey.shade200,
+                                  ),
+                                  Expanded(
+                                    child: _buildStatItem(
+                                      'Alpa / Tanpa Ket.',
+                                      '$totalAlpa Hari',
+                                      AppTheme.alpaColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(color: Colors.grey.shade200, height: 1),
-                          ),
-                          Row(
-                            children: [
-                              Expanded(child: _buildStatItem('Izin', '$totalIzin Hari', AppTheme.izinColor)),
-                              Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Alpa / Tanpa Ket.', '$totalAlpa Hari', AppTheme.alpaColor)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
+                        )
+                        .animate()
+                        .slideY(begin: 0.05, end: 0, duration: 300.ms)
+                        .fadeIn(),
                     const SizedBox(height: 32),
 
                     // Quick Actions
                     Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.history_rounded),
-                            label: const Text('Riwayat Hadir'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.history_rounded),
+                                label: const Text('Riwayat Hadir'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.siswaHistory,
+                                  );
+                                },
+                              ),
                             ),
-                            onPressed: () {
-                              Navigator.pushNamed(context, AppRoutes.siswaHistory);
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.card_travel_rounded),
-                            label: const Text('Ajukan Izin'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.primaryColor,
-                              side: const BorderSide(color: AppTheme.primaryColor),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                icon: const Icon(Icons.card_travel_rounded),
+                                label: const Text('Ajukan Izin'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primaryColor,
+                                  side: const BorderSide(
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.siswaLeaveRequest,
+                                  );
+                                },
+                              ),
                             ),
-                            onPressed: () {
-                              Navigator.pushNamed(context, AppRoutes.siswaLeaveRequest);
-                            },
-                          ),
-                        ),
-                      ],
-                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms, delay: 50.ms).fadeIn(),
+                          ],
+                        )
+                        .animate()
+                        .slideY(
+                          begin: 0.05,
+                          end: 0,
+                          duration: 300.ms,
+                          delay: 50.ms,
+                        )
+                        .fadeIn(),
                     const SizedBox(height: 32),
                     const SizedBox(height: 32),
 
@@ -233,14 +320,18 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                       children: [
                         Text(
                           'Riwayat Kehadiran Terbaru',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF2D3142),
                               ),
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(context, AppRoutes.siswaHistory);
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.siswaHistory,
+                            );
                           },
                           child: const Text('Lihat Semua'),
                         ),
@@ -260,57 +351,86 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                         : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: siswaProvider.history.length > 5 ? 5 : siswaProvider.history.length,
+                            itemCount: siswaProvider.history.length > 5
+                                ? 5
+                                : siswaProvider.history.length,
                             itemBuilder: (context, index) {
-                              final entry = siswaProvider.history.entries.toList()[index];
+                              final entry = siswaProvider.history.entries
+                                  .toList()[index];
                               final sessionId = entry.key;
                               final attendance = entry.value;
 
                               final isMapel = sessionId.contains('MAPEL');
-                              String title = isMapel ? 'Sesi Mapel' : 'Sesi Harian Kelas';
-                              
+                              String title = isMapel
+                                  ? 'Sesi Mapel'
+                                  : 'Sesi Harian Kelas';
+
                               if (isMapel) {
                                 final parts = sessionId.split('-');
                                 if (parts.length > 3) {
-                                  title = 'Sesi Mapel: ${parts[3].replaceAll('_', ' ')}';
+                                  title =
+                                      'Sesi Mapel: ${parts[3].replaceAll('_', ' ')}';
                                 }
                               }
 
                               String dateStr = '';
                               try {
                                 final dt = DateTime.parse(attendance.timestamp);
-                                dateStr = '${dt.day}/${dt.month}/${dt.year} pukul ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                dateStr =
+                                    '${dt.day}/${dt.month}/${dt.year} pukul ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
                               } catch (_) {
                                 dateStr = attendance.timestamp;
                               }
 
                               return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.grey.shade200),
-                                ),
-                                child: ListTile(
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
+                                    margin: const EdgeInsets.only(bottom: 12),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.primaryColor.withOpacity(0.15),
-                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.grey.shade200,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      isMapel ? Icons.menu_book : Icons.calendar_month,
-                                      color: AppTheme.primaryColor,
+                                    child: ListTile(
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryColor
+                                              .withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          isMapel
+                                              ? Icons.menu_book
+                                              : Icons.calendar_month,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.textColor,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        'Waktu: $dateStr',
+                                        style: const TextStyle(
+                                          color: AppTheme.textMutedColor,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      trailing: _buildStatusWidget(
+                                        attendance.status,
+                                      ),
                                     ),
-                                  ),
-                                  title: Text(
-                                    title,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor, fontSize: 14),
-                                  ),
-                                  subtitle: Text('Waktu: $dateStr', style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 11)),
-                                  trailing: _buildStatusWidget(attendance.status),
-                                ),
-                              ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn();
+                                  )
+                                  .animate()
+                                  .slideY(begin: 0.05, end: 0, duration: 300.ms)
+                                  .fadeIn();
                             },
                           ),
                   ],
@@ -356,7 +476,11 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
         ),
       ],
     );
@@ -380,11 +504,19 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textColor,
+                ),
               ),
               Text(
                 label,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
