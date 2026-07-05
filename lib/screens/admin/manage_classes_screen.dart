@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
+import '../../core/services/qr_service.dart';
+import '../../models/class_model.dart';
 
 class ManageClassesScreen extends StatefulWidget {
   const ManageClassesScreen({super.key});
@@ -15,6 +18,7 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
   final _formKey = GlobalKey<FormState>();
   final _classNameController = TextEditingController();
   String? _selectedTeacherId;
+  final QRService _qrService = QRService();
 
   @override
   void dispose() {
@@ -188,9 +192,18 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                                  ),
                                ],
                              ),
-                             trailing: IconButton(
-                               icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                               onPressed: () => _confirmDeleteClass(cls.id, cls.name),
+                             trailing: Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 IconButton(
+                                   icon: const Icon(Icons.qr_code, color: AppTheme.primaryColor),
+                                   onPressed: () => _showQRPrintDialog(cls, _qrService.generateClassQRContent(cls.id)),
+                                 ),
+                                 IconButton(
+                                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                   onPressed: () => _confirmDeleteClass(cls.id, cls.name),
+                                 ),
+                               ],
                              ),
                            ),
                          );
@@ -202,6 +215,126 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
         onPressed: _showAddClassDialog,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+    );
+  }
+
+  void _showQRPrintDialog(ClassModel cls, String qrData) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 280,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.black, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'SMP MUHAMMADIYAH 1',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black, letterSpacing: 0.5),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Text(
+                      'SEKAMPUNG UDIK',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 2,
+                      color: Colors.black,
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(10),
+                      child: QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 180.0,
+                        gapless: false,
+                        errorStateBuilder: (cxt, err) {
+                          return const Center(child: Text('Gagal membuat QR Code'));
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'KARTU MEJA PRESENSI',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'KELAS ${cls.name}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Scan kartu ini menggunakan aplikasi Guru untuk mencatat kehadiran kelas.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 9, color: Colors.black87, fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.print),
+                    label: const Text('Cetak QR'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Kartu meja presensi kelas ${cls.name} siap dicetak!'),
+                          action: SnackBarAction(
+                            label: 'OK',
+                            textColor: Colors.white,
+                            onPressed: () {},
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

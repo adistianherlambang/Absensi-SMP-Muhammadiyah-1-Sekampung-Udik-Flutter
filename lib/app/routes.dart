@@ -16,6 +16,9 @@ import '../screens/siswa/siswa_dashboard.dart';
 import '../screens/siswa/scan_qr_screen.dart';
 import '../screens/siswa/attendance_history_screen.dart';
 import '../screens/siswa/leave_request_screen.dart';
+import '../screens/guru/scan_class_qr_screen.dart';
+import '../screens/guru/input_attendance_screen.dart';
+import '../screens/guru/history_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -71,6 +74,11 @@ class AppRoutes {
       siswaScanQR: (context) => const ScanQRScreen(),
       siswaHistory: (context) => const AttendanceHistoryScreen(),
       siswaLeaveRequest: (context) => const LeaveRequestScreen(),
+
+      // Guru Baru (Scan, Input, Riwayat)
+      '/guru/scan-class': (context) => const ScanClassQRScreen(),
+      '/guru/input-attendance': (context) => const InputAttendanceScreen(),
+      '/guru/history': (context) => const HistoryScreen(),
     };
   }
 }

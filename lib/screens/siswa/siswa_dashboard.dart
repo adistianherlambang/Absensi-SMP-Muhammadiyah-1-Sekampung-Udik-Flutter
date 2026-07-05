@@ -225,23 +225,34 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                       ],
                     ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms, delay: 50.ms).fadeIn(),
                     const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                    // Sesi Presensi Aktif
-                    Text(
-                      'Sesi Presensi Tersedia',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                          ),
+                    // Riwayat Kehadiran Terbaru
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Riwayat Kehadiran Terbaru',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF2D3142),
+                              ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, AppRoutes.siswaHistory);
+                          },
+                          child: const Text('Lihat Semua'),
+                        ),
+                      ],
                     ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
-                    siswaProvider.activeSessions.isEmpty
+                    siswaProvider.history.isEmpty
                         ? const Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 32),
                               child: Text(
-                                'Tidak ada sesi presensi aktif untuk kelas Anda saat ini.',
-                                textAlign: TextAlign.center,
+                                'Belum ada riwayat kehadiran tercatat.',
                                 style: TextStyle(color: Colors.grey),
                               ),
                             ),
@@ -249,101 +260,55 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                         : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: siswaProvider.activeSessions.length,
+                            itemCount: siswaProvider.history.length > 5 ? 5 : siswaProvider.history.length,
                             itemBuilder: (context, index) {
-                              final session = siswaProvider.activeSessions[index];
-                              final isMapel = session.type == 'mapel';
-                              final hasAttended = siswaProvider.history.containsKey(session.id);
-                              final color = isMapel ? const Color(0xFF4A00E0) : const Color(0xFF00B4DB);
+                              final entry = siswaProvider.history.entries.toList()[index];
+                              final sessionId = entry.key;
+                              final attendance = entry.value;
+
+                              final isMapel = sessionId.contains('MAPEL');
+                              String title = isMapel ? 'Sesi Mapel' : 'Sesi Harian Kelas';
+                              
+                              if (isMapel) {
+                                final parts = sessionId.split('-');
+                                if (parts.length > 3) {
+                                  title = 'Sesi Mapel: ${parts[3].replaceAll('_', ' ')}';
+                                }
+                              }
+
+                              String dateStr = '';
+                              try {
+                                final dt = DateTime.parse(attendance.timestamp);
+                                dateStr = '${dt.day}/${dt.month}/${dt.year} pukul ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                              } catch (_) {
+                                dateStr = attendance.timestamp;
+                              }
 
                               return Container(
-                                margin: const EdgeInsets.only(bottom: 16),
+                                margin: const EdgeInsets.only(bottom: 12),
                                 decoration: BoxDecoration(
-                                  color: color,
-                                  borderRadius: BorderRadius.circular(28),
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.grey.shade200),
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(
-                                              isMapel ? Icons.book_rounded : Icons.alarm_rounded,
-                                              color: Colors.white,
-                                              size: 24,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              isMapel
-                                                  ? 'Presensi Mapel: ${session.subject}'
-                                                  : 'Presensi Pagi (Harian Kelas)',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Tanggal: ${session.date}',
-                                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
-                                      ),
-                                      Text(
-                                        'Waktu Mulai: ${session.timeStart}',
-                                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      hasAttended
-                                          ? Container(
-                                              padding: const EdgeInsets.symmetric(vertical: 12),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.2),
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              child: const Text(
-                                                'Anda Sudah Mengisi Presensi',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            )
-                                          : ElevatedButton.icon(
-                                              icon: Icon(Icons.qr_code_scanner_rounded, color: color),
-                                              label: const Text('Scan QR Code Kehadiran'),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.white,
-                                                foregroundColor: color,
-                                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                              ),
-                                              onPressed: () {
-                                                Navigator.pushNamed(
-                                                  context,
-                                                  AppRoutes.siswaScanQR,
-                                                  arguments: {
-                                                    'session_id': session.id,
-                                                    'qr_id': user?.qrCodeId ?? '',
-                                                  },
-                                                );
-                                              },
-                                            ),
-                                    ],
+                                child: ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      isMapel ? Icons.menu_book : Icons.calendar_month,
+                                      color: AppTheme.primaryColor,
+                                    ),
                                   ),
+                                  title: Text(
+                                    title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor, fontSize: 14),
+                                  ),
+                                  subtitle: Text('Waktu: $dateStr', style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 11)),
+                                  trailing: _buildStatusWidget(attendance.status),
                                 ),
                               ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn();
                             },
@@ -352,6 +317,48 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildStatusWidget(String status) {
+    Color color;
+    IconData icon;
+    String label;
+
+    switch (status.toLowerCase()) {
+      case 'hadir':
+        color = AppTheme.hadirColor;
+        icon = Icons.check_circle_outline;
+        label = 'Hadir';
+        break;
+      case 'izin':
+        color = AppTheme.izinColor;
+        icon = Icons.info_outline;
+        label = 'Izin';
+        break;
+      case 'sakit':
+        color = AppTheme.sakitColor;
+        icon = Icons.warning_amber_outlined;
+        label = 'Sakit';
+        break;
+      case 'alpa':
+      default:
+        color = AppTheme.alpaColor;
+        icon = Icons.highlight_off;
+        label = 'Alpa';
+        break;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+        ),
+      ],
     );
   }
 

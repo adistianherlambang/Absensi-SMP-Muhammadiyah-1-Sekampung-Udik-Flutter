@@ -133,4 +133,107 @@ class MapelProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  // Kirim presensi kelas secara massal (bulk)
+  Future<void> submitClassAttendance({
+    required String classId,
+    required String subject,
+    required String teacherUid,
+    required Map<String, String> studentStatuses,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final now = DateTime.now();
+      final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      
+      final sessionId = 'SESS-MAPEL-$classId-${subject.replaceAll(' ', '_')}-${now.millisecondsSinceEpoch}';
+
+      final session = SessionModel(
+        id: sessionId,
+        type: 'mapel',
+        classId: classId,
+        subject: subject,
+        createdBy: teacherUid,
+        date: dateStr,
+        timeStart: timeStr,
+        timeEnd: timeStr,
+        status: 'closed',
+      );
+      await _dbService.createSession(session);
+
+      final Map<String, AttendanceModel> attendances = {};
+      studentStatuses.forEach((studentId, status) {
+        attendances[studentId] = AttendanceModel(
+          studentId: studentId,
+          status: status,
+          timestamp: now.toIso8601String(),
+          method: 'manual_override',
+          recordedBy: teacherUid,
+        );
+      });
+
+      await _dbService.saveBulkAttendance(sessionId, attendances);
+      await fetchSessions(teacherUid);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Perbarui presensi kelas secara massal (bulk)
+  Future<void> updateClassAttendance({
+    required String sessionId,
+    required String teacherUid,
+    required Map<String, String> studentStatuses,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final now = DateTime.now();
+      final Map<String, AttendanceModel> attendances = {};
+      studentStatuses.forEach((studentId, status) {
+        attendances[studentId] = AttendanceModel(
+          studentId: studentId,
+          status: status,
+          timestamp: now.toIso8601String(),
+          method: 'manual_override',
+          recordedBy: teacherUid,
+        );
+      });
+
+      await _dbService.saveBulkAttendance(sessionId, attendances);
+      _sessionAttendances = attendances;
+      await fetchSessions(teacherUid);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Hapus sesi presensi kelas beserta catatannya
+  Future<void> deleteClassAttendance({
+    required String sessionId,
+    required String teacherUid,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _dbService.deleteSession(sessionId);
+      await fetchSessions(teacherUid);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

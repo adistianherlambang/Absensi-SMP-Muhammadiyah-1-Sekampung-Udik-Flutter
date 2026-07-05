@@ -163,29 +163,60 @@ class _MapelDashboardState extends State<MapelDashboard> {
                     ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
                     const SizedBox(height: 24),
 
-                    // Tombol Buka Sesi Baru
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.add_circle_outline_rounded),
-                      label: const Text('Buka Sesi Presensi Mapel'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.mapelOpenSession);
-                      },
+                    // Quick Actions
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.qr_code_scanner),
+                            label: const Text('Scan Meja Kelas'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/guru/scan-class');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.history),
+                            label: const Text('Riwayat Presensi'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.primaryColor,
+                              side: const BorderSide(color: AppTheme.primaryColor),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/guru/history');
+                            },
+                          ),
+                        ),
+                      ],
                     ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms, delay: 50.ms).fadeIn(),
                     const SizedBox(height: 32),
 
                     // Daftar Sesi
-                    Text(
-                      'Sesi Presensi Mapel Terbuka',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Riwayat Presensi Terbaru',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF2D3142),
+                              ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/guru/history'),
+                          child: const Text('Lihat Semua'),
+                        ),
+                      ],
                     ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
                     mapelProvider.sessions.isEmpty
@@ -193,7 +224,7 @@ class _MapelDashboardState extends State<MapelDashboard> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 32),
                               child: Text(
-                                'Belum ada sesi presensi mata pelajaran.',
+                                'Belum ada sesi presensi dicatat.',
                                 style: TextStyle(color: Colors.grey),
                               ),
                             ),
@@ -201,10 +232,9 @@ class _MapelDashboardState extends State<MapelDashboard> {
                         : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: mapelProvider.sessions.length,
+                            itemCount: mapelProvider.sessions.length > 5 ? 5 : mapelProvider.sessions.length,
                             itemBuilder: (context, index) {
                               final session = mapelProvider.sessions[index];
-                              final isActive = session.status == 'active';
 
                               // Ambil nama kelas
                               String className = 'Tidak diketahui';
@@ -216,27 +246,17 @@ class _MapelDashboardState extends State<MapelDashboard> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 12),
                                 decoration: BoxDecoration(
-                                  color: isActive ? AppTheme.primaryColor.withOpacity(0.1) : Colors.grey.shade50,
+                                  color: Colors.grey.shade50,
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: isActive ? AppTheme.primaryColor.withOpacity(0.3) : Colors.grey.shade200,
+                                    color: Colors.grey.shade200,
                                     width: 1,
                                   ),
                                 ),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(20),
                                   onTap: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.mapelAttendance,
-                                      arguments: {
-                                        'session_id': session.id,
-                                        'class_id': session.classId,
-                                        'class_name': className,
-                                        'subject': session.subject,
-                                        'status': session.status,
-                                      },
-                                    );
+                                    Navigator.pushNamed(context, '/guru/history');
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
@@ -244,12 +264,12 @@ class _MapelDashboardState extends State<MapelDashboard> {
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
+                                          decoration: const BoxDecoration(
+                                            color: AppTheme.primaryColor,
                                             shape: BoxShape.circle,
                                           ),
-                                          child: Icon(
-                                            isActive ? Icons.play_arrow_rounded : Icons.lock_rounded,
+                                          child: const Icon(
+                                            Icons.history_edu,
                                             color: Colors.white,
                                             size: 20,
                                           ),
@@ -269,15 +289,15 @@ class _MapelDashboardState extends State<MapelDashboard> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                'Tanggal: ${session.date} • Mulai: ${session.timeStart}',
+                                                'Tanggal: ${session.date} • Jam: ${session.timeStart}',
                                                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        Icon(
+                                        const Icon(
                                           Icons.chevron_right_rounded,
-                                          color: isActive ? AppTheme.primaryColor : Colors.grey,
+                                          color: AppTheme.primaryColor,
                                         ),
                                       ],
                                     ),

@@ -108,6 +108,12 @@ class DBService {
     });
   }
 
+  // Hapus Sesi Presensi beserta Catatan Kehadirannya
+  Future<void> deleteSession(String sessionId) async {
+    await _firestore.collection('sessions').doc(sessionId).delete();
+    await _firestore.collection('attendances').doc(sessionId).delete();
+  }
+
   // ==========================================
   // CATATAN KEHADIRAN (ATTENDANCES)
   // ==========================================
@@ -118,6 +124,15 @@ class DBService {
         .collection('attendances')
         .doc(sessionId)
         .set({studentId: attendance.toMap()}, SetOptions(merge: true));
+  }
+
+  // Simpan / Perbarui Presensi Massal (Bulk) untuk satu sesi
+  Future<void> saveBulkAttendance(String sessionId, Map<String, AttendanceModel> attendances) async {
+    final Map<String, dynamic> data = {};
+    attendances.forEach((studentId, att) {
+      data[studentId] = att.toMap();
+    });
+    await _firestore.collection('attendances').doc(sessionId).set(data);
   }
 
   // Ambil Kehadiran per Sesi

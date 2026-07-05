@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/piket_provider.dart';
+import '../../providers/mapel_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../app/routes.dart';
 import '../../app/theme.dart';
@@ -19,7 +19,8 @@ class _PiketDashboardState extends State<PiketDashboard> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PiketProvider>(context, listen: false).fetchSessions();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      Provider.of<MapelProvider>(context, listen: false).fetchSessions(authProvider.currentUser!.uid);
       Provider.of<AdminProvider>(context, listen: false).fetchData(); // Load classes info
     });
   }
@@ -27,13 +28,12 @@ class _PiketDashboardState extends State<PiketDashboard> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
-    final piketProvider = context.watch<PiketProvider>();
+    final mapelProvider = context.watch<MapelProvider>();
     final adminProvider = context.watch<AdminProvider>();
+    final teacherUid = authProvider.currentUser?.uid ?? '';
 
     // Hitung metrik Guru Piket
-    final totalSessions = piketProvider.sessions.length;
-    final activeSessionsCount = piketProvider.sessions.where((s) => s.status == 'active').length;
-    final closedSessionsCount = piketProvider.sessions.where((s) => s.status == 'closed').length;
+    final totalSessions = mapelProvider.sessions.length;
     final totalClasses = adminProvider.classes.length;
 
     return Scaffold(
@@ -55,10 +55,10 @@ class _PiketDashboardState extends State<PiketDashboard> {
           )
         ],
       ),
-      body: piketProvider.isLoading
+      body: mapelProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () => piketProvider.fetchSessions(),
+              onRefresh: () => mapelProvider.fetchSessions(teacherUid),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20.0),
@@ -122,7 +122,7 @@ class _PiketDashboardState extends State<PiketDashboard> {
 
                     // Ringkasan Statistik Guru Piket
                     Text(
-                      'Overview Presensi Hari Ini',
+                      'Overview Presensi Guru Piket',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF2D3142),
@@ -136,26 +136,11 @@ class _PiketDashboardState extends State<PiketDashboard> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: Column(
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(child: _buildStatItem('Total Sesi', '$totalSessions', AppTheme.primaryColor)),
-                              Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Sesi Aktif', '$activeSessionsCount', AppTheme.hadirColor)),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(color: Colors.grey.shade200, height: 1),
-                          ),
-                          Row(
-                            children: [
-                              Expanded(child: _buildStatItem('Sesi Ditutup', '$closedSessionsCount', AppTheme.alpaColor)),
-                              Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Total Kelas', '$totalClasses Kelas', AppTheme.izinColor)),
-                            ],
-                          ),
+                          Expanded(child: _buildStatItem('Total Sesi Saya', '$totalSessions Sesi', AppTheme.primaryColor)),
+                          Container(width: 1, height: 40, color: Colors.grey.shade200),
+                          Expanded(child: _buildStatItem('Total Kelas', '$totalClasses Kelas', AppTheme.izinColor)),
                         ],
                       ),
                     ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
@@ -166,8 +151,8 @@ class _PiketDashboardState extends State<PiketDashboard> {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            icon: const Icon(Icons.add_box_rounded),
-                            label: const Text('Buka Sesi Harian'),
+                            icon: const Icon(Icons.qr_code_scanner),
+                            label: const Text('Scan Meja Kelas'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
@@ -175,15 +160,15 @@ class _PiketDashboardState extends State<PiketDashboard> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, AppRoutes.piketOpenSession);
+                              Navigator.pushNamed(context, '/guru/scan-class');
                             },
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: OutlinedButton.icon(
-                            icon: const Icon(Icons.analytics_rounded),
-                            label: const Text('Rekap Mingguan'),
+                            icon: const Icon(Icons.history),
+                            label: const Text('Riwayat Presensi'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.primaryColor,
                               side: const BorderSide(color: AppTheme.primaryColor),
@@ -191,7 +176,7 @@ class _PiketDashboardState extends State<PiketDashboard> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, AppRoutes.piketWeeklyRecap);
+                              Navigator.pushNamed(context, '/guru/history');
                             },
                           ),
                         ),
@@ -200,20 +185,29 @@ class _PiketDashboardState extends State<PiketDashboard> {
                     const SizedBox(height: 32),
 
                     // Daftar Sesi Presensi Harian Aktif/Tutup
-                    Text(
-                      'Sesi Presensi Hari Ini',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Riwayat Presensi Terbaru',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF2D3142),
+                              ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/guru/history'),
+                          child: const Text('Lihat Semua'),
+                        ),
+                      ],
                     ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
-                    piketProvider.sessions.isEmpty
+                    mapelProvider.sessions.isEmpty
                         ? const Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 32),
                               child: Text(
-                                'Belum ada sesi presensi harian dibuka hari ini.',
+                                'Belum ada sesi presensi dicatat.',
                                 style: TextStyle(color: Colors.grey),
                               ),
                             ),
@@ -221,10 +215,9 @@ class _PiketDashboardState extends State<PiketDashboard> {
                         : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: piketProvider.sessions.length,
+                            itemCount: mapelProvider.sessions.length > 5 ? 5 : mapelProvider.sessions.length,
                             itemBuilder: (context, index) {
-                              final session = piketProvider.sessions[index];
-                              final isActive = session.status == 'active';
+                              final session = mapelProvider.sessions[index];
 
                               // Ambil nama kelas
                               String className = 'Tidak diketahui';
@@ -236,26 +229,17 @@ class _PiketDashboardState extends State<PiketDashboard> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 12),
                                 decoration: BoxDecoration(
-                                  color: isActive ? AppTheme.primaryColor.withOpacity(0.1) : Colors.grey.shade50,
+                                  color: Colors.grey.shade50,
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: isActive ? AppTheme.primaryColor.withOpacity(0.3) : Colors.grey.shade200,
+                                    color: Colors.grey.shade200,
                                     width: 1,
                                   ),
                                 ),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(20),
                                   onTap: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.piketValidate,
-                                      arguments: {
-                                        'session_id': session.id,
-                                        'class_id': session.classId,
-                                        'class_name': className,
-                                        'status': session.status,
-                                      },
-                                    );
+                                    Navigator.pushNamed(context, '/guru/history');
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
@@ -263,12 +247,12 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
+                                          decoration: const BoxDecoration(
+                                            color: AppTheme.primaryColor,
                                             shape: BoxShape.circle,
                                           ),
-                                          child: Icon(
-                                            isActive ? Icons.alarm_on_rounded : Icons.alarm_off_rounded,
+                                          child: const Icon(
+                                            Icons.history_edu,
                                             color: Colors.white,
                                             size: 20,
                                           ),
@@ -279,7 +263,7 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Kelas $className',
+                                                'Kelas $className — ${session.subject}',
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 15,
@@ -288,15 +272,15 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                'Tanggal: ${session.date} • Mulai: ${session.timeStart}',
+                                                'Tanggal: ${session.date} • Jam: ${session.timeStart}',
                                                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        Icon(
-                                          isActive ? Icons.chevron_right_rounded : Icons.lock_outline_rounded,
-                                          color: isActive ? AppTheme.primaryColor : Colors.grey,
+                                        const Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: AppTheme.primaryColor,
                                         ),
                                       ],
                                     ),

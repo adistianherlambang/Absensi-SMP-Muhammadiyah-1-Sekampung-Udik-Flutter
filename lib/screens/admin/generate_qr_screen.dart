@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/admin_provider.dart';
-import '../../models/user_model.dart';
-import '../../widgets/searchable_select.dart';
+import '../../models/class_model.dart';
+import '../../core/services/qr_service.dart';
 import '../../app/theme.dart';
 
 class GenerateQRScreen extends StatefulWidget {
@@ -14,31 +14,23 @@ class GenerateQRScreen extends StatefulWidget {
 }
 
 class _GenerateQRScreenState extends State<GenerateQRScreen> {
-  String? _selectedClassId;
+  final QRService _qrService = QRService();
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
     final adminProvider = context.watch<AdminProvider>();
-    
-    // Ambil kelas yang merupakan kelas 9 (dimulai dengan "IX" atau angka 9)
-    final class9List = adminProvider.classes.where((c) {
-      final nameUpper = c.name.toUpperCase();
-      return nameUpper.startsWith('IX') || nameUpper.contains('9');
-    }).toList();
+    final allClasses = adminProvider.classes;
 
-    // Default select class jika belum dipilih
-    if (_selectedClassId == null && class9List.isNotEmpty) {
-      _selectedClassId = class9List.first.id;
-    }
-
-    // Ambil daftar siswa di kelas 9 terpilih
-    final List<UserModel> class9Students = adminProvider.users.where((u) {
-      return u.role == 'siswa' && u.classId == _selectedClassId;
+    // Filter kelas berdasarkan pencarian
+    final filteredClasses = allClasses.where((c) {
+      return c.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Generate QR Siswa Kelas 9'),
+        title: const Text('Cetak QR Code Kelas'),
       ),
       body: adminProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -47,146 +39,201 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Dropdown pilih kelas 9
-                  if (class9List.isEmpty)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
+                  // Search Bar
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama kelas...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.amber.shade200),
                       ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'Peringatan: Belum ada kelas 9 (berawalan "IX" atau mengandung "9") yang dibuat di sistem. Hubungi administrator/tambahkan kelas terlebih dahulu.',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
-                        ),
-                      ),
-                    )
-                  else ...[
-                    SearchableSelect<dynamic>(
-                      labelText: 'Pilih Kelas 9',
-                      items: class9List,
-                      itemLabel: (c) => c.name as String,
-                      selectedValue: _selectedClassId != null
-                          ? class9List.firstWhere((c) => c.id == _selectedClassId, orElse: () => class9List.first)
-                          : null,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedClassId = val?.id;
-                        });
-                      },
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: class9Students.isEmpty
-                          ? const Center(child: Text('Tidak ada siswa di kelas ini.'))
-                          : ListView.builder(
-                              itemCount: class9Students.length,
-                              itemBuilder: (context, index) {
-                                final student = class9Students[index];
-                                final qrData = adminProvider.getStudentQRData(student);
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Daftar Kelas
+                  Expanded(
+                    child: filteredClasses.isEmpty
+                        ? const Center(child: Text('Tidak ada kelas ditemukan.'))
+                        : ListView.builder(
+                            itemCount: filteredClasses.length,
+                            itemBuilder: (context, index) {
+                              final cls = filteredClasses[index];
+                              final qrData = _qrService.generateClassQRContent(cls.id);
 
-                                 return Container(
-                                   margin: const EdgeInsets.only(bottom: 12),
-                                   decoration: BoxDecoration(
-                                     color: Colors.white,
-                                     borderRadius: BorderRadius.circular(20),
-                                     border: Border.all(color: Colors.grey.shade200),
-                                   ),
-                                   child: ListTile(
-                                     leading: Container(
-                                       padding: const EdgeInsets.all(8),
-                                       decoration: BoxDecoration(
-                                         color: AppTheme.primaryColor.withOpacity(0.15),
-                                         borderRadius: BorderRadius.circular(12),
-                                       ),
-                                       child: const Icon(Icons.person_outline, color: AppTheme.primaryColor),
-                                     ),
-                                     title: Text(
-                                       student.name,
-                                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                                     ),
-                                     subtitle: Text('QR Code ID: ${student.qrCodeId ?? "Belum di-set"}', style: const TextStyle(color: AppTheme.textMutedColor)),
-                                     trailing: TextButton.icon(
-                                       icon: const Icon(Icons.qr_code, size: 20, color: AppTheme.primaryColor),
-                                       label: const Text('Lihat QR', style: TextStyle(color: AppTheme.primaryColor)),
-                                       onPressed: qrData.isEmpty
-                                           ? null
-                                           : () => _showQRDialog(student, qrData),
-                                     ),
-                                   ),
-                                 );
-                              },
-                            ),
-                    ),
-                  ],
+                              // Dapatkan nama wali kelas
+                              String teacherName = 'Tidak ada';
+                              try {
+                                final teacher = adminProvider.users.firstWhere((u) => u.uid == cls.homeroomTeacherId);
+                                teacherName = teacher.name;
+                              } catch (_) {}
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.meeting_room_outlined, color: AppTheme.primaryColor),
+                                  ),
+                                  title: Text(
+                                    cls.name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                                  ),
+                                  subtitle: Text('Wali Kelas: $teacherName', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                  trailing: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.primaryColor,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    ),
+                                    icon: const Icon(Icons.qr_code, size: 18),
+                                    label: const Text('QR Meja'),
+                                    onPressed: () => _showQRPrintDialog(cls, qrData),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
                 ],
               ),
             ),
     );
   }
 
-  void _showQRDialog(UserModel student, String qrData) {
+  void _showQRPrintDialog(ClassModel cls, String qrData) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Column(
-            children: [
-              Text(
-                student.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Kartu QR Presensi SMPM 1',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          contentPadding: const EdgeInsets.all(24),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Print-Ready Card Layout
               Container(
-                padding: const EdgeInsets.all(16),
+                width: 280,
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.black, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                    ),
+                  ],
                 ),
-                child: QrImageView(
-                  data: qrData,
-                  version: QrVersions.auto,
-                  size: 200.0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'SMP MUHAMMADIYAH 1',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black, letterSpacing: 0.5),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Text(
+                      'SEKAMPUNG UDIK',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 2,
+                      color: Colors.black,
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    const SizedBox(height: 16),
+                    // QR Code
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(10),
+                      child: QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 180.0,
+                        gapless: false,
+                        errorStateBuilder: (cxt, err) {
+                          return const Center(child: Text('Gagal membuat QR Code'));
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'KARTU MEJA PRESENSI',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'KELAS ${cls.name}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Scan kartu ini menggunakan aplikasi Guru untuk mencatat kehadiran kelas.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 9, color: Colors.black87, fontStyle: FontStyle.italic),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'ID: ${student.qrCodeId}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.print),
+                    label: const Text('Cetak QR'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Kartu meja presensi kelas ${cls.name} siap dicetak!'),
+                          action: SnackBarAction(
+                            label: 'OK',
+                            textColor: Colors.white,
+                            onPressed: () {},
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Simulasi pencetakan QR Code berhasil disiapkan.')),
-                );
-              },
-              child: const Text('Cetak / Unduh'),
-            ),
-          ],
         );
       },
     );
