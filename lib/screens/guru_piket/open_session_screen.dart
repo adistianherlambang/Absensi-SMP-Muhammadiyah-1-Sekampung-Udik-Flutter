@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../widgets/searchable_select.dart';
 
 class OpenSessionScreen extends StatefulWidget {
   const OpenSessionScreen({super.key});
@@ -88,21 +89,16 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
                       textAlign: TextAlign.center,
                     )
                   else ...[
-                    DropdownButtonFormField<String>(
-                      value: _selectedClassId,
-                      decoration: const InputDecoration(
-                        labelText: 'Pilih Kelas',
-                        prefixIcon: Icon(Icons.class_outlined),
-                      ),
-                      items: adminProvider.classes.map((c) {
-                        return DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.name),
-                        );
-                      }).toList(),
+                    SearchableSelect<dynamic>(
+                      labelText: 'Pilih Kelas',
+                      items: adminProvider.classes,
+                      itemLabel: (c) => c.name as String,
+                      selectedValue: _selectedClassId != null
+                          ? adminProvider.classes.firstWhere((c) => c.id == _selectedClassId, orElse: () => adminProvider.classes.first)
+                          : null,
                       onChanged: (val) {
                         setState(() {
-                          _selectedClassId = val;
+                          _selectedClassId = val?.id;
                         });
                       },
                     ),

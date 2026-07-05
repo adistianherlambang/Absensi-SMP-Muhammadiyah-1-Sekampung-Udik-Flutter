@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../widgets/searchable_select.dart';
 
 class OpenMapelSessionScreen extends StatefulWidget {
   const OpenMapelSessionScreen({super.key});
@@ -104,21 +105,16 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
                     )
                   else ...[
                     // Dropdown Kelas
-                    DropdownButtonFormField<String>(
-                      value: _selectedClassId,
-                      decoration: const InputDecoration(
-                        labelText: 'Pilih Kelas',
-                        prefixIcon: Icon(Icons.class_outlined),
-                      ),
-                      items: adminProvider.classes.map((c) {
-                        return DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.name),
-                        );
-                      }).toList(),
+                    SearchableSelect<dynamic>(
+                      labelText: 'Pilih Kelas',
+                      items: adminProvider.classes,
+                      itemLabel: (c) => c.name as String,
+                      selectedValue: _selectedClassId != null
+                          ? adminProvider.classes.firstWhere((c) => c.id == _selectedClassId, orElse: () => adminProvider.classes.first)
+                          : null,
                       onChanged: (val) {
                         setState(() {
-                          _selectedClassId = val;
+                          _selectedClassId = val?.id;
                         });
                       },
                     ),
@@ -132,18 +128,11 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
                         textAlign: TextAlign.center,
                       )
                     else
-                      DropdownButtonFormField<String>(
-                        value: _selectedSubject,
-                        decoration: const InputDecoration(
-                          labelText: 'Pilih Mata Pelajaran',
-                          prefixIcon: Icon(Icons.book_outlined),
-                        ),
-                        items: subjects.map((s) {
-                          return DropdownMenuItem(
-                            value: s,
-                            child: Text(s),
-                          );
-                        }).toList(),
+                      SearchableSelect<String>(
+                        labelText: 'Pilih Mata Pelajaran',
+                        items: subjects,
+                        itemLabel: (s) => s,
+                        selectedValue: _selectedSubject,
                         onChanged: (val) {
                           setState(() {
                             _selectedSubject = val;

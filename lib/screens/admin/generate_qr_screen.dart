@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
+import '../../widgets/searchable_select.dart';
 
 class GenerateQRScreen extends StatefulWidget {
   const GenerateQRScreen({super.key});
@@ -58,18 +59,16 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                       ),
                     )
                   else ...[
-                    DropdownButtonFormField<String>(
-                      value: _selectedClassId,
-                      decoration: const InputDecoration(labelText: 'Pilih Kelas 9'),
-                      items: class9List.map((c) {
-                        return DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.name),
-                        );
-                      }).toList(),
+                    SearchableSelect<dynamic>(
+                      labelText: 'Pilih Kelas 9',
+                      items: class9List,
+                      itemLabel: (c) => c.name as String,
+                      selectedValue: _selectedClassId != null
+                          ? class9List.firstWhere((c) => c.id == _selectedClassId, orElse: () => class9List.first)
+                          : null,
                       onChanged: (val) {
                         setState(() {
-                          _selectedClassId = val;
+                          _selectedClassId = val?.id;
                         });
                       },
                     ),

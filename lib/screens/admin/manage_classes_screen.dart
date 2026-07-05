@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../widgets/searchable_select.dart';
 
 class ManageClassesScreen extends StatefulWidget {
   const ManageClassesScreen({super.key});
@@ -73,18 +74,16 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                         style: TextStyle(color: Colors.red),
                       )
                     else
-                      DropdownButtonFormField<String>(
-                        value: _selectedTeacherId,
-                        decoration: const InputDecoration(labelText: 'Wali Kelas'),
-                        items: teachers.map((t) {
-                          return DropdownMenuItem(
-                            value: t.uid,
-                            child: Text(t.name),
-                          );
-                        }).toList(),
+                      SearchableSelect<dynamic>(
+                        labelText: 'Wali Kelas',
+                        items: teachers,
+                        itemLabel: (t) => t.name as String,
+                        selectedValue: _selectedTeacherId != null
+                            ? teachers.firstWhere((t) => t.uid == _selectedTeacherId, orElse: () => teachers.first)
+                            : null,
                         onChanged: (val) {
                           setModalState(() {
-                            _selectedTeacherId = val;
+                            _selectedTeacherId = val?.uid;
                           });
                         },
                         validator: (v) => v == null ? 'Pilih wali kelas' : null,

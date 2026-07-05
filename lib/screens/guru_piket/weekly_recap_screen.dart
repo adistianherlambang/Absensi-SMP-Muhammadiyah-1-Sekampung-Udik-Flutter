@@ -4,6 +4,7 @@ import '../../providers/admin_provider.dart';
 import '../../core/services/db_service.dart';
 import '../../models/session_model.dart';
 import '../../models/user_model.dart';
+import '../../widgets/searchable_select.dart';
 
 class WeeklyRecapScreen extends StatefulWidget {
   const WeeklyRecapScreen({super.key});
@@ -107,18 +108,16 @@ class _WeeklyRecapScreenState extends State<WeeklyRecapScreen> {
                   if (adminProvider.classes.isEmpty)
                     const Center(child: Text('Tidak ada kelas terdaftar.'))
                   else ...[
-                    DropdownButtonFormField<String>(
-                      value: _selectedClassId,
-                      decoration: const InputDecoration(labelText: 'Pilih Kelas'),
-                      items: adminProvider.classes.map((c) {
-                        return DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.name),
-                        );
-                      }).toList(),
+                    SearchableSelect<dynamic>(
+                      labelText: 'Pilih Kelas',
+                      items: adminProvider.classes,
+                      itemLabel: (c) => c.name as String,
+                      selectedValue: _selectedClassId != null
+                          ? adminProvider.classes.firstWhere((c) => c.id == _selectedClassId, orElse: () => adminProvider.classes.first)
+                          : null,
                       onChanged: (val) {
                         setState(() {
-                          _selectedClassId = val;
+                          _selectedClassId = val?.id;
                         });
                         _loadWeeklyRecap();
                       },

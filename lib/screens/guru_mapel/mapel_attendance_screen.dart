@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/attendance_model.dart';
+import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
 
 class MapelAttendanceScreen extends StatefulWidget {
@@ -68,19 +69,25 @@ class _MapelAttendanceScreenState extends State<MapelAttendanceScreen> {
                 children: [
                   const Text('Pilih Kehadiran:', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: selectedStatus,
-                    decoration: const InputDecoration(contentPadding: EdgeInsets.all(12)),
+                  SearchableSelect<Map<String, String>>(
+                    labelText: 'Status Kehadiran',
                     items: const [
-                      DropdownMenuItem(value: 'hadir', child: Text('Hadir')),
-                      DropdownMenuItem(value: 'izin', child: Text('Izin')),
-                      DropdownMenuItem(value: 'sakit', child: Text('Sakit')),
-                      DropdownMenuItem(value: 'alpa', child: Text('Alpa')),
+                      {'value': 'hadir', 'label': 'Hadir'},
+                      {'value': 'izin', 'label': 'Izin'},
+                      {'value': 'sakit', 'label': 'Sakit'},
+                      {'value': 'alpa', 'label': 'Alpa'},
                     ],
+                    itemLabel: (item) => item['label']!,
+                    selectedValue: {
+                      'value': selectedStatus,
+                      'label': selectedStatus == 'hadir' ? 'Hadir' :
+                               selectedStatus == 'izin' ? 'Izin' :
+                               selectedStatus == 'sakit' ? 'Sakit' : 'Alpa'
+                    },
                     onChanged: (val) {
                       if (val != null) {
                         setDialogState(() {
-                          selectedStatus = val;
+                          selectedStatus = val['value']!;
                         });
                       }
                     },
