@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -35,8 +34,7 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
   void _showAddClassDialog() {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     _classNameController.clear();
-    
-    // Filter guru untuk dropdown wali kelas
+
     final teachers = adminProvider.users.where((u) => u.role == 'guru_piket' || u.role == 'guru_mapel').toList();
     setState(() {
       _selectedTeacherId = teachers.isNotEmpty ? teachers.first.uid : null;
@@ -105,7 +103,6 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                           ? null
                           : () async {
                               if (!_formKey.currentState!.validate()) return;
-
                               Navigator.pop(context);
                               try {
                                 await adminProvider.createClass(
@@ -156,63 +153,62 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                       itemBuilder: (context, index) {
                         final cls = adminProvider.classes[index];
 
-                        // Dapatkan nama wali kelas
                         String teacherName = 'Tidak ada';
                         try {
                           final teacher = adminProvider.users.firstWhere((u) => u.uid == cls.homeroomTeacherId);
                           teacherName = teacher.name;
                         } catch (_) {}
 
-                         return Container(
-                           margin: const EdgeInsets.only(bottom: 12),
-                           decoration: BoxDecoration(
-                             color: Colors.white,
-                             borderRadius: BorderRadius.circular(20),
-                             border: Border.all(color: Colors.grey.shade200),
-                           ),
-                           child: ListTile(
-                             leading: Container(
-                               padding: const EdgeInsets.all(8),
-                               decoration: BoxDecoration(
-                                 color: AppTheme.primaryColor.withOpacity(0.15),
-                                 borderRadius: BorderRadius.circular(12),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.meeting_room, color: AppTheme.primaryColor),
+                            ),
+                            title: Text(
+                              cls.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textColor),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Text('Wali Kelas: $teacherName', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Jumlah Siswa: ${cls.studentIds.length}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryColor,
+                                  ),
                                 ),
-                               child: const Icon(Icons.meeting_room, color: AppTheme.primaryColor),
-                             ),
-                             title: Text(
-                               cls.name,
-                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textColor),
-                             ),
-                             subtitle: Column(
-                               crossAxisAlignment: CrossAxisAlignment.start,
-                               children: [
-                                 const SizedBox(height: 4),
-                                 Text('Wali Kelas: $teacherName', style: const TextStyle(color: AppTheme.textMutedColor)),
-                                 const SizedBox(height: 2),
-                                 Text(
-                                   'Jumlah Siswa: ${cls.studentIds.length}',
-                                   style: const TextStyle(
-                                     fontWeight: FontWeight.w600,
-                                     color: AppTheme.primaryColor,
-                                   ),
-                                 ),
-                               ],
-                             ),
-                             trailing: Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 IconButton(
-                                   icon: const Icon(Icons.qr_code, color: AppTheme.primaryColor),
-                                   onPressed: () => _showQRPrintDialog(cls, _qrService.generateClassQRContent(cls.id)),
-                                 ),
-                                 IconButton(
-                                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                   onPressed: () => _confirmDeleteClass(cls.id, cls.name),
-                                 ),
-                               ],
-                             ),
-                           ),
-                         );
+                              ],
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.qr_code, color: AppTheme.primaryColor),
+                                  onPressed: () => _showQRPrintDialog(cls, _qrService.generateClassQRContent(cls.id)),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                  onPressed: () => _confirmDeleteClass(cls.id, cls.name),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
                       },
                     ),
             ),
@@ -224,145 +220,107 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
     );
   }
 
-  void _showQRPrintDialog(ClassModel cls, String qrData) {
+  /// Render QR card image first, then show dialog with Image.memory preview.
+  /// Avoids all RepaintBoundary / semantics assertion issues.
+  Future<void> _showQRPrintDialog(ClassModel cls, String qrData) async {
+    Uint8List? pngBytes;
+    try {
+      pngBytes = await renderQRCardToPng(qrData: qrData, className: cls.name);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal merender gambar QR: $e'), backgroundColor: Colors.redAccent),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogCtx) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           contentPadding: const EdgeInsets.all(24),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Preview card (display only)
-              Container(
-                width: 280,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.black, width: 3),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Preview gambar yang sudah di-render
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.memory(
+                    pngBytes!,
+                    width: 280,
+                    fit: BoxFit.fitWidth,
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(height: 24),
+                // Bagikan QR (full-width)
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: AppTheme.primaryColor),
+                      foregroundColor: AppTheme.primaryColor,
+                    ),
+                    icon: const Icon(Icons.share_rounded, size: 18),
+                    label: const Text('Bagikan QR'),
+                    onPressed: () async {
+                      Navigator.pop(dialogCtx);
+                      await _shareQRBytes(pngBytes!, cls.name);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Batal + Unduh PNG
+                Row(
                   children: [
-                    const Text(
-                      'SMP MUHAMMADIYAH 1',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black, letterSpacing: 0.5),
-                      textAlign: TextAlign.center,
-                    ),
-                    const Text(
-                      'SEKAMPUNG UDIK',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 2,
-                      color: Colors.black,
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.all(10),
-                      child: QrImageView(
-                        data: qrData,
-                        version: QrVersions.auto,
-                        size: 180.0,
-                        gapless: false,
-                        errorStateBuilder: (cxt, err) {
-                          return const Center(child: Text('Gagal membuat QR Code'));
-                        },
+                    Expanded(
+                      child: SizedBox(
+                        height: 44,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(dialogCtx),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Batal'),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'KARTU MEJA PRESENSI',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'KELAS ${cls.name}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Scan kartu ini menggunakan aplikasi Guru untuk mencatat kehadiran kelas.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 9, color: Colors.black87, fontStyle: FontStyle.italic),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: SizedBox(
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.download_rounded, size: 16),
+                          label: const Text('Unduh PNG'),
+                          onPressed: () async {
+                            Navigator.pop(dialogCtx);
+                            await _downloadQRBytes(pngBytes!, cls.name);
+                          },
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 44),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: const BorderSide(color: AppTheme.primaryColor),
-                        foregroundColor: AppTheme.primaryColor,
-                      ),
-                      icon: const Icon(Icons.share_rounded, size: 18),
-                      label: const Text('Bagikan QR'),
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        await _shareQRImage(qrData, cls.name);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 44),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Batal'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 44),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: const Icon(Icons.download_rounded, size: 16),
-                      label: const Text('Unduh PNG'),
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        await _downloadQRImage(qrData, cls.name);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Future<void> _downloadQRImage(String qrData, String className) async {
+  Future<void> _downloadQRBytes(Uint8List pngBytes, String className) async {
     try {
-      final Uint8List pngBytes = await renderQRCardToPng(
-        qrData: qrData,
-        className: className,
-      );
-
       String path = '';
       if (Platform.isAndroid || Platform.isIOS) {
         Directory? directory = await getExternalStorageDirectory();
@@ -404,13 +362,8 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
     }
   }
 
-  Future<void> _shareQRImage(String qrData, String className) async {
+  Future<void> _shareQRBytes(Uint8List pngBytes, String className) async {
     try {
-      final Uint8List pngBytes = await renderQRCardToPng(
-        qrData: qrData,
-        className: className,
-      );
-
       final XFile xFile = XFile.fromData(
         pngBytes,
         mimeType: 'image/png',
