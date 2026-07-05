@@ -148,11 +148,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   const Color(0xFF8E2DE2),
                                 ),
                               ),
-                              Container(
-                                width: 1,
-                                height: 40,
-                                color: Colors.grey.shade200,
-                              ),
+                              // Container(
+                              //   width: 1,
+                              //   height: 40,
+                              //   color: Colors.grey.shade200,
+                              // ),
                               Expanded(
                                 child: _buildStatItem(
                                   'Total Kelas',
@@ -167,8 +167,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             child: Divider(
                               color: Colors.grey.shade200,
                               height: 1,
-                              indent: 16,
-                              endIndent: 16,
+                              indent: 80,
+                              endIndent: 80,
                             ),
                           ),
                           Row(
@@ -180,11 +180,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   const Color(0xFF00B4DB),
                                 ),
                               ),
-                              Container(
-                                width: 1,
-                                height: 40,
-                                color: Colors.grey.shade200,
-                              ),
+                              // Container(
+                              //   width: 1,
+                              //   height: 40,
+                              //   color: Colors.grey.shade200,
+                              // ),
                               Expanded(
                                 child: _buildStatItem(
                                   'Guru / Staf',
