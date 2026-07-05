@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Warna Primer & Sekunder Premium (Modern Soft UI)
-  static const Color primaryColor = Color(0xFF6849EF); // Vibrant Purple
-  static const Color secondaryColor = Color(0xFF8E2DE2); // Gradient Purple
-  static const Color accentColor = Color(0xFFF37335); // Vibrant Orange
-  static const Color backgroundColor = Colors.white; // Pure White Background
+  // Warna Primer & Sekunder Premium (Pastel Modern UI)
+  static const Color primaryColor = Color(0xFF8C82FC); // Soft Purple
+  static const Color secondaryColor = Color(0xFFFF8EF6); // Soft Pink
+  static const Color accentColor = Color(0xFFFFAD62); // Soft Orange
+  static const Color blueColor = Color(0xFF86D5FF); // Soft Blue
+  static const Color backgroundColor = Colors.white;
   static const Color cardColor = Colors.white;
-  static const Color textColor = Color(0xFF2D3142); // Darker blue-grey
-  static const Color textMutedColor = Color(0xFF7A869A); // Soft grey
+  static const Color textColor = Color(0xFF181820); // Deep Dark Charcoal
+  static const Color textMutedColor = Color(0xFF7A7D84); // Cool Grey
 
-  // Warna Status Kehadiran (Tanpa Badge Style, menggunakan teks & ikon berwarna)
-  static const Color hadirColor = Color(0xFF10B981); // Hijau Emerald
-  static const Color izinColor = Color(0xFF3B82F6); // Biru Ocean
-  static const Color sakitColor = Color(0xFFF59E0B); // Amber / Kuning
-  static const Color alpaColor = Color(0xFFEF4444); // Merah Rose
+  // Warna Status Kehadiran (Senada dengan Pastel Screenshot)
+  static const Color hadirColor = Color(0xFF8C82FC); // Purple
+  static const Color izinColor = Color(0xFF86D5FF); // Blue
+  static const Color sakitColor = Color(0xFFFFAD62); // Orange
+  static const Color alpaColor = Color(0xFFFF8EF6); // Pink
 
   static ThemeData get lightTheme {
     return ThemeData(

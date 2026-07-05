@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../app/routes.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../widgets/glass_card.dart';
+import '../../app/theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -92,17 +92,17 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
+                Icon(
                   Icons.qr_code_scanner,
                   size: 100,
-                  color: Color(0xFF6849EF),
+                  color: AppTheme.primaryColor,
                 ),
                 const SizedBox(height: 24),
                 Text(
                   'Sistem Presensi QR',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2D3142),
+                        color: AppTheme.textColor,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -110,14 +110,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'SMP Muhammadiyah 1 Sekampung Udik',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF7A869A),
+                        color: AppTheme.textMutedColor,
                         fontWeight: FontWeight.w500,
                       ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
-                GlassCard(
+                Container(
                   padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
                   child: Column(
                     children: [
                       TextFormField(
@@ -125,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF6849EF)),
+                          prefixIcon: Icon(Icons.email_outlined, color: AppTheme.primaryColor),
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -149,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outlined, color: Color(0xFF6849EF)),
+                          prefixIcon: Icon(Icons.lock_outlined, color: AppTheme.primaryColor),
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -159,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              color: const Color(0xFF7A869A),
+                              color: AppTheme.textMutedColor,
                             ),
                             onPressed: () {
                               setState(() {
@@ -183,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const Center(child: CircularProgressIndicator())
                           : ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6849EF),
+                                backgroundColor: AppTheme.primaryColor,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),

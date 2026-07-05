@@ -4,7 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../app/routes.dart';
-import '../../widgets/glass_card.dart';
+import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class PiketDashboard extends StatefulWidget {
@@ -65,50 +65,59 @@ class _PiketDashboardState extends State<PiketDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Banner Sambutan (GlassCard)
-                    GlassCard(
-                      shadowColor: const Color(0xFF6849EF),
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6849EF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.assignment_ind_rounded,
-                              size: 40,
-                              color: Color(0xFF6849EF),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Selamat Datang, Guru Piket!',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
+                    // Custom Header
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                          child: Icon(Icons.person_pin_rounded, color: AppTheme.primaryColor, size: 28),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Selamat Datang,',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  authProvider.currentUser?.name ?? '',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                  ),
+                              ),
+                              Text(
+                                authProvider.currentUser?.name ?? 'Guru Piket',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.textColor,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.notifications_outlined, color: AppTheme.textColor, size: 22),
+                        ),
+                      ],
+                    ).animate().fadeIn(),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Kelola Absensi Harian\n& Rekapitulasi Kelas',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.textColor,
+                        height: 1.2,
                       ),
-                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
+                    ).animate().slideY(begin: 0.1, end: 0, duration: 300.ms).fadeIn(),
+                    const SizedBox(height: 28),
                     const SizedBox(height: 24),
 
                     // Ringkasan Statistik Guru Piket
@@ -160,7 +169,7 @@ class _PiketDashboardState extends State<PiketDashboard> {
                             icon: const Icon(Icons.add_box_rounded),
                             label: const Text('Buka Sesi Harian'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6849EF),
+                              backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -176,8 +185,8 @@ class _PiketDashboardState extends State<PiketDashboard> {
                             icon: const Icon(Icons.analytics_rounded),
                             label: const Text('Rekap Mingguan'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF6849EF),
-                              side: const BorderSide(color: Color(0xFF6849EF)),
+                              foregroundColor: AppTheme.primaryColor,
+                              side: const BorderSide(color: AppTheme.primaryColor),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
@@ -216,7 +225,6 @@ class _PiketDashboardState extends State<PiketDashboard> {
                             itemBuilder: (context, index) {
                               final session = piketProvider.sessions[index];
                               final isActive = session.status == 'active';
-                              final color = isActive ? Colors.green : Colors.grey;
 
                               // Ambil nama kelas
                               String className = 'Tidak diketahui';
@@ -225,64 +233,73 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                 className = cls.name;
                               } catch (_) {}
 
-                              return GlassCard(
-                                shadowColor: color,
-                                margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.all(8.0),
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.piketValidate,
-                                    arguments: {
-                                      'session_id': session.id,
-                                      'class_id': session.classId,
-                                      'class_name': className,
-                                      'status': session.status,
-                                    },
-                                  );
-                                },
-                                child: ListTile(
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: color.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      isActive ? Icons.alarm_on_rounded : Icons.alarm_off_rounded,
-                                      color: color,
-                                    ),
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: isActive ? AppTheme.primaryColor.withOpacity(0.1) : Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isActive ? AppTheme.primaryColor.withOpacity(0.3) : Colors.grey.shade200,
+                                    width: 1,
                                   ),
-                                  title: Text(
-                                    'Kelas $className',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2D3142)),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 4),
-                                      Text('Tanggal: ${session.date}', style: TextStyle(color: Colors.grey.shade600)),
-                                      Text('Mulai: ${session.timeStart} ${session.timeEnd != null ? " s/d " + session.timeEnd! : ""}', style: TextStyle(color: Colors.grey.shade600)),
-                                      const SizedBox(height: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: color.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          isActive ? 'SESI AKTIF' : 'DITUTUP',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 10,
-                                            color: color,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.piketValidate,
+                                      arguments: {
+                                        'session_id': session.id,
+                                        'class_id': session.classId,
+                                        'class_name': className,
+                                        'status': session.status,
+                                      },
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            isActive ? Icons.alarm_on_rounded : Icons.alarm_off_rounded,
+                                            color: Colors.white,
+                                            size: 20,
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: Icon(
-                                    isActive ? Icons.chevron_right_rounded : Icons.lock_outline_rounded,
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Kelas $className',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                  color: AppTheme.textColor,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Tanggal: ${session.date} • Mulai: ${session.timeStart}',
+                                                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(
+                                          isActive ? Icons.chevron_right_rounded : Icons.lock_outline_rounded,
+                                          color: isActive ? AppTheme.primaryColor : Colors.grey,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn();
@@ -313,7 +330,7 @@ class _PiketDashboardState extends State<PiketDashboard> {
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D3142)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
               ),
               Text(
                 label,

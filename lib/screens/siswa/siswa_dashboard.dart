@@ -4,7 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/siswa_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../app/routes.dart';
-import '../../widgets/glass_card.dart';
+import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class SiswaDashboard extends StatefulWidget {
@@ -92,51 +92,59 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Kartu Profil Siswa (GlassCard)
-                    GlassCard(
-                      shadowColor: const Color(0xFF6849EF),
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6849EF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              size: 36,
-                              color: Color(0xFF6849EF),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user?.name ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2D3142),
-                                  ),
+                    // Custom Header
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                          child: Icon(Icons.school_rounded, color: AppTheme.primaryColor, size: 28),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Selamat Datang, Siswa',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  className,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              ),
+                              Text(
+                                user?.name ?? '',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.textColor,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.notifications_outlined, color: AppTheme.textColor, size: 22),
+                        ),
+                      ],
+                    ).animate().fadeIn(),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Mari Mulai Presensi!\n$className',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.textColor,
+                        height: 1.2,
                       ),
-                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
+                    ).animate().slideY(begin: 0.1, end: 0, duration: 300.ms).fadeIn(),
+                    const SizedBox(height: 28),
                     const SizedBox(height: 24),
 
                     // Ringkasan Kehadiran
@@ -188,7 +196,7 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                             icon: const Icon(Icons.history_rounded),
                             label: const Text('Riwayat Hadir'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6849EF),
+                              backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -204,8 +212,8 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                             icon: const Icon(Icons.card_travel_rounded),
                             label: const Text('Ajukan Izin'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF6849EF),
-                              side: const BorderSide(color: Color(0xFF6849EF)),
+                              foregroundColor: AppTheme.primaryColor,
+                              side: const BorderSide(color: AppTheme.primaryColor),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
@@ -248,71 +256,94 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                               final hasAttended = siswaProvider.history.containsKey(session.id);
                               final color = isMapel ? const Color(0xFF4A00E0) : const Color(0xFF00B4DB);
 
-                              return GlassCard(
-                                shadowColor: color,
+                              return Container(
                                 margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.all(20.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: color.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Icon(
-                                            isMapel ? Icons.book_rounded : Icons.alarm_rounded,
-                                            color: color,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            isMapel
-                                                ? 'Presensi Mapel: ${session.subject}'
-                                                : 'Presensi Pagi (Harian Kelas)',
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2D3142)),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text('Tanggal: ${session.date}', style: TextStyle(color: Colors.grey.shade600)),
-                                    Text('Waktu Mulai: ${session.timeStart}', style: TextStyle(color: Colors.grey.shade600)),
-                                    const SizedBox(height: 16),
-                                    hasAttended
-                                        ? Text(
-                                            'Anda Sudah Mengisi Presensi',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: Colors.green.shade700,
-                                              fontWeight: FontWeight.bold,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.2),
+                                              shape: BoxShape.circle,
                                             ),
-                                          )
-                                        : ElevatedButton.icon(
-                                            icon: const Icon(Icons.qr_code_scanner_rounded),
-                                            label: const Text('Scan QR Code Kehadiran'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: color,
-                                              foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(vertical: 14),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            child: Icon(
+                                              isMapel ? Icons.book_rounded : Icons.alarm_rounded,
+                                              color: Colors.white,
+                                              size: 24,
                                             ),
-                                            onPressed: () {
-                                              Navigator.pushNamed(
-                                                context,
-                                                AppRoutes.siswaScanQR,
-                                                arguments: {
-                                                  'session_id': session.id,
-                                                  'qr_id': user?.qrCodeId ?? '',
-                                                },
-                                              );
-                                            },
                                           ),
-                                  ],
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              isMapel
+                                                  ? 'Presensi Mapel: ${session.subject}'
+                                                  : 'Presensi Pagi (Harian Kelas)',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Tanggal: ${session.date}',
+                                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                                      ),
+                                      Text(
+                                        'Waktu Mulai: ${session.timeStart}',
+                                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      hasAttended
+                                          ? Container(
+                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(16),
+                                              ),
+                                              child: const Text(
+                                                'Anda Sudah Mengisi Presensi',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            )
+                                          : ElevatedButton.icon(
+                                              icon: Icon(Icons.qr_code_scanner_rounded, color: color),
+                                              label: const Text('Scan QR Code Kehadiran'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.white,
+                                                foregroundColor: color,
+                                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.pushNamed(
+                                                  context,
+                                                  AppRoutes.siswaScanQR,
+                                                  arguments: {
+                                                    'session_id': session.id,
+                                                    'qr_id': user?.qrCodeId ?? '',
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                    ],
+                                  ),
                                 ),
                               ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn();
                             },
@@ -342,7 +373,7 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D3142)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
               ),
               Text(
                 label,
