@@ -39,7 +39,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 Navigator.pushReplacementNamed(context, AppRoutes.login);
               }
             },
-          )
+          ),
         ],
       ),
       body: adminProvider.isLoading
@@ -53,57 +53,71 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Custom Header
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
-                          child: Icon(Icons.person_rounded, color: AppTheme.primaryColor, size: 28),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Selamat Datang,',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                authProvider.currentUser?.name ?? 'Admin Sekolah',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.notifications_outlined, color: AppTheme.textColor, size: 22),
-                        ),
-                      ],
-                    ).animate().fadeIn(),
+                    // Row(
+                    //   children: [
+                    //     CircleAvatar(
+                    //       radius: 24,
+                    //       backgroundColor: AppTheme.primaryColor.withOpacity(
+                    //         0.2,
+                    //       ),
+                    //       child: Icon(
+                    //         Icons.person_rounded,
+                    //         color: AppTheme.primaryColor,
+                    //         size: 28,
+                    //       ),
+                    //     ),
+                    //     const SizedBox(width: 12),
+                    //     Expanded(
+                    //       child: Column(
+                    //         crossAxisAlignment: CrossAxisAlignment.start,
+                    //         children: [
+                    //           Text(
+                    //             'Selamat Datang,',
+                    //             style: TextStyle(
+                    //               fontSize: 14,
+                    //               color: Colors.grey.shade600,
+                    //               fontWeight: FontWeight.w500,
+                    //             ),
+                    //           ),
+                    //           Text(
+                    //             authProvider.currentUser?.name ??
+                    //                 'Admin Sekolah',
+                    //             style: TextStyle(
+                    //               fontSize: 16,
+                    //               fontWeight: FontWeight.bold,
+                    //               color: AppTheme.textColor,
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //     Container(
+                    //       padding: const EdgeInsets.all(10),
+                    //       decoration: BoxDecoration(
+                    //         color: Colors.grey.shade100,
+                    //         shape: BoxShape.circle,
+                    //       ),
+                    //       child: Icon(
+                    //         Icons.notifications_outlined,
+                    //         color: AppTheme.textColor,
+                    //         size: 22,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ).animate().fadeIn(),
                     const SizedBox(height: 24),
                     Text(
-                      'Kelola Sekolah &\nPresensi Hari Ini',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.textColor,
-                        height: 1.2,
-                      ),
-                    ).animate().slideY(begin: 0.1, end: 0, duration: 300.ms).fadeIn(),
+                          'Kelola Sekolah dan Lihat Presensi Hari Ini',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.textColor,
+                            height: 1.2,
+                          ),
+                        )
+                        .animate()
+                        .slideY(begin: 0.1, end: 0, duration: 300.ms)
+                        .fadeIn(),
                     const SizedBox(height: 28),
                     const SizedBox(height: 32),
 
@@ -111,9 +125,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Text(
                       'Statistik Sistem',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2D3142),
+                      ),
                     ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
                     Container(
@@ -127,20 +141,57 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Total User', '${adminProvider.users.length}', const Color(0xFF8E2DE2))),
-                              Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Total Kelas', '${adminProvider.classes.length}', const Color(0xFFF37335))),
+                              Expanded(
+                                child: _buildStatItem(
+                                  'Total User',
+                                  '${adminProvider.users.length}',
+                                  const Color(0xFF8E2DE2),
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.grey.shade200,
+                              ),
+                              Expanded(
+                                child: _buildStatItem(
+                                  'Total Kelas',
+                                  '${adminProvider.classes.length}',
+                                  const Color(0xFFF37335),
+                                ),
+                              ),
                             ],
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(color: Colors.grey.shade200, height: 1),
+                            child: Divider(
+                              color: Colors.grey.shade200,
+                              height: 1,
+                              indent: 16,
+                              endIndent: 16,
+                            ),
                           ),
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Siswa Terdaftar', '${adminProvider.users.where((u) => u.role == 'siswa').length}', const Color(0xFF00B4DB))),
-                              Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Guru / Staf', '${adminProvider.users.where((u) => u.role == 'guru_mapel' || u.role == 'guru_piket').length}', const Color(0xFFFF416C))),
+                              Expanded(
+                                child: _buildStatItem(
+                                  'Siswa Terdaftar',
+                                  '${adminProvider.users.where((u) => u.role == 'siswa').length}',
+                                  const Color(0xFF00B4DB),
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.grey.shade200,
+                              ),
+                              Expanded(
+                                child: _buildStatItem(
+                                  'Guru / Staf',
+                                  '${adminProvider.users.where((u) => u.role == 'guru_mapel' || u.role == 'guru_piket').length}',
+                                  const Color(0xFFFF416C),
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -152,9 +203,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Text(
                       'Layanan Administrasi',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2D3142),
+                      ),
                     ).animate().fadeIn(delay: 200.ms),
                     const SizedBox(height: 16),
                     GridView.count(
@@ -229,11 +280,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D3142)),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3142),
+                ),
               ),
               Text(
                 label,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -254,81 +313,89 @@ class _AdminDashboardState extends State<AdminDashboard> {
     int index,
   ) {
     return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(28),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.pushNamed(context, route),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top row with Icon
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(28),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.pushNamed(context, route),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon, color: Colors.white, size: 24),
+                    // Top row with Icon
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, color: Colors.white, size: 24),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const Spacer(),
-                // Title and subtitle
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                // Bottom arrow row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
+                    const Spacer(),
+                    // Title and subtitle
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                         color: Colors.white,
-                        shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.arrow_forward_rounded,
-                        color: color,
-                        size: 20,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.8),
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    // Bottom arrow row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            color: color,
+                            size: 20,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    ).animate().slideY(begin: 0.1, end: 0, duration: 300.ms, delay: Duration(milliseconds: index * 50)).fadeIn();
+        )
+        .animate()
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 300.ms,
+          delay: Duration(milliseconds: index * 50),
+        )
+        .fadeIn();
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../core/services/db_service.dart';
+import '../../app/theme.dart';
 import '../../models/session_model.dart';
 import '../../models/user_model.dart';
 import '../../widgets/searchable_select.dart';
@@ -205,15 +206,51 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
-                    ListTile(
-                      leading: const Icon(Icons.people_outline),
-                      title: const Text('Jumlah Siswa Terdata'),
-                      trailing: Text('${_students.length} orang'),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.history_toggle_off),
-                      title: const Text('Total Sesi Presensi Terbuka'),
-                      trailing: Text('${_sessions.length} sesi'),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.people_outline, color: AppTheme.primaryColor, size: 20),
+                              ),
+                              const SizedBox(width: 16),
+                              const Expanded(child: Text('Jumlah Siswa Terdata', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textColor))),
+                              Text('${_students.length} orang', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor)),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Divider(color: Colors.grey.shade200, height: 1),
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accentColor.withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.history_toggle_off, color: AppTheme.accentColor, size: 20),
+                              ),
+                              const SizedBox(width: 16),
+                              const Expanded(child: Text('Total Sesi Presensi', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textColor))),
+                              Text('${_sessions.length} sesi', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor)),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                     const Spacer(),
                     ElevatedButton.icon(

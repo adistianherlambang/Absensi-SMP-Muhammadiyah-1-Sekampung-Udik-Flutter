@@ -110,25 +110,37 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                           dateStr = attendance.timestamp;
                         }
 
-                        return Card(
+                        return Container(
                           margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
                           child: ListTile(
-                            leading: Icon(
-                              isMapel ? Icons.menu_book : Icons.calendar_month,
-                              color: Theme.of(context).colorScheme.primary,
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                isMapel ? Icons.menu_book : Icons.calendar_month,
+                                color: AppTheme.primaryColor,
+                              ),
                             ),
                             title: Text(
                               title,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: 4),
-                                Text('Waktu: $dateStr'),
+                                Text('Waktu: $dateStr', style: const TextStyle(color: AppTheme.textMutedColor)),
                                 if (attendance.note != null) ...[
                                   const SizedBox(height: 2),
-                                  Text('Catatan: ${attendance.note}'),
+                                  Text('Catatan: ${attendance.note}', style: const TextStyle(color: AppTheme.textMutedColor)),
                                 ],
                               ],
                             ),

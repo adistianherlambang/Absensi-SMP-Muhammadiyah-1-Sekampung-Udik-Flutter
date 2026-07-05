@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/siswa_provider.dart';
+import '../../app/theme.dart';
 
 class ScanQRScreen extends StatefulWidget {
   const ScanQRScreen({super.key});
@@ -105,7 +106,7 @@ class _ScanQRScreenState extends State<ScanQRScreen> {
               width: 250,
               height: 250,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.white, width: 4),
+                border: Border.all(color: AppTheme.primaryColor, width: 4),
                 borderRadius: BorderRadius.circular(24),
               ),
             ),

@@ -167,9 +167,9 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Kehadiran', '$attendanceRate%', const Color(0xFF6849EF))),
+                              Expanded(child: _buildStatItem('Kehadiran', '$attendanceRate%', AppTheme.hadirColor)),
                               Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Sakit', '$totalSakit Hari', const Color(0xFFF59E0B))),
+                              Expanded(child: _buildStatItem('Sakit', '$totalSakit Hari', AppTheme.sakitColor)),
                             ],
                           ),
                           Padding(
@@ -178,9 +178,9 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                           ),
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Izin', '$totalIzin Hari', const Color(0xFF3B82F6))),
+                              Expanded(child: _buildStatItem('Izin', '$totalIzin Hari', AppTheme.izinColor)),
                               Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Alpa / Tanpa Ket.', '$totalAlpa Hari', const Color(0xFFEF4444))),
+                              Expanded(child: _buildStatItem('Alpa / Tanpa Ket.', '$totalAlpa Hari', AppTheme.alpaColor)),
                             ],
                           ),
                         ],

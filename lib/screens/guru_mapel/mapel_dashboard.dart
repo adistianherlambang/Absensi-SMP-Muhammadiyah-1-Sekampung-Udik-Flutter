@@ -142,9 +142,9 @@ class _MapelDashboardState extends State<MapelDashboard> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Sesi Mapel', '$totalSessions', const Color(0xFF6849EF))),
+                              Expanded(child: _buildStatItem('Sesi Mapel', '$totalSessions', AppTheme.primaryColor)),
                               Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Sesi Aktif', '$activeSessionsCount', Colors.green)),
+                              Expanded(child: _buildStatItem('Sesi Aktif', '$activeSessionsCount', AppTheme.hadirColor)),
                             ],
                           ),
                           Padding(
@@ -153,9 +153,9 @@ class _MapelDashboardState extends State<MapelDashboard> {
                           ),
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Kelas Diajar', '$totalClasses Kelas', Colors.blue)),
+                              Expanded(child: _buildStatItem('Kelas Diajar', '$totalClasses Kelas', AppTheme.izinColor)),
                               Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Mapel Diampu', '$subjectCount Mapel', Colors.orange)),
+                              Expanded(child: _buildStatItem('Mapel Diampu', '$subjectCount Mapel', AppTheme.sakitColor)),
                             ],
                           ),
                         ],

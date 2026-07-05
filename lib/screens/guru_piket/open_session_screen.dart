@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
+import '../../app/theme.dart';
 
 class OpenSessionScreen extends StatefulWidget {
   const OpenSessionScreen({super.key});
@@ -67,19 +68,19 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
                   const Icon(
                     Icons.add_alarm,
                     size: 80,
-                    color: Color(0xFF2C5E8A),
+                    color: AppTheme.primaryColor,
                   ),
                   const SizedBox(height: 24),
                   const Text(
                     'Buka Sesi Presensi Harian Baru',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Sesi ini memungkinkan siswa memindai QR Code untuk presensi mandiri atau diinput manual oleh Guru Piket.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: AppTheme.textMutedColor),
                   ),
                   const SizedBox(height: 40),
                   if (adminProvider.classes.isEmpty)

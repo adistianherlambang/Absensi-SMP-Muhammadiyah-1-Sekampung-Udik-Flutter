@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
+import '../../app/theme.dart';
 
 class OpenMapelSessionScreen extends StatefulWidget {
   const OpenMapelSessionScreen({super.key});
@@ -82,19 +83,19 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
                   const Icon(
                     Icons.history_edu_outlined,
                     size: 80,
-                    color: Color(0xFF2C5E8A),
+                    color: AppTheme.primaryColor,
                   ),
                   const SizedBox(height: 24),
                   const Text(
                     'Buka Sesi Presensi Mapel Baru',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Pilih kelas dan mata pelajaran yang sedang diampu untuk memulai pencatatan absensi jam pelajaran.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: AppTheme.textMutedColor),
                   ),
                   const SizedBox(height: 40),
                   if (adminProvider.classes.isEmpty)

@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/searchable_select.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
+import '../../app/theme.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -478,12 +479,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.people_outline, size: 64, color: Colors.white54),
+            Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'Tidak ada pengguna.',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.grey.shade600,
                 fontSize: 16,
               ),
             ),
@@ -530,19 +531,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorPair[0].withOpacity(0.15),
-                    blurRadius: 24,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 12),
-                  ),
-                  const BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                border: Border.all(
+                  color: Colors.grey.shade200,
+                  width: 1,
+                ),
               ),
               child: Material(
                 color: Colors.transparent,
@@ -580,11 +572,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected
-                                  ? const Color(0xFF6849EF)
+                                  ? AppTheme.primaryColor
                                   : Colors.transparent,
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF6849EF)
+                                    ? AppTheme.primaryColor
                                     : Colors.grey.shade400,
                                 width: 2,
                               ),
@@ -605,27 +597,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: colorPair,
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: colorPair[0].withOpacity(0.15),
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colorPair[0].withOpacity(0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
                           ),
                           child: Center(
                             child: Text(
                               user.name.isNotEmpty
                                   ? user.name[0].toUpperCase()
                                   : 'U',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: colorPair[0],
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
                               ),
@@ -644,7 +625,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
-                                  color: Color(0xFF2D3142),
+                                  color: AppTheme.textColor,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -784,7 +765,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             indicatorSize: TabBarIndicatorSize.label,
             indicator: BoxDecoration(
               borderRadius: BorderRadius.circular(50),
-              color: const Color(0xFF6849EF), // Ungu gelap untuk indicator
+              color: AppTheme.primaryColor, // Ungu untuk indicator
             ),
             splashBorderRadius: BorderRadius.circular(50),
             tabs: const [
@@ -826,7 +807,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 ],
               ),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color(0xFF6849EF),
+          backgroundColor: AppTheme.primaryColor,
           onPressed: _showAddUserDialog,
           child: const Icon(Icons.add, color: Colors.white),
         ),

@@ -220,22 +220,26 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Card(
-                    color: Colors.white,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Detail Sesi Presensi', style: Theme.of(context).textTheme.titleLarge),
+                          Text('Detail Sesi Presensi', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppTheme.textColor)),
                           const SizedBox(height: 8),
-                          Text('ID Sesi: $_sessionId'),
-                          Text('Tipe: Harian Pagi'),
+                          Text('ID Sesi: $_sessionId', style: const TextStyle(color: AppTheme.textMutedColor)),
+                          const Text('Tipe: Harian Pagi', style: TextStyle(color: AppTheme.textMutedColor)),
                           Text(
                             isActive ? 'Status: Sesi Terbuka' : 'Status: Sesi Ditutup',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: isActive ? Colors.green : Colors.grey,
+                              color: isActive ? AppTheme.hadirColor : Colors.grey,
                             ),
                           ),
                         ],
@@ -258,15 +262,20 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                               final attendance = piketProvider.sessionAttendances[student.uid];
                               final statusText = attendance?.status ?? 'alpa';
 
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: ListTile(
-                                  title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  subtitle: attendance?.note != null ? Text('Catatan: ${attendance!.note}') : null,
-                                  trailing: _buildStatusWidget(statusText),
-                                  onTap: () => _showOverrideDialog(student, attendance),
-                                ),
-                              );
+                               return Container(
+                                 margin: const EdgeInsets.only(bottom: 8),
+                                 decoration: BoxDecoration(
+                                   color: Colors.white,
+                                   borderRadius: BorderRadius.circular(16),
+                                   border: Border.all(color: Colors.grey.shade200),
+                                 ),
+                                 child: ListTile(
+                                   title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor)),
+                                   subtitle: attendance?.note != null ? Text('Catatan: ${attendance!.note}', style: const TextStyle(color: AppTheme.textMutedColor)) : null,
+                                   trailing: _buildStatusWidget(statusText),
+                                   onTap: () => _showOverrideDialog(student, attendance),
+                                 ),
+                               );
                             },
                           ),
                   ),

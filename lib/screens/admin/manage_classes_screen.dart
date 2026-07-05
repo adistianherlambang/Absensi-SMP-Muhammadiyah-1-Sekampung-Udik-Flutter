@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
+import '../../app/theme.dart';
 
 class ManageClassesScreen extends StatefulWidget {
   const ManageClassesScreen({super.key});
@@ -152,44 +153,54 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                           teacherName = teacher.name;
                         } catch (_) {}
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                              child: const Icon(Icons.meeting_room, color: Colors.blue),
-                            ),
-                            title: Text(
-                              cls.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Text('Wali Kelas: $teacherName'),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Jumlah Siswa: ${cls.studentIds.length}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).colorScheme.primary,
-                                  ),
+                         return Container(
+                           margin: const EdgeInsets.only(bottom: 12),
+                           decoration: BoxDecoration(
+                             color: Colors.white,
+                             borderRadius: BorderRadius.circular(20),
+                             border: Border.all(color: Colors.grey.shade200),
+                           ),
+                           child: ListTile(
+                             leading: Container(
+                               padding: const EdgeInsets.all(8),
+                               decoration: BoxDecoration(
+                                 color: AppTheme.primaryColor.withOpacity(0.15),
+                                 borderRadius: BorderRadius.circular(12),
                                 ),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: () => _confirmDeleteClass(cls.id, cls.name),
-                            ),
-                          ),
-                        );
+                               child: const Icon(Icons.meeting_room, color: AppTheme.primaryColor),
+                             ),
+                             title: Text(
+                               cls.name,
+                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textColor),
+                             ),
+                             subtitle: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 const SizedBox(height: 4),
+                                 Text('Wali Kelas: $teacherName', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                 const SizedBox(height: 2),
+                                 Text(
+                                   'Jumlah Siswa: ${cls.studentIds.length}',
+                                   style: const TextStyle(
+                                     fontWeight: FontWeight.w600,
+                                     color: AppTheme.primaryColor,
+                                   ),
+                                 ),
+                               ],
+                             ),
+                             trailing: IconButton(
+                               icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                               onPressed: () => _confirmDeleteClass(cls.id, cls.name),
+                             ),
+                           ),
+                         );
                       },
                     ),
             ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: AppTheme.primaryColor,
         onPressed: _showAddClassDialog,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

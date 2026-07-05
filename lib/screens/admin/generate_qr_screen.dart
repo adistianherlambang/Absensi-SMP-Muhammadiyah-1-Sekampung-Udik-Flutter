@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
 import '../../widgets/searchable_select.dart';
+import '../../app/theme.dart';
 
 class GenerateQRScreen extends StatefulWidget {
   const GenerateQRScreen({super.key});
@@ -48,13 +49,17 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                 children: [
                   // Dropdown pilih kelas 9
                   if (class9List.isEmpty)
-                    Card(
-                      color: Colors.amber.shade100,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
                       child: const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: Text(
                           'Peringatan: Belum ada kelas 9 (berawalan "IX" atau mengandung "9") yang dibuat di sistem. Hubungi administrator/tambahkan kelas terlebih dahulu.',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
                         ),
                       ),
                     )
@@ -82,27 +87,36 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                                 final student = class9Students[index];
                                 final qrData = adminProvider.getStudentQRData(student);
 
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  child: ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                      child: const Icon(Icons.person_outline),
-                                    ),
-                                    title: Text(
-                                      student.name,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    subtitle: Text('QR Code ID: ${student.qrCodeId ?? "Belum di-set"}'),
-                                    trailing: TextButton.icon(
-                                      icon: const Icon(Icons.qr_code, size: 20),
-                                      label: const Text('Lihat QR'),
-                                      onPressed: qrData.isEmpty
-                                          ? null
-                                          : () => _showQRDialog(student, qrData),
-                                    ),
-                                  ),
-                                );
+                                 return Container(
+                                   margin: const EdgeInsets.only(bottom: 12),
+                                   decoration: BoxDecoration(
+                                     color: Colors.white,
+                                     borderRadius: BorderRadius.circular(20),
+                                     border: Border.all(color: Colors.grey.shade200),
+                                   ),
+                                   child: ListTile(
+                                     leading: Container(
+                                       padding: const EdgeInsets.all(8),
+                                       decoration: BoxDecoration(
+                                         color: AppTheme.primaryColor.withOpacity(0.15),
+                                         borderRadius: BorderRadius.circular(12),
+                                       ),
+                                       child: const Icon(Icons.person_outline, color: AppTheme.primaryColor),
+                                     ),
+                                     title: Text(
+                                       student.name,
+                                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                                     ),
+                                     subtitle: Text('QR Code ID: ${student.qrCodeId ?? "Belum di-set"}', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                     trailing: TextButton.icon(
+                                       icon: const Icon(Icons.qr_code, size: 20, color: AppTheme.primaryColor),
+                                       label: const Text('Lihat QR', style: TextStyle(color: AppTheme.primaryColor)),
+                                       onPressed: qrData.isEmpty
+                                           ? null
+                                           : () => _showQRDialog(student, qrData),
+                                     ),
+                                   ),
+                                 );
                               },
                             ),
                     ),
@@ -159,6 +173,11 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
           actionsAlignment: MainAxisAlignment.center,
           actions: [
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(

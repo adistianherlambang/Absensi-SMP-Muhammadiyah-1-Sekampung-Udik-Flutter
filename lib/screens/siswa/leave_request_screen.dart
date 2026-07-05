@@ -138,8 +138,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   // Form pengajuan izin
                   Form(
                     key: _formKey,
-                    child: Card(
-                      elevation: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -200,17 +204,22 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               itemBuilder: (context, index) {
                                 final req = siswaProvider.leaveRequests[index];
 
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  child: ListTile(
-                                    title: Text(
-                                      'Tanggal Izin: ${req.date}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    subtitle: Text('Alasan: ${req.reason}'),
-                                    trailing: _buildStatusWidget(req.status),
-                                  ),
-                                );
+                                 return Container(
+                                   margin: const EdgeInsets.only(bottom: 12),
+                                   decoration: BoxDecoration(
+                                     color: Colors.white,
+                                     borderRadius: BorderRadius.circular(16),
+                                     border: Border.all(color: Colors.grey.shade200),
+                                   ),
+                                   child: ListTile(
+                                     title: Text(
+                                       'Tanggal Izin: ${req.date}',
+                                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                                     ),
+                                     subtitle: Text('Alasan: ${req.reason}', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                     trailing: _buildStatusWidget(req.status),
+                                   ),
+                                 );
                               },
                             ),
                     ),

@@ -5,6 +5,7 @@ import '../../core/services/db_service.dart';
 import '../../models/session_model.dart';
 import '../../models/user_model.dart';
 import '../../widgets/searchable_select.dart';
+import '../../app/theme.dart';
 
 class WeeklyRecapScreen extends StatefulWidget {
   const WeeklyRecapScreen({super.key});
@@ -137,8 +138,13 @@ class _WeeklyRecapScreenState extends State<WeeklyRecapScreen> {
                                 final student = _students[index];
                                 final stats = _studentStats[student.uid] ?? {'hadir': 0, 'izin': 0, 'sakit': 0, 'alpa': 0};
 
-                                return Card(
+                                return Container(
                                   margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Column(
@@ -146,17 +152,17 @@ class _WeeklyRecapScreenState extends State<WeeklyRecapScreen> {
                                       children: [
                                         Text(
                                           student.name,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textColor),
                                         ),
                                         const SizedBox(height: 8),
                                         // Baris Rincian (Teks Bersih Tanpa Badge)
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text('Hadir: ${stats['hadir']}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
-                                            Text('Izin: ${stats['izin']}', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600)),
-                                            Text('Sakit: ${stats['sakit']}', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600)),
-                                            Text('Alpa: ${stats['alpa']}', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                                            Text('Hadir: ${stats['hadir']}', style: const TextStyle(color: AppTheme.hadirColor, fontWeight: FontWeight.w600)),
+                                            Text('Izin: ${stats['izin']}', style: const TextStyle(color: AppTheme.izinColor, fontWeight: FontWeight.w600)),
+                                            Text('Sakit: ${stats['sakit']}', style: const TextStyle(color: AppTheme.sakitColor, fontWeight: FontWeight.w600)),
+                                            Text('Alpa: ${stats['alpa']}', style: const TextStyle(color: AppTheme.alpaColor, fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ],

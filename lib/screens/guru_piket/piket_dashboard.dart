@@ -140,9 +140,9 @@ class _PiketDashboardState extends State<PiketDashboard> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Total Sesi', '$totalSessions', const Color(0xFF6849EF))),
+                              Expanded(child: _buildStatItem('Total Sesi', '$totalSessions', AppTheme.primaryColor)),
                               Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Sesi Aktif', '$activeSessionsCount', Colors.green)),
+                              Expanded(child: _buildStatItem('Sesi Aktif', '$activeSessionsCount', AppTheme.hadirColor)),
                             ],
                           ),
                           Padding(
@@ -151,9 +151,9 @@ class _PiketDashboardState extends State<PiketDashboard> {
                           ),
                           Row(
                             children: [
-                              Expanded(child: _buildStatItem('Sesi Ditutup', '$closedSessionsCount', Colors.grey)),
+                              Expanded(child: _buildStatItem('Sesi Ditutup', '$closedSessionsCount', AppTheme.alpaColor)),
                               Container(width: 1, height: 40, color: Colors.grey.shade200),
-                              Expanded(child: _buildStatItem('Total Kelas', '$totalClasses Kelas', Colors.blue)),
+                              Expanded(child: _buildStatItem('Total Kelas', '$totalClasses Kelas', AppTheme.izinColor)),
                             ],
                           ),
                         ],
