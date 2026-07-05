@@ -17,7 +17,8 @@ class ManageUsersScreen extends StatefulWidget {
   State<ManageUsersScreen> createState() => _ManageUsersScreenState();
 }
 
-class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProviderStateMixin {
+class _ManageUsersScreenState extends State<ManageUsersScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -25,7 +26,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
   final _subjectController = TextEditingController();
 
   late TabController _tabController;
-  String _selectedRole = 'admin'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
+  String _selectedRole =
+      'admin'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
   String? _selectedClassId;
 
   // Filter properties
@@ -247,7 +249,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Tambah Pengguna Baru (${_selectedRole == "admin" ? "Administrator" : _selectedRole == "guru_piket" ? "Guru Piket" : _selectedRole == "guru_mapel" ? "Guru Mapel" : "Siswa"})',
+                          'Tambah Pengguna Baru (${_selectedRole == "admin"
+                              ? "Administrator"
+                              : _selectedRole == "guru_piket"
+                              ? "Guru Piket"
+                              : _selectedRole == "guru_mapel"
+                              ? "Guru Mapel"
+                              : "Siswa"})',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 20),
@@ -317,7 +325,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                           TextFormField(
                             controller: _subjectController,
                             decoration: const InputDecoration(
-                              labelText: 'Mata Pelajaran (pisahkan dengan koma)',
+                              labelText:
+                                  'Mata Pelajaran (pisahkan dengan koma)',
                               helperText: 'Contoh: Matematika, Fisika, IPA',
                             ),
                             validator: (v) =>
@@ -479,8 +488,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                                 _selectedClassId = val?.id;
                               });
                             },
-                            validator: (v) =>
-                                user.role == 'siswa' && v == null
+                            validator: (v) => user.role == 'siswa' && v == null
                                 ? 'Pilih kelas siswa'
                                 : null,
                           ),
@@ -492,7 +500,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                           TextFormField(
                             controller: _subjectController,
                             decoration: const InputDecoration(
-                              labelText: 'Mata Pelajaran (pisahkan dengan koma)',
+                              labelText:
+                                  'Mata Pelajaran (pisahkan dengan koma)',
                               helperText: 'Contoh: Matematika, Fisika, IPA',
                             ),
                             validator: (v) =>
@@ -519,7 +528,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text('Memproses pembaruan data user...')),
+                                content: Text(
+                                  'Memproses pembaruan data user...',
+                                ),
+                              ),
                             );
 
                             try {
@@ -562,10 +574,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                               );
                             }
                           },
-                          child: const Text('Simpan Perubahan',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Simpan Perubahan',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -668,12 +683,18 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
     );
   }
 
-  Widget _buildUserList(List<UserModel> users, AdminProvider adminProvider, String role) {
+  Widget _buildUserList(
+    List<UserModel> users,
+    AdminProvider adminProvider,
+    String role,
+  ) {
     // 1. Filter local users berdasarkan search query & class filter
     final filteredUsers = users.where((u) {
-      final matchesSearch = u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                            u.email.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesClass = _filterClassId == null || u.classId == _filterClassId;
+      final matchesSearch =
+          u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          u.email.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesClass =
+          _filterClassId == null || u.classId == _filterClassId;
       return matchesSearch && matchesClass;
     }).toList();
 
@@ -697,7 +718,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(color: Colors.grey.shade200),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     filled: true,
                     fillColor: Colors.grey.shade50,
                   ),
@@ -714,7 +738,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                   width: 140,
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(color: Colors.grey.shade300),
@@ -733,10 +760,15 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                         value: null,
                         child: Text('Semua', style: TextStyle(fontSize: 13)),
                       ),
-                      ...adminProvider.classes.map((c) => DropdownMenuItem<String>(
-                            value: c.id,
-                            child: Text(c.name, style: const TextStyle(fontSize: 13)),
-                          )),
+                      ...adminProvider.classes.map(
+                        (c) => DropdownMenuItem<String>(
+                          value: c.id,
+                          child: Text(
+                            c.name,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ),
                     ],
                     onChanged: (val) {
                       setState(() {
@@ -755,7 +787,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                      Icon(
+                        Icons.people_outline,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Tidak ada pengguna ditemukan.',
@@ -768,7 +804,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   itemCount: filteredUsers.length,
                   itemBuilder: (context, index) {
                     final user = filteredUsers[index];
@@ -800,159 +839,176 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                     final colorPair = colors[user.name.length % colors.length];
 
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isSelected ? AppTheme.primaryColor.withOpacity(0.4) : Colors.grey.shade200,
-                          width: isSelected ? 2 : 1,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppTheme.primaryColor.withOpacity(0.08),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                )
-                              ]
-                            : null,
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(24),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                _selectedUsers.remove(user);
-                              } else {
-                                _selectedUsers.add(user);
-                              }
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                // Checkbox Custom
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      if (isSelected) {
-                                        _selectedUsers.remove(user);
-                                      } else {
-                                        _selectedUsers.add(user);
-                                      }
-                                    });
-                                  },
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: isSelected ? AppTheme.primaryColor : Colors.transparent,
-                                      border: Border.all(
-                                        color: isSelected ? AppTheme.primaryColor : Colors.grey.shade400,
-                                        width: 2,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppTheme.primaryColor.withOpacity(0.4)
+                                  : Colors.grey.shade200,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppTheme.primaryColor.withOpacity(
+                                        0.08,
                                       ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
-                                    child: isSelected
-                                        ? const Icon(
-                                            Icons.check,
-                                            size: 16,
-                                            color: Colors.white,
-                                          )
-                                        : null,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-
-                                // Avatar dengan Gradient
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: colorPair[0].withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                                      style: TextStyle(
-                                        color: colorPair[0],
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-
-                                // Info Pengguna
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        user.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 16,
-                                          color: AppTheme.textColor,
+                                  ]
+                                : null,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(24),
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedUsers.remove(user);
+                                  } else {
+                                    _selectedUsers.add(user);
+                                  }
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    // Checkbox Custom
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          if (isSelected) {
+                                            _selectedUsers.remove(user);
+                                          } else {
+                                            _selectedUsers.add(user);
+                                          }
+                                        });
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 200,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        user.email,
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 13,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      // Badge Role
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
+                                        width: 24,
+                                        height: 24,
                                         decoration: BoxDecoration(
-                                          color: colorPair[0].withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
+                                          shape: BoxShape.circle,
+                                          color: isSelected
+                                              ? AppTheme.primaryColor
+                                              : Colors.transparent,
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? AppTheme.primaryColor
+                                                : Colors.grey.shade400,
+                                            width: 2,
+                                          ),
                                         ),
+                                        child: isSelected
+                                            ? const Icon(
+                                                Icons.check,
+                                                size: 16,
+                                                color: Colors.white,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+
+                                    // Avatar dengan Gradient
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: colorPair[0].withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Center(
                                         child: Text(
-                                          '${user.role.toUpperCase()}$extraInfo',
+                                          user.name.isNotEmpty
+                                              ? user.name[0].toUpperCase()
+                                              : 'U',
                                           style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
                                             color: colorPair[0],
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                    ),
+                                    const SizedBox(width: 16),
 
-                                // Tombol Hapus Individual (hanya tampil jika tidak dalam mode seleksi)
-                                if (_selectedUsers.isEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    color: Colors.red.shade300,
-                                    onPressed: () => _confirmDeleteUser(user),
-                                  ),
-                              ],
+                                    // Info Pengguna
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            user.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 16,
+                                              color: AppTheme.textColor,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            user.email,
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 13,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          // Badge Role
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: colorPair[0].withOpacity(
+                                                0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              '${user.role.toUpperCase()}$extraInfo',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 11,
+                                                color: colorPair[0],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Tombol Hapus Individual (hanya tampil jika tidak dalam mode seleksi)
+                                    if (_selectedUsers.isEmpty)
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline),
+                                        color: Colors.red.shade300,
+                                        onPressed: () =>
+                                            _confirmDeleteUser(user),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    )
+                        )
                         .animate()
                         .slideY(
                           begin: 0.4,
@@ -1002,10 +1058,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
         elevation: 0,
         title: const Text(
           'Kelola Pengguna',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
@@ -1099,7 +1152,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                           ? () => _showEditUserDialog(_selectedUsers.first)
                           : null,
                       icon: const Icon(Icons.edit, color: Colors.white),
-                      label: const Text('Edit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1109,7 +1168,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProvid
                       backgroundColor: Colors.redAccent,
                       onPressed: _confirmDeleteSelectedUsers,
                       icon: const Icon(Icons.delete, color: Colors.white),
-                      label: const Text('Hapus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      label: const Text(
+                        'Hapus',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],

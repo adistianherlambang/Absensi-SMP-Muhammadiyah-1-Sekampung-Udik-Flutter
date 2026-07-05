@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:file_picker/file_picker.dart';
@@ -12,6 +10,7 @@ import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
 import '../../core/services/qr_service.dart';
+import '../../core/services/qr_card_renderer.dart';
 import '../../models/class_model.dart';
 
 class ManageClassesScreen extends StatefulWidget {
@@ -226,8 +225,6 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
   }
 
   void _showQRPrintDialog(ClassModel cls, String qrData) {
-    final GlobalKey repaintKey = GlobalKey();
-
     showDialog(
       context: context,
       builder: (context) {
@@ -237,70 +234,66 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Print-Ready Card Layout wrapped in RepaintBoundary
-              RepaintBoundary(
-                key: repaintKey,
-                child: Container(
-                  width: 280,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.black, width: 3),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'SMP MUHAMMADIYAH 1',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black, letterSpacing: 0.5),
-                        textAlign: TextAlign.center,
+              // Preview card (display only)
+              Container(
+                width: 280,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.black, width: 3),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'SMP MUHAMMADIYAH 1',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black, letterSpacing: 0.5),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Text(
+                      'SEKAMPUNG UDIK',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 2,
+                      color: Colors.black,
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(10),
+                      child: QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 180.0,
+                        gapless: false,
+                        errorStateBuilder: (cxt, err) {
+                          return const Center(child: Text('Gagal membuat QR Code'));
+                        },
                       ),
-                      const Text(
-                        'SEKAMPUNG UDIK',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 2,
-                        color: Colors.black,
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                      ),
-                      const SizedBox(height: 16),
-                      // QR Code
-                      Container(
-                        color: Colors.white,
-                        padding: const EdgeInsets.all(10),
-                        child: QrImageView(
-                          data: qrData,
-                          version: QrVersions.auto,
-                          size: 180.0,
-                          gapless: false,
-                          errorStateBuilder: (cxt, err) {
-                            return const Center(child: Text('Gagal membuat QR Code'));
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'KARTU MEJA PRESENSI',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'KELAS ${cls.name}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Scan kartu ini menggunakan aplikasi Guru untuk mencatat kehadiran kelas.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 9, color: Colors.black87, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'KARTU MEJA PRESENSI',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'KELAS ${cls.name}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Scan kartu ini menggunakan aplikasi Guru untuk mencatat kehadiran kelas.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 9, color: Colors.black87, fontStyle: FontStyle.italic),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
@@ -318,7 +311,7 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                       label: const Text('Bagikan QR'),
                       onPressed: () async {
                         Navigator.pop(context);
-                        await _shareQRImage(repaintKey, cls.name);
+                        await _shareQRImage(qrData, cls.name);
                       },
                     ),
                   ),
@@ -350,7 +343,7 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                       label: const Text('Unduh PNG'),
                       onPressed: () async {
                         Navigator.pop(context);
-                        await _downloadQRImage(repaintKey, cls.name);
+                        await _downloadQRImage(qrData, cls.name);
                       },
                     ),
                   ),
@@ -363,20 +356,12 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
     );
   }
 
-  Future<void> _downloadQRImage(GlobalKey repaintKey, String className) async {
+  Future<void> _downloadQRImage(String qrData, String className) async {
     try {
-      final RenderRepaintBoundary? boundary =
-          repaintKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) {
-        throw 'Gagal menemukan area gambar';
-      }
-
-      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        throw 'Gagal merender data gambar';
-      }
-      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      final Uint8List pngBytes = await renderQRCardToPng(
+        qrData: qrData,
+        className: className,
+      );
 
       String path = '';
       if (Platform.isAndroid || Platform.isIOS) {
@@ -419,20 +404,12 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
     }
   }
 
-  Future<void> _shareQRImage(GlobalKey repaintKey, String className) async {
+  Future<void> _shareQRImage(String qrData, String className) async {
     try {
-      final RenderRepaintBoundary? boundary =
-          repaintKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) {
-        throw 'Gagal menemukan area gambar';
-      }
-
-      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        throw 'Gagal merender data gambar';
-      }
-      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      final Uint8List pngBytes = await renderQRCardToPng(
+        qrData: qrData,
+        className: className,
+      );
 
       final XFile xFile = XFile.fromData(
         pngBytes,
