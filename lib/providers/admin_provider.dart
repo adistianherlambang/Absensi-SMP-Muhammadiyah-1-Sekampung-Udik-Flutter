@@ -219,6 +219,74 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
+  // Perbarui User
+  Future<void> updateUser({
+    required String uid,
+    required String name,
+    required String role,
+    String? classId,
+    List<String>? subjects,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final existingUser = _users.firstWhere((u) => u.uid == uid);
+
+      // 1. Update list kelas jika role siswa dan kelasnya berubah
+      if (existingUser.role == 'siswa' && existingUser.classId != classId) {
+        // Hapus dari kelas lama
+        if (existingUser.classId != null) {
+          try {
+            final oldCl = _classes.firstWhere((c) => c.id == existingUser.classId);
+            final updatedStudentIds = List<String>.from(oldCl.studentIds)..remove(uid);
+            final updatedClass = ClassModel(
+              id: oldCl.id,
+              name: oldCl.name,
+              homeroomTeacherId: oldCl.homeroomTeacherId,
+              studentIds: updatedStudentIds,
+            );
+            await _dbService.saveClass(updatedClass);
+          } catch (_) {}
+        }
+        // Tambah ke kelas baru
+        if (classId != null) {
+          try {
+            final newCl = _classes.firstWhere((c) => c.id == classId);
+            final updatedStudentIds = List<String>.from(newCl.studentIds)..add(uid);
+            final updatedClass = ClassModel(
+              id: newCl.id,
+              name: newCl.name,
+              homeroomTeacherId: newCl.homeroomTeacherId,
+              studentIds: updatedStudentIds,
+            );
+            await _dbService.saveClass(updatedClass);
+          } catch (_) {}
+        }
+      }
+
+      // 2. Simpan data user ke database
+      final updatedUser = UserModel(
+        uid: uid,
+        name: name,
+        email: existingUser.email,
+        role: role,
+        classId: classId,
+        subjects: subjects,
+        qrCodeId: existingUser.qrCodeId,
+        status: existingUser.status,
+      );
+
+      await _dbService.saveUserProfile(updatedUser);
+      await fetchData();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Dapatkan String Data QR untuk Siswa
   String getStudentQRData(UserModel student) {
     if (student.qrCodeId == null) return '';

@@ -208,49 +208,41 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                     ).animate().fadeIn(delay: 200.ms),
                     const SizedBox(height: 16),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.82,
+                    _buildMenuCard(
+                      context,
+                      'Kelola Pengguna',
+                      'Tambah, edit, dan kelola guru serta siswa secara massal',
+                      Icons.manage_accounts_rounded,
+                      AppRoutes.adminManageUsers,
+                      AppTheme.primaryColor,
+                      0,
+                      isFullWidth: true,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
                       children: [
-                        _buildMenuCard(
-                          context,
-                          'Kelola Pengguna',
-                          'Tambah & edit guru/siswa',
-                          Icons.manage_accounts_rounded,
-                          AppRoutes.adminManageUsers,
-                          AppTheme.primaryColor,
-                          0,
+                        Expanded(
+                          child: _buildMenuCard(
+                            context,
+                            'Kelola Kelas',
+                            'Atur kelas & wali kelas',
+                            Icons.door_sliding_rounded,
+                            AppRoutes.adminManageClasses,
+                            AppTheme.secondaryColor,
+                            1,
+                          ),
                         ),
-                        _buildMenuCard(
-                          context,
-                          'Kelola Kelas',
-                          'Atur kelas & wali kelas',
-                          Icons.door_sliding_rounded,
-                          AppRoutes.adminManageClasses,
-                          AppTheme.secondaryColor,
-                          1,
-                        ),
-                        _buildMenuCard(
-                          context,
-                          'Generate QR Siswa',
-                          'Buat QR Code kelas IX',
-                          Icons.qr_code_2_rounded,
-                          AppRoutes.adminGenerateQR,
-                          AppTheme.accentColor,
-                          2,
-                        ),
-                        _buildMenuCard(
-                          context,
-                          'Laporan Presensi',
-                          'Unduh rekap kehadiran',
-                          Icons.summarize_rounded,
-                          AppRoutes.adminReports,
-                          AppTheme.blueColor,
-                          3,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildMenuCard(
+                            context,
+                            'Laporan Presensi',
+                            'Unduh rekap kehadiran',
+                            Icons.summarize_rounded,
+                            AppRoutes.adminReports,
+                            AppTheme.blueColor,
+                            2,
+                          ),
                         ),
                       ],
                     ),
@@ -310,85 +302,139 @@ class _AdminDashboardState extends State<AdminDashboard> {
     IconData icon,
     String route,
     Color color,
-    int index,
-  ) {
-    return Container(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(28),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => Navigator.pushNamed(context, route),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    int index, {
+    bool isFullWidth = false,
+  }) {
+    final cardContent = Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: isFullWidth
+          ? Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top row with Icon
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(icon, color: Colors.white, size: 24),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    // Title and subtitle
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
-                    // Bottom arrow row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward_rounded,
-                            color: color,
-                            size: 20,
-                          ),
-                        ),
-                      ],
+                      child: Icon(icon, color: Colors.white, size: 24),
                     ),
                   ],
                 ),
-              ),
+                const Spacer(),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        color: color,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-        )
+    );
+
+    return Container(
+      height: isFullWidth ? 100 : 160,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(28),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(context, route),
+          child: cardContent,
+        ),
+      ),
+    )
         .animate()
         .slideY(
           begin: 0.1,

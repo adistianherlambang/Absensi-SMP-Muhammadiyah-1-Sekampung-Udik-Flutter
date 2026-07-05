@@ -17,22 +17,48 @@ class ManageUsersScreen extends StatefulWidget {
   State<ManageUsersScreen> createState() => _ManageUsersScreenState();
 }
 
-class _ManageUsersScreenState extends State<ManageUsersScreen> {
+class _ManageUsersScreenState extends State<ManageUsersScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _subjectController = TextEditingController();
 
-  String _selectedRole =
-      'siswa'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
+  late TabController _tabController;
+  String _selectedRole = 'admin'; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
   String? _selectedClassId;
+
+  // Filter properties
+  String _searchQuery = '';
+  String? _filterClassId;
 
   // Set untuk menyimpan UID dari pengguna yang dipilih (checkbox)
   final Set<UserModel> _selectedUsers = {};
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        if (_tabController.index == 0) {
+          _selectedRole = 'admin';
+        } else if (_tabController.index == 1) {
+          _selectedRole = 'guru_piket';
+        } else if (_tabController.index == 2) {
+          _selectedRole = 'guru_mapel';
+        } else {
+          _selectedRole = 'siswa';
+        }
+        _searchQuery = '';
+        _filterClassId = null;
+      });
+    });
+  }
+
+  @override
   void dispose() {
+    _tabController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -180,7 +206,15 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     _passwordController.clear();
     _subjectController.clear();
     setState(() {
-      _selectedRole = 'siswa';
+      if (_tabController.index == 0) {
+        _selectedRole = 'admin';
+      } else if (_tabController.index == 1) {
+        _selectedRole = 'guru_piket';
+      } else if (_tabController.index == 2) {
+        _selectedRole = 'guru_mapel';
+      } else {
+        _selectedRole = 'siswa';
+      }
       _selectedClassId = adminProvider.classes.isNotEmpty
           ? adminProvider.classes.first.id
           : null;
@@ -194,192 +228,353 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                top: 24,
-                left: 24,
-                right: 24,
-              ),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Tambah Pengguna Baru',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Input Nama
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nama Lengkap',
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: StatefulBuilder(
+              builder: (context, setModalState) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Tambah Pengguna Baru (${_selectedRole == "admin" ? "Administrator" : _selectedRole == "guru_piket" ? "Guru Piket" : _selectedRole == "guru_mapel" ? "Guru Mapel" : "Siswa"})',
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        validator: (v) => v == null || v.isEmpty
-                            ? 'Nama tidak boleh kosong'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 20),
 
-                      // Input Email
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(labelText: 'Email'),
-                        validator: (v) => v == null || v.isEmpty
-                            ? 'Email tidak boleh kosong'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Input Password
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'Password',
-                        ),
-                        validator: (v) => v == null || v.length < 6
-                            ? 'Password minimal 6 karakter'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Pilihan Peran / Role (SearchableSelect)
-                      SearchableSelect<Map<String, String>>(
-                        labelText: 'Peran / Role',
-                        items: const [
-                          {'value': 'admin', 'label': 'Administrator'},
-                          {'value': 'guru_piket', 'label': 'Guru Piket'},
-                          {'value': 'guru_mapel', 'label': 'Guru Mata Pelajaran'},
-                          {'value': 'siswa', 'label': 'Siswa'},
-                        ],
-                        itemLabel: (item) => item['label']!,
-                        selectedValue: {
-                          'value': _selectedRole,
-                          'label': _selectedRole == 'admin' ? 'Administrator' : 
-                                   _selectedRole == 'guru_piket' ? 'Guru Piket' :
-                                   _selectedRole == 'guru_mapel' ? 'Guru Mata Pelajaran' : 'Siswa'
-                        },
-                        onChanged: (val) {
-                          if (val != null) {
-                            setModalState(() {
-                              _selectedRole = val['value']!;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Kondisional khusus Siswa: Pilih Kelas
-                      if (_selectedRole == 'siswa') ...[
-                        SearchableSelect<dynamic>(
-                          labelText: 'Pilih Kelas (Khusus Siswa)',
-                          items: adminProvider.classes,
-                          itemLabel: (c) => c.name as String,
-                          selectedValue: _selectedClassId != null
-                              ? adminProvider.classes.firstWhere(
-                                  (c) => c.id == _selectedClassId,
-                                  orElse: () => adminProvider.classes.first,
-                                )
-                              : null,
-                          onChanged: (val) {
-                            setModalState(() {
-                              _selectedClassId = val?.id;
-                            });
-                          },
-                          validator: (v) =>
-                              _selectedRole == 'siswa' && v == null
-                              ? 'Pilih kelas siswa'
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Kondisional khusus Guru Mapel: Masukkan Mapel
-                      if (_selectedRole == 'guru_mapel') ...[
+                        // Input Nama
                         TextFormField(
-                          controller: _subjectController,
+                          controller: _nameController,
                           decoration: const InputDecoration(
-                            labelText: 'Mata Pelajaran (pisahkan dengan koma)',
-                            helperText: 'Contoh: Matematika, Fisika, IPA',
+                            labelText: 'Nama Lengkap',
                           ),
-                          validator: (v) =>
-                              _selectedRole == 'guru_mapel' &&
-                                  (v == null || v.isEmpty)
-                              ? 'Masukkan minimal 1 mata pelajaran'
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Nama tidak boleh kosong'
                               : null,
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (!_formKey.currentState!.validate()) return;
+                        // Input Email
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(labelText: 'Email'),
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Email tidak boleh kosong'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
 
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Memproses penambahan user baru...',
-                              ),
+                        // Input Password
+                        TextFormField(
+                          controller: _passwordController,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                          ),
+                          validator: (v) => v == null || v.length < 6
+                              ? 'Password minimal 6 karakter'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Kondisional khusus Siswa: Pilih Kelas
+                        if (_selectedRole == 'siswa') ...[
+                          SearchableSelect<dynamic>(
+                            labelText: 'Pilih Kelas (Khusus Siswa)',
+                            items: adminProvider.classes,
+                            itemLabel: (c) => c.name as String,
+                            selectedValue: _selectedClassId != null
+                                ? adminProvider.classes.firstWhere(
+                                    (c) => c.id == _selectedClassId,
+                                    orElse: () => adminProvider.classes.first,
+                                  )
+                                : null,
+                            onChanged: (val) {
+                              setModalState(() {
+                                _selectedClassId = val?.id;
+                              });
+                            },
+                            validator: (v) =>
+                                _selectedRole == 'siswa' && v == null
+                                ? 'Pilih kelas siswa'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Kondisional khusus Guru Mapel: Masukkan Mapel
+                        if (_selectedRole == 'guru_mapel') ...[
+                          TextFormField(
+                            controller: _subjectController,
+                            decoration: const InputDecoration(
+                              labelText: 'Mata Pelajaran (pisahkan dengan koma)',
+                              helperText: 'Contoh: Matematika, Fisika, IPA',
                             ),
-                          );
+                            validator: (v) =>
+                                _selectedRole == 'guru_mapel' &&
+                                    (v == null || v.isEmpty)
+                                ? 'Masukkan minimal 1 mata pelajaran'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
-                          try {
-                            List<String>? subjectsList;
-                            if (_selectedRole == 'guru_mapel' &&
-                                _subjectController.text.isNotEmpty) {
-                              subjectsList = _subjectController.text
-                                  .split(',')
-                                  .map((s) => s.trim())
-                                  .where((s) => s.isNotEmpty)
-                                  .toList();
-                            }
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
 
-                            await adminProvider.createUser(
-                              name: _nameController.text.trim(),
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text.trim(),
-                              role: _selectedRole,
-                              classId: _selectedRole == 'siswa'
-                                  ? _selectedClassId
-                                  : null,
-                              subjects: subjectsList,
-                            );
-
-                            if (!mounted) return;
+                            Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('User berhasil ditambahkan!'),
+                                content: Text(
+                                  'Memproses penambahan user baru...',
+                                ),
                               ),
                             );
-                          } catch (e) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Gagal menambah user: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Simpan Pengguna'),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+
+                            try {
+                              List<String>? subjectsList;
+                              if (_selectedRole == 'guru_mapel' &&
+                                  _subjectController.text.isNotEmpty) {
+                                subjectsList = _subjectController.text
+                                    .split(',')
+                                    .map((s) => s.trim())
+                                    .where((s) => s.isNotEmpty)
+                                    .toList();
+                              }
+
+                              await adminProvider.createUser(
+                                name: _nameController.text.trim(),
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text.trim(),
+                                role: _selectedRole,
+                                classId: _selectedRole == 'siswa'
+                                    ? _selectedClassId
+                                    : null,
+                                subjects: subjectsList,
+                              );
+
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('User berhasil ditambahkan!'),
+                                ),
+                              );
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Gagal menambah user: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Simpan Pengguna'),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditUserDialog(UserModel user) {
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    _nameController.text = user.name;
+    _emailController.text = user.email;
+    _passwordController.clear();
+    _subjectController.text = user.subjects?.join(', ') ?? '';
+
+    setState(() {
+      _selectedClassId = user.classId;
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: StatefulBuilder(
+              builder: (context, setModalState) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Edit Pengguna: ${user.name}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Input Nama
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama Lengkap',
+                          ),
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Nama tidak boleh kosong'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Input Email (Read-only)
+                        TextFormField(
+                          controller: _emailController,
+                          enabled: false,
+                          decoration: const InputDecoration(
+                            labelText: 'Email (Tidak dapat diubah)',
+                            filled: true,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Kondisional khusus Siswa: Pilih Kelas
+                        if (user.role == 'siswa') ...[
+                          SearchableSelect<dynamic>(
+                            labelText: 'Pilih Kelas (Khusus Siswa)',
+                            items: adminProvider.classes,
+                            itemLabel: (c) => c.name as String,
+                            selectedValue: _selectedClassId != null
+                                ? adminProvider.classes.firstWhere(
+                                    (c) => c.id == _selectedClassId,
+                                    orElse: () => adminProvider.classes.first,
+                                  )
+                                : null,
+                            onChanged: (val) {
+                              setModalState(() {
+                                _selectedClassId = val?.id;
+                              });
+                            },
+                            validator: (v) =>
+                                user.role == 'siswa' && v == null
+                                ? 'Pilih kelas siswa'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Kondisional khusus Guru Mapel: Masukkan Mapel
+                        if (user.role == 'guru_mapel') ...[
+                          TextFormField(
+                            controller: _subjectController,
+                            decoration: const InputDecoration(
+                              labelText: 'Mata Pelajaran (pisahkan dengan koma)',
+                              helperText: 'Contoh: Matematika, Fisika, IPA',
+                            ),
+                            validator: (v) =>
+                                user.role == 'guru_mapel' &&
+                                    (v == null || v.isEmpty)
+                                ? 'Masukkan minimal 1 mata pelajaran'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Memproses pembaruan data user...')),
+                            );
+
+                            try {
+                              List<String>? subjectsList;
+                              if (user.role == 'guru_mapel' &&
+                                  _subjectController.text.isNotEmpty) {
+                                subjectsList = _subjectController.text
+                                    .split(',')
+                                    .map((s) => s.trim())
+                                    .where((s) => s.isNotEmpty)
+                                    .toList();
+                              }
+
+                              await adminProvider.updateUser(
+                                uid: user.uid,
+                                name: _nameController.text.trim(),
+                                role: user.role,
+                                classId: user.role == 'siswa'
+                                    ? _selectedClassId
+                                    : null,
+                                subjects: subjectsList,
+                              );
+
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('User berhasil diperbarui!'),
+                                ),
+                              );
+                              setState(() {
+                                _selectedUsers.clear();
+                              });
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Gagal memperbarui user: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Simpan Perubahan',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
     );
@@ -473,89 +668,161 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  Widget _buildUserList(List<UserModel> users, AdminProvider adminProvider) {
-    if (users.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'Tidak ada pengguna.',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+  Widget _buildUserList(List<UserModel> users, AdminProvider adminProvider, String role) {
+    // 1. Filter local users berdasarkan search query & class filter
+    final filteredUsers = users.where((u) {
+      final matchesSearch = u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                            u.email.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesClass = _filterClassId == null || u.classId == _filterClassId;
+      return matchesSearch && matchesClass;
+    }).toList();
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        final user = users[index];
-        final isSiswa = user.role == 'siswa';
-        final isMapel = user.role == 'guru_mapel';
-
-        String extraInfo = '';
-        if (isSiswa && user.classId != null) {
-          try {
-            final cl = adminProvider.classes.firstWhere(
-              (c) => c.id == user.classId,
-            );
-            extraInfo = ' • ${cl.name}';
-          } catch (e) {
-            extraInfo = ' • Kelas ?';
-          }
-        } else if (isMapel && user.subjects != null) {
-          extraInfo = ' • ${user.subjects!.join(', ')}';
-        }
-
-        final isSelected = _selectedUsers.contains(user);
-
-        // Generate a pseudo-random color based on user name length or initials
-        final colors = [
-          [const Color(0xFF4A00E0), const Color(0xFF8E2DE2)],
-          [const Color(0xFFFF416C), const Color(0xFFFF4B2B)],
-          [const Color(0xFFFDC830), const Color(0xFFF37335)],
-          [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
-        ];
-        final colorPair = colors[user.name.length % colors.length];
-
-        return Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.grey.shade200,
-                  width: 1,
-                ),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(24),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () {
+    return Column(
+      children: [
+        // Filter bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Cari nama atau email...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                  onChanged: (val) {
                     setState(() {
-                      if (isSelected) {
-                        _selectedUsers.remove(user);
-                      } else {
-                        _selectedUsers.add(user);
-                      }
+                      _searchQuery = val;
                     });
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        // Checkbox Custom
-                        GestureDetector(
+                ),
+              ),
+              if (role == 'siswa') ...[
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 140,
+                  child: DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      labelText: 'Kelas',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                    value: _filterClassId,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('Semua', style: TextStyle(fontSize: 13)),
+                      ),
+                      ...adminProvider.classes.map((c) => DropdownMenuItem<String>(
+                            value: c.id,
+                            child: Text(c.name, style: const TextStyle(fontSize: 13)),
+                          )),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _filterClassId = val;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Expanded(
+          child: filteredUsers.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tidak ada pengguna ditemukan.',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  itemCount: filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = filteredUsers[index];
+                    final isSiswa = user.role == 'siswa';
+                    final isMapel = user.role == 'guru_mapel';
+
+                    String extraInfo = '';
+                    if (isSiswa && user.classId != null) {
+                      try {
+                        final cl = adminProvider.classes.firstWhere(
+                          (c) => c.id == user.classId,
+                        );
+                        extraInfo = ' • ${cl.name}';
+                      } catch (e) {
+                        extraInfo = ' • Kelas ?';
+                      }
+                    } else if (isMapel && user.subjects != null) {
+                      extraInfo = ' • ${user.subjects!.join(', ')}';
+                    }
+
+                    final isSelected = _selectedUsers.contains(user);
+
+                    final colors = [
+                      [const Color(0xFF4A00E0), const Color(0xFF8E2DE2)],
+                      [const Color(0xFFFF416C), const Color(0xFFFF4B2B)],
+                      [const Color(0xFFFDC830), const Color(0xFFF37335)],
+                      [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
+                    ];
+                    final colorPair = colors[user.name.length % colors.length];
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isSelected ? AppTheme.primaryColor.withOpacity(0.4) : Colors.grey.shade200,
+                          width: isSelected ? 2 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.primaryColor.withOpacity(0.08),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(24),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
                           onTap: () {
                             setState(() {
                               if (isSelected) {
@@ -565,137 +832,150 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                               }
                             });
                           },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? AppTheme.primaryColor
-                                  : Colors.transparent,
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppTheme.primaryColor
-                                    : Colors.grey.shade400,
-                                width: 2,
-                              ),
-                            ),
-                            child: isSelected
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 16,
-                                    color: Colors.white,
-                                  )
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        // Avatar dengan Gradient
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: colorPair[0].withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Center(
-                            child: Text(
-                              user.name.isNotEmpty
-                                  ? user.name[0].toUpperCase()
-                                  : 'U',
-                              style: TextStyle(
-                                color: colorPair[0],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        // Info Pengguna
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                  color: AppTheme.textColor,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                user.email,
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 13,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 8),
-                              // Badge Role
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorPair[0].withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '${user.role.toUpperCase()}$extraInfo',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                    color: colorPair[0],
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                // Checkbox Custom
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      if (isSelected) {
+                                        _selectedUsers.remove(user);
+                                      } else {
+                                        _selectedUsers.add(user);
+                                      }
+                                    });
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                                      border: Border.all(
+                                        color: isSelected ? AppTheme.primaryColor : Colors.grey.shade400,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: isSelected
+                                        ? const Icon(
+                                            Icons.check,
+                                            size: 16,
+                                            color: Colors.white,
+                                          )
+                                        : null,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 16),
+
+                                // Avatar dengan Gradient
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: colorPair[0].withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                                      style: TextStyle(
+                                        color: colorPair[0],
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+
+                                // Info Pengguna
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 16,
+                                          color: AppTheme.textColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        user.email,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Badge Role
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colorPair[0].withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          '${user.role.toUpperCase()}$extraInfo',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                            color: colorPair[0],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Tombol Hapus Individual (hanya tampil jika tidak dalam mode seleksi)
+                                if (_selectedUsers.isEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline),
+                                    color: Colors.red.shade300,
+                                    onPressed: () => _confirmDeleteUser(user),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
-
-                        // Tombol Hapus
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          color: Colors.red.shade300,
-                          onPressed: () => _confirmDeleteUser(user),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    )
+                        .animate()
+                        .slideY(
+                          begin: 0.4,
+                          end: 0,
+                          duration: 500.ms,
+                          curve: Curves.easeOutQuart,
+                          delay: Duration(milliseconds: 70 * index),
+                        )
+                        .fade(
+                          duration: 500.ms,
+                          delay: Duration(milliseconds: 70 * index),
+                        )
+                        .scale(
+                          begin: const Offset(0.9, 0.9),
+                          end: const Offset(1.0, 1.0),
+                          duration: 500.ms,
+                          curve: Curves.easeOutQuart,
+                          delay: Duration(milliseconds: 70 * index),
+                        );
+                  },
                 ),
-              ),
-            )
-            .animate()
-            .slideY(
-              begin: 0.4,
-              end: 0,
-              duration: 500.ms,
-              curve: Curves.easeOutQuart,
-              delay: Duration(milliseconds: 70 * index),
-            )
-            .fade(
-              duration: 500.ms,
-              delay: Duration(milliseconds: 70 * index),
-            )
-            .scale(
-              begin: const Offset(0.9, 0.9),
-              end: const Offset(1.0, 1.0),
-              duration: 500.ms,
-              curve: Curves.easeOutQuart,
-              delay: Duration(milliseconds: 70 * index),
-            );
-      },
+        ),
+      ],
     );
   }
 
@@ -715,103 +995,126 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         .where((u) => u.role == 'siswa')
         .toList();
 
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        backgroundColor: Colors.white, // Pure white background
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text(
-            'Kelola Pengguna',
-            style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-            ),
+    return Scaffold(
+      backgroundColor: Colors.white, // Pure white background
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Kelola Pengguna',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
-          iconTheme: const IconThemeData(color: Colors.black87),
-          actions: [
-            if (_selectedUsers.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.redAccent),
-                tooltip: 'Hapus Terpilih',
-                onPressed: _confirmDeleteSelectedUsers,
+        ),
+        iconTheme: const IconThemeData(color: Colors.black87),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.black87),
+            onSelected: (value) {
+              if (value == 'download') {
+                _downloadTemplate();
+              } else if (value == 'import') {
+                _importExcel();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'download',
+                child: Text('Unduh Template Excel'),
               ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.black87),
-              onSelected: (value) {
-                if (value == 'download') {
-                  _downloadTemplate();
-                } else if (value == 'import') {
-                  _importExcel();
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'download',
-                  child: Text('Unduh Template Excel'),
-                ),
-                const PopupMenuItem(
-                  value: 'import',
-                  child: Text('Import Data (Excel)'),
-                ),
-              ],
-            ),
-          ],
-          bottom: TabBar(
-            isScrollable: true,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.black54,
-            indicatorSize: TabBarIndicatorSize.label,
-            indicator: BoxDecoration(
-              borderRadius: BorderRadius.circular(50),
-              color: AppTheme.primaryColor, // Ungu untuk indicator
-            ),
-            splashBorderRadius: BorderRadius.circular(50),
-            tabs: const [
-              Tab(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Admin'),
-                ),
-              ),
-              Tab(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Guru Piket'),
-                ),
-              ),
-              Tab(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Guru Mapel'),
-                ),
-              ),
-              Tab(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Siswa'),
-                ),
+              const PopupMenuItem(
+                value: 'import',
+                child: Text('Import Data (Excel)'),
               ),
             ],
           ),
-        ),
-        body: adminProvider.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
-                children: [
-                  _buildUserList(adminUsers, adminProvider),
-                  _buildUserList(guruPiketUsers, adminProvider),
-                  _buildUserList(guruMapelUsers, adminProvider),
-                  _buildUserList(siswaUsers, adminProvider),
-                ],
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.black54,
+          indicatorSize: TabBarIndicatorSize.label,
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(50),
+            color: AppTheme.primaryColor, // Ungu untuk indicator
+          ),
+          splashBorderRadius: BorderRadius.circular(50),
+          tabs: const [
+            Tab(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Admin'),
               ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: AppTheme.primaryColor,
-          onPressed: _showAddUserDialog,
-          child: const Icon(Icons.add, color: Colors.white),
+            ),
+            Tab(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Guru Piket'),
+              ),
+            ),
+            Tab(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Guru Mapel'),
+              ),
+            ),
+            Tab(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Siswa'),
+              ),
+            ),
+          ],
         ),
       ),
+      body: adminProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildUserList(adminUsers, adminProvider, 'admin'),
+                _buildUserList(guruPiketUsers, adminProvider, 'guru_piket'),
+                _buildUserList(guruMapelUsers, adminProvider, 'guru_mapel'),
+                _buildUserList(siswaUsers, adminProvider, 'siswa'),
+              ],
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: _selectedUsers.isEmpty
+          ? FloatingActionButton(
+              backgroundColor: AppTheme.primaryColor,
+              onPressed: _showAddUserDialog,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FloatingActionButton.extended(
+                      heroTag: 'edit_selected',
+                      backgroundColor: Colors.amber.shade700,
+                      onPressed: _selectedUsers.length == 1
+                          ? () => _showEditUserDialog(_selectedUsers.first)
+                          : null,
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      label: const Text('Edit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FloatingActionButton.extended(
+                      heroTag: 'delete_selected',
+                      backgroundColor: Colors.redAccent,
+                      onPressed: _confirmDeleteSelectedUsers,
+                      icon: const Icon(Icons.delete, color: Colors.white),
+                      label: const Text('Hapus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
