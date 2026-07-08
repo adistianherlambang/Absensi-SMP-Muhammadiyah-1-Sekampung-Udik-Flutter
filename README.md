@@ -12,6 +12,7 @@
 ## 📋 Daftar Isi
 
 - [Overview Proyek](#-overview-proyek)
+- [Paradigma Pengembangan & Arsitektur Sistem](#-paradigma-pengembangan--arsitektur-sistem)
 - [Fitur Utama & Keunggulan Sistem](#-fitur-utama--keunggulan-sistem)
 - [Struktur Direktori](#-struktur-direktori)
 - [Alur Kerja Utama Sistem](#-alur-kerja-utama-sistem)
@@ -20,6 +21,8 @@
 - [Panduan Instalasi](#-panduan-instalasi)
 - [Kredensial Akun Bawaan](#-kredensial-akun-bawaan)
 - [Ringkasan Tech Stack](#-ringkasan-tech-stack)
+- [Matriks Hak Akses Lengkap](#-matriks-hak-akses-lengkap)
+- [Metode Pengujian](#-metode-pengujian)
 
 ---
 
@@ -40,72 +43,117 @@
 
 Sistem presensi di SMP Muhammadiyah 1 Sekampung Udik sebelumnya masih dilakukan **secara manual berbasis kertas**, yang mengakibatkan berbagai permasalahan:
 
-- 📄 **Data mudah hilang/terselip** — lembar absensi fisik rentan rusak
-- 🔄 **Data tidak sinkron** antara absensi harian (wali kelas) dan absensi per mata pelajaran (guru mapel)
-- ⏳ **Rekap lambat** — rekapitulasi mingguan/bulanan memakan waktu lama
-- 📊 **Laporan tidak real-time** — guru piket dan kepala sekolah tidak dapat memantau kehadiran secara langsung
+- 📄 **Data mudah hilang/terselip** — lembar absensi fisik rentan rusak.
+- 🔄 **Data tidak sinkron** antara absensi harian (wali kelas) dan absensi per mata pelajaran (guru mapel).
+- ⏳ **Rekap lambat** — rekapitulasi mingguan/bulanan memakan waktu lama.
+- 📊 **Laporan tidak real-time** — guru piket dan kepala sekolah tidak dapat memantau kehadiran secara langsung.
 
 ### Solusi yang Ditawarkan
 
 Aplikasi mobile berbasis **QR Code** dengan:
-- ✅ Penyimpanan terpusat & **real-time** di Firebase
-- ✅ **RBAC (Role-Based Access Control)** berjenjang untuk 4 peran pengguna
-- ✅ Sinkronisasi data lintas peran tanpa konflik
-- ✅ Rekap otomatis dari harian → mingguan → bulanan → semesteran
+- ✅ Penyimpanan terpusat & **real-time** di Firebase.
+- ✅ **RBAC (Role-Based Access Control)** berjenjang untuk 4 peran pengguna.
+- ✅ Sinkronisasi data lintas peran tanpa konflik.
+- ✅ Rekap otomatis dari harian → mingguan → bulanan → semesteran.
+
+---
+
+## ⚙️ Paradigma Pengembangan & Arsitektur Sistem
+
+Aplikasi ini dirancang dengan mematuhi paradigma rekayasa perangkat lunak modern untuk menjamin performa, keamanan, dan kemudahan pemeliharaan (*maintainability*).
+
+### 1. Metodologi RAD (Rapid Application Development)
+Proyek dikembangkan menggunakan metodologi RAD yang berfokus pada kecepatan pengembangan melalui siklus iteratif dan umpan balik pengguna yang cepat:
+- **Requirements Planning**: Identifikasi kendala presensi manual di SMP Muhammadiyah 1 Sekampung Udik.
+- **User Design**: Pemodelan diagram UML (Use Case, Activity, Class, Sequence) dan perancangan antarmuka Glassmorphism premium di Figma.
+- **Construction**: Pengodean modular dengan Flutter & Firebase, menggabungkan fitur presensi mandiri QR Code siswa dan presensi massal guru secara iteratif.
+- **Cutover**: Pengujian menyeluruh dengan *Black Box Testing* sebelum sistem diimplementasikan di lingkungan sekolah.
+
+### 2. Arsitektur MVVM (Model-View-ViewModel) dengan Provider
+Untuk memisahkan antara tampilan (UI) dan logika bisnis, proyek ini menggunakan arsitektur **MVVM**:
+
+```
+ ┌───────────────────────┐        ┌─────────────────────────┐        ┌───────────────────────┐
+ │       VIEW (UI)       │        │   VIEWMODEL (Provider)  │        │         MODEL         │
+ │                       │        │                         │        │                       │
+ │  • Screens (UI screens)│ ◀────  │  • AuthProvider         │ ◀────  │  • UserModel          │
+ │  • Widgets (Reusable) │  State │  • AdminProvider        │  Data  │  • SessionModel       │
+ │                       │  Update│  • PiketProvider        │        │  • AttendanceModel    │
+ │  (Merespon input user │        │  • MapelProvider        │        │  • LeaveRequestModel  │
+ │   & render state)     │  ────▶ │                         │  ────▶ │                       │
+ └───────────────────────┘  Event │  (Mengelola state,      │ Action └───────────────────────┘
+                                  │   proses bisnis, &      │
+                                  │   panggil services)     │
+                                  └────────────┬────────────┘
+                                               │
+                                               ▼
+                                  ┌─────────────────────────┐
+                                  │      SERVICE LAYER      │
+                                  │                         │
+                                  │  • AuthService (Auth)   │
+                                  │  • DBService (Firestore)│
+                                  │  • QRService (Encoder)  │
+                                  └─────────────────────────┘
+```
+
+- **Model (`lib/models/`)**: Representasi struktur data murni dalam bentuk kelas Dart. Dilengkapi dengan fungsi serialisasi (`toMap()` dan `fromMap()`) untuk integrasi Cloud Firestore.
+- **View (`lib/screens/` & `lib/widgets/`)**: Berisi komponen antarmuka pengguna. View murni merepresentasikan state yang dikirimkan oleh ViewModel dan mengirimkan interaksi user kembali ke ViewModel.
+- **ViewModel/Provider (`lib/providers/`)**: Menggunakan library `provider` untuk mengelola *state* aplikasi. Ketika data berubah, ViewModel memanggil `notifyListeners()`, yang memicu render ulang pada View secara efisien.
+- **Services (`lib/core/services/`)**: Lapisan abstraksi data untuk menangani komunikasi dengan pihak ketiga (Firebase Auth, Cloud Firestore API, dan modul pembaca/pembuat QR Code).
+
+### 3. Keamanan Bertingkat (Dual-Layer RBAC Guard)
+Sistem menerapkan kontrol akses peran pengguna (**Role-Based Access Control**) secara ketat pada dua tingkat keamanan:
+1. **Client-Side (Route Guard)**: Router Flutter (`lib/app/routes.dart`) mencegah pengguna dengan role tidak sesuai mengakses halaman dashboard atau fitur role lainnya dengan mengecek properti `role` pada `UserModel` aktif saat navigasi dilakukan.
+2. **Server-Side (Firebase Security Rules)**: Menjamin keamanan data di Cloud Firestore. Database memeriksa langsung kecocokan UID pengirim request dengan field `role` di dokumen `/users/{uid}` sebelum mengizinkan operasi *Read*, *Write*, atau *Delete*.
 
 ---
 
 ## 🌟 Fitur Utama & Keunggulan Sistem
 
 ### 👑 Modul Admin
-
 | Fitur | Deskripsi |
 |---|---|
 | **Kelola Pengguna** | CRUD lengkap semua akun (admin, guru piket, guru mapel, siswa) |
-| **Import Bulk Excel** | Upload pengguna massal via file `.xlsx` dengan template yang dapat diunduh |
+| **Import Bulk Excel** | Upload pengguna massal via file `.xlsx` dengan template yang disediakan sistem |
 | **Kelola Kelas** | CRUD kelas beserta penugasan wali kelas |
 | **Generate QR Code** | Generate QR unik per siswa kelas 9 dengan tanda tangan digital (`SMP-MUH-1-ABSENSI-SECURE`) |
-| **Export QR** | Export kartu QR siswa sebagai gambar (Share) |
+| **Export QR** | Export kartu QR siswa sebagai berkas gambar untuk dicetak/dibagikan |
 | **Laporan Komprehensif** | Rekap presensi harian/mingguan/bulanan/semesteran dengan statistik ringkasan |
-| **Filter & Pencarian** | Pencarian pengguna berdasarkan nama, filter berdasarkan kelas |
+| **Filter & Pencarian** | Pencarian pengguna berdasarkan nama dan filterisasi berdasarkan kelas |
 
 ### 🛡️ Modul Guru Piket
-
 | Fitur | Deskripsi |
 |---|---|
 | **Dashboard Real-time** | Pantau kehadiran siswa seluruh kelas secara langsung |
 | **Buka/Tutup Sesi Harian** | Buat sesi presensi harian per kelas dengan timestamp otomatis |
 | **Validasi Kehadiran** | Override status kehadiran siswa (Hadir / Izin / Sakit / Alpa) + catatan |
-| **Rekap Mingguan** | Generate rekap akhir minggu dengan statistik per kelas |
-| **Unduh Laporan** | Export rekap kehadiran harian |
+| **Rekap Mingguan** | Generate rekap akhir minggu dengan statistik kehadiran per kelas |
+| **Unduh Laporan** | Export rekap kehadiran harian untuk keperluan pelaporan fisik |
 
-### 📚 Modul Guru Mata Pelajaran
-
+### 📚 Modul Guru (Umum & Mata Pelajaran) - *Revisi Alur Baru*
 | Fitur | Deskripsi |
 |---|---|
-| **Scan QR Kelas** | Scan QR kelas untuk terhubung ke sesi mata pelajaran |
-| **Buka/Tutup Sesi Mapel** | Kelola sesi presensi per jam pelajaran yang diampu |
-| **Tandai Kehadiran** | Input kehadiran siswa per sesi mapel (manual atau via scan) |
-| **Catatan Disiplin** | Tambahkan catatan keterlambatan/pelanggaran ke rekaman kehadiran |
-| **Riwayat Sesi** | Lihat histori seluruh sesi mapel yang pernah dibuka |
+| **Scan QR Meja Kelas** | Pindai QR Code yang ditempel pada meja/dinding kelas untuk mengidentifikasi kelas secara cepat tanpa memilih manual |
+| **Buka Sesi & Input Massal (Fokus Absen)** | Masukkan mata pelajaran dengan seluruh siswa otomatis diset default "Hadir", lalu guru cukup memilih "Tidak Hadir" dan menentukan status (Izin/Sakit/Alpa) hanya untuk siswa yang absen (layar ringkas & efisien) |
+| **Kirim Kehadiran Massal** | Simpan sesi presensi mata pelajaran dan catatan kehadiran massal secara instan ke Cloud Firestore |
+| **Histori Sesi Presensi** | Lihat daftar histori sesi pelajaran yang pernah diajarkan oleh guru bersangkutan |
+| **Edit & Hapus Sesi** | Lakukan pembaruan (edit) status kehadiran siswa di masa lalu atau hapus sesi presensi beserta catatan kehadirannya secara langsung |
 
 ### 🎓 Modul Siswa
-
 | Fitur | Deskripsi |
 |---|---|
-| **Scan QR Presensi** | Presensi mandiri dengan scan QR Code diri sendiri dalam sesi aktif |
-| **Dashboard Personal** | Tampilan kehadiran hari ini + statistik ringkasan |
-| **Riwayat Kehadiran** | Lihat seluruh histori kehadiran dengan filter status |
-| **Ajukan Izin Digital** | Submit formulir pengajuan izin/keterangan ketidakhadiran |
-| **Status Izin** | Pantau status pengajuan izin (pending / approved / rejected) |
+| **Scan QR Presensi** | Presensi mandiri dengan memindai QR Code kartu siswa dalam sesi presensi aktif |
+| **Dashboard Personal** | Tampilan status kehadiran hari ini beserta statistik ringkasan semester |
+| **Riwayat Kehadiran** | Lihat seluruh histori kehadiran pribadi dengan filter status |
+| **Ajukan Izin Digital** | Submit formulir pengajuan izin/sakit digital beserta unggah alasan ketidakhadiran |
+| **Status Izin** | Pantau status persetujuan pengajuan izin oleh Guru Piket/Admin |
 
 ### ⚡ Keunggulan Teknis
-
-- 🔒 **Double-layer Security**: RBAC di level UI (route guard) **dan** di Firebase Security Rules
-- ⚡ **Timeout Handling**: Semua query Firestore memiliki timeout 10 detik dengan pesan error yang jelas
-- 📦 **QR Signature Validation**: Setiap QR divalidasi tanda tangan `SMP-MUH-1-ABSENSI-SECURE` sebelum diproses
-- 🎨 **Animated UI**: Micro-animation menggunakan `flutter_animate` untuk pengalaman pengguna premium
-- 📊 **Bulk Operations**: Import pengguna massal via Excel tanpa perlu input satu per satu
+- 🔒 **Double-layer Security**: Keamanan menyeluruh pada antarmuka (UI guard) dan basis data (database rules).
+- ⚡ **Firestore Timeout handling**: Semua request database dilindungi timeout 10 detik guna mencegah aplikasi membeku ketika jaringan tidak stabil.
+- 📦 **QR Signature Verification**: Mekanisme tanda tangan Base64 terenkripsi mencegah manipulasi atau penggunaan QR Code palsu dari luar sistem.
+- 🎨 **Premium Aesthetics**: Menggunakan Glassmorphism modern, palet warna elegan, dan mikro-animasi halus (`flutter_animate`).
+- 📊 **Bulk Operations**: Kemudahan operasional melalui pengolahan data massal (bulk input kehadiran & import akun via Excel).
 
 ---
 
@@ -143,11 +191,11 @@ flutter_application_1/
     │   ├── 📄 leave_request_model.dart    # id, student_id, date, reason, status, reviewed_by
     │   └── 📄 report_model.dart           # id, type, class_id, period_start/end, summary
     │
-    ├── providers/                         # State management (Provider pattern)
+    ├── providers/                         # State management (Provider pattern - ViewModel)
     │   ├── 📄 auth_provider.dart          # Auth state: login, logout, refreshProfile, RBAC routing
     │   ├── 📄 admin_provider.dart         # State admin: users, classes, QR generate, reports
     │   ├── 📄 piket_provider.dart         # State guru piket: sessions, attendance validation
-    │   ├── 📄 mapel_provider.dart         # State guru mapel: mapel sessions, attendance per mapel
+    │   ├── 📄 mapel_provider.dart         # State guru mapel & guru kelas: input/edit presensi massal
     │   └── 📄 siswa_provider.dart         # State siswa: scan QR, history, leave requests
     │
     ├── screens/
@@ -172,10 +220,10 @@ flutter_application_1/
     │   │   ├── 📄 open_mapel_session_screen.dart  # Buka/tutup sesi presensi mapel
     │   │   └── 📄 mapel_attendance_screen.dart    # Input kehadiran per sesi mapel
     │   │
-    │   ├── guru/                                  # Modul tambahan guru via scan kelas
-    │   │   ├── 📄 scan_class_qr_screen.dart       # Scan QR kelas sebagai entry point
-    │   │   ├── 📄 input_attendance_screen.dart    # Input kehadiran setelah scan kelas
-    │   │   └── 📄 history_screen.dart             # Riwayat sesi & kehadiran guru
+    │   ├── guru/                                  # Modul tambahan guru (Alur Baru)
+    │   │   ├── 📄 scan_class_qr_screen.dart       # Scan QR meja kelas sebagai entry point
+    │   │   ├── 📄 input_attendance_screen.dart    # Input kehadiran massal (bulk) siswa kelas
+    │   │   └── 📄 history_screen.dart             # Riwayat sesi, edit, dan hapus presensi guru
     │   │
     │   └── siswa/
     │       ├── 📄 siswa_dashboard.dart            # Dashboard siswa: kehadiran hari ini + statistik
@@ -193,7 +241,6 @@ flutter_application_1/
 ## 🔄 Alur Kerja Utama Sistem
 
 ### 1. Alur Login & Routing RBAC
-
 ```
 [User membuka app]
         │
@@ -212,12 +259,9 @@ flutter_application_1/
         └── role: "siswa"       ──▶ /siswa   (SiswaDashboard)
 ```
 
-> ⚠️ Setiap screen dilindungi **route guard** yang memverifikasi `role` dari Firebase sebelum render — akses lintas peran secara otomatis ditolak.
-
 ---
 
 ### 2. Alur Presensi Harian (QR Code Siswa)
-
 ```
 [Guru Piket]                      [Sistem]                       [Siswa]
      │                                │                              │
@@ -246,48 +290,39 @@ Rekap Mingguan ──────────▶ Agregasi 5 hari → summary {ha
 
 ---
 
-### 3. Alur Presensi Mata Pelajaran
-
+### 3. Alur Baru Presensi Guru (Scan Meja Kelas & Input Massal)
 ```
-[Guru Mapel]                    [Sistem]
-     │                              │
-     ▼                              │
-Buka Sesi Mapel ──────▶ Buat /sessions/{id}  type:"mapel"
-(pilih kelas + mapel)   status: "active"
-     │                              │
-     ▼                              │
-Input Kehadiran Siswa ────▶ Tulis /attendances/{session_id}
-(satu per satu)            method: "manual_override"
-                           recorded_by: guru_uid
-     │                              │
-     ▼                              │
-Tutup Sesi ──────────────▶ Update status: "closed"
-```
-
----
-
-### 4. Alur Pengajuan Izin Siswa
-
-```
-[Siswa]                        [Sistem]                 [Guru Piket/Admin]
-   │                               │                            │
-   ▼                               │                            │
-Isi Form Izin ─────────▶ Buat /leave_requests/{id}             │
-(tanggal + alasan)         status: "pending"                   │
-   │                               │                            │
-   │                    Notifikasi ───────────────────▶ Review pengajuan
-   │                               │                   (setujui / tolak)
-   │                    Update status ◀─────────────── approved / rejected
-   │                               │
-   ▼                               │
-Pantau Status ◀────────── Real-time update di dashboard siswa
+[Guru Mapel/Kelas]                [Sistem]                     [Siswa Kelas]
+        │                             │                              │
+        ▼                             │                              │
+Scan QR Meja Kelas ───────────▶ Decode Class QR                      │
+                                parsed ['class_id']                  │
+        │                             │                              │
+        ▼                             │                              │
+Tampil Input Screen ◀───────── Ambil data siswa                      │
+                                di kelas tersebut                    │
+        │                             │                              │
+        ▼                             │                              │
+1. Masukkan Mata Pelajaran            │                              │
+2. Pilih Status Kehadiran             │                              │
+   Siswa secara massal                │                              │
+        │                             │                              │
+        ▼                             │                              │
+Kirim Presensi (Submit) ──────▶ 1. Buat /sessions/{id}               │
+                                   type: "mapel", status: "closed"   │
+                                2. Tulis /attendances/{id}           │
+                                   secara bulk (map data)            │
+        │                             │                              ▼
+        ▼                             │                     Histori Kehadiran
+Kembali ke Dashboard ◀──────── Selesai                              Terbarui
 ```
 
 ---
 
 ## 🔐 Validasi & Logika Teknis Khusus
 
-### 1. QR Code — Enkoding & Validasi
+### 1. QR Code — Enkoding & Validasi Keamanan
+Sistem melakukan validasi tanda tangan untuk memastikan QR Code yang discan tidak dipalsukan.
 
 **Proses Generate:**
 ```
@@ -299,87 +334,48 @@ Pantau Status ◀────────── Real-time update di dashboard si
 ```
 
 **Proses Validasi saat Scan:**
-1. Decode Base64 → JSON parse
-2. Periksa field `app` == `"SMP-MUH-1-ABSENSI-SECURE"` → jika tidak cocok, **tolak**
-3. Ambil `student_id` dan `qr_code_id`
-4. Cek ada sesi aktif untuk kelas siswa → jika tidak ada, **tolak** dengan pesan jelas
-5. Cek siswa belum tercatat di sesi ini → jika sudah, **tolak** (cegah double entry)
-6. Semua lolos → tulis record kehadiran `{ status: "hadir", method: "qr_scan" }`
+1. Decode Base64 string ke format teks JSON.
+2. Periksa field `app` == `"SMP-MUH-1-ABSENSI-SECURE"` → jika tidak cocok, **tolak** scan.
+3. Ambil nilai `student_id` dan `qr_code_id`.
+4. Lakukan verifikasi apakah ada sesi presensi bertipe `harian` yang berstatus `active` untuk kelas siswa tersebut. Jika tidak ada sesi aktif, **tolak** presensi.
+5. Cek apakah siswa bersangkutan sudah terdaftar melakukan presensi pada sesi tersebut. Jika sudah, **tolak** (mencegah duplikasi data).
+6. Jika semua validasi terpenuhi, data presensi direkam ke node `/attendances/{sessionId}/{studentId}`.
 
-**QR Kelas (untuk Guru Mapel):**
+**QR Kelas (untuk Guru):**
 ```
 { "app": "SMP-MUH-1-ABSENSI-SECURE", "class_id": "..." }
 ```
-Digunakan guru mapel untuk masuk ke sesi kelas tertentu via scan.
+Ditempel di meja atau dinding kelas. Membantu guru mendeteksi ID Kelas secara instan saat scan sebelum melakukan presensi bulk.
 
 ---
 
-### 2. RBAC — Firebase Security Rules
-
-```
-Koleksi           │ Admin │ Guru Piket    │ Guru Mapel │ Siswa
-──────────────────┼───────┼───────────────┼────────────┼─────────────────
-/users            │ R/W   │ Read Only     │ Read Only  │ Read (own only)
-/classes          │ R/W   │ Read Only     │ Read Only  │ Read Only
-/sessions         │ R/W   │ R/W           │ R/W        │ Read Only
-/attendances      │ R/W   │ R/W           │ R/W        │ Write (scan QR)
-/leave_requests   │ R/W   │ Read+Update   │ —          │ Read+Create
-/reports          │ R/W   │ R/W           │ —          │ —
-```
-
-> Rules diimplementasikan menggunakan helper `hasRole(role)` yang membaca field `role` dari Firestore `/users/{uid}` — perubahan role langsung efektif tanpa restart.
+### 2. Logika Presensi Massal (Bulk Attendance)
+Pada menu input presensi guru, data siswa dikumpulkan ke dalam map lokal `_studentStatuses` dengan status default awal seluruhnya diset sebagai `hadir`.
+- **Fokus Absen**: Layar UI disederhanakan dengan menyembunyikan pilihan detail ketidakhadiran secara default. Hanya toggle `Hadir` / `Tidak Hadir` yang dimunculkan. Jika guru mengklik `Tidak Hadir` pada siswa tertentu, barulah pilihan detail status (`Izin`, `Sakit`, `Alpa`) dimunculkan untuk siswa tersebut. Ini mempersempit scope kerja guru agar hanya fokus pada siswa yang tidak masuk kelas.
+- Saat tombol **Kirim Presensi** ditekan, sistem membuat objek sesi presensi baru berstatus langsung `closed` (karena presensi diisi secara instan pada saat itu juga).
+- Seluruh daftar kehadiran siswa dikompresi ke dalam bentuk map database tunggal untuk satu dokumen sesi di Firestore:
+  ```json
+  "/attendances/{sessionId}": {
+     "student_id_1": { "status": "hadir", "timestamp": "...", "method": "manual_override", "recorded_by": "guru_uid" },
+     "student_id_2": { "status": "izin", "timestamp": "...", "method": "manual_override", "recorded_by": "guru_uid" }
+  }
+  ```
+  Hal ini menghemat kuota operasi baca/tulis Firestore (*Read/Write operations*) dibandingkan membuat dokumen terpisah untuk setiap kehadiran siswa.
 
 ---
 
-### 3. Import Pengguna Massal (Excel)
-
-Template kolom yang disediakan sistem:
-
-| Kolom | Keterangan |
-|---|---|
-| `Nama Lengkap` | Nama penuh pengguna |
-| `Email` | Email login (unik) |
-| `Password` | Password awal (min. 6 karakter) |
-| `Role` | `admin` / `guru_piket` / `guru_mapel` / `siswa` |
-| `Info Tambahan` | Kelas (untuk siswa) atau mata pelajaran (untuk guru mapel) |
-
-Sistem akan: (1) Buat akun Firebase Auth per baris, (2) Simpan profil ke Firestore `/users/{uid}`, (3) Tampilkan ringkasan berhasil/gagal per baris.
-
----
-
-### 4. Status Kehadiran
-
-| Status | Deskripsi | Siapa yang Dapat Set |
-|---|---|---|
-| `hadir` | Siswa hadir | Scan QR otomatis / Manual guru |
-| `izin` | Siswa izin resmi | Guru piket / Admin |
-| `sakit` | Siswa sakit | Guru piket / Admin |
-| `alpa` | Tanpa keterangan | Guru piket / Admin (default jika tidak hadir) |
-
----
-
-### 5. Timeout & Error Handling Firestore
-
-Semua query Firestore menggunakan timeout **10 detik**:
+### 3. Timeout & Error Handling Firestore
+Untuk mengantisipasi koneksi internet yang lambat di area sekolah, seluruh kueri database Cloud Firestore dibatasi oleh timeout **10 detik**:
 ```dart
-query.get().timeout(
-  Duration(seconds: 10),
-  onTimeout: () => throw Exception(
-    "Koneksi Firestore timeout. Periksa internet atau status database di Firebase Console."
-  ),
-);
+Future<QuerySnapshot> _getWithTimeout(Query query) async {
+  return await query.get().timeout(
+    const Duration(seconds: 10),
+    onTimeout: () => throw Exception(
+      "Koneksi Firestore timeout. Periksa internet atau status database di Firebase Console."
+    ),
+  );
+}
 ```
-
----
-
-### 6. Logika Status Sesi
-
-| Status | Deskripsi | Aksi yang Diizinkan |
-|---|---|---|
-| `active` | Sesi berjalan, input terbuka | Siswa scan QR, guru input kehadiran |
-| `closed` | Sesi ditutup | Hanya baca — tidak bisa tambah data baru |
-
-> Siswa hanya bisa scan QR **saat sesi `active`**. Setiap kelas hanya boleh memiliki **1 sesi harian aktif** dalam satu waktu.
 
 ---
 
@@ -428,7 +424,6 @@ query.get().timeout(
 ---
 
 ### Langkah 1 — Clone Repository
-
 ```bash
 git clone <url-repository>
 cd flutter_application_1
@@ -437,7 +432,6 @@ cd flutter_application_1
 ---
 
 ### Langkah 2 — Install Dependencies
-
 ```bash
 flutter pub get
 ```
@@ -445,20 +439,16 @@ flutter pub get
 ---
 
 ### Langkah 3 — Konfigurasi Firebase
-
 1. **Buat project di Firebase Console** → [console.firebase.google.com](https://console.firebase.google.com)
-
 2. **Aktifkan layanan berikut:**
    - Firebase Authentication → Email/Password
    - Cloud Firestore → mode produksi
-
 3. **Konfigurasi FlutterFire:**
    ```bash
    dart pub global activate flutterfire_cli
    flutterfire configure
    ```
    File `lib/firebase_options.dart` akan otomatis ter-generate.
-
 4. **Deploy Firestore Security Rules:**
    ```bash
    firebase deploy --only firestore:rules
@@ -467,8 +457,7 @@ flutter pub get
 ---
 
 ### Langkah 4 — Setup MySQL (Opsional — Dokumentasi Skripsi)
-
-> MySQL hanya untuk keperluan **dokumentasi ERD & analisis relasi skripsi**, bukan sumber data operasional.
+> MySQL hanya untuk keperluan **dokumentasi ERD & analisis relasi skripsi (Bab IV)**, bukan sumber data operasional aplikasi.
 
 ```bash
 # Buka XAMPP → aktifkan Apache & MySQL
@@ -479,7 +468,6 @@ mysql -u root -p db_presensi_muh1 < database_schema.sql
 ---
 
 ### Langkah 5 — Jalankan Aplikasi
-
 ```bash
 # Cek device tersedia
 flutter devices
@@ -494,98 +482,41 @@ flutter build apk --release
 ---
 
 ### Langkah 6 — Buat Akun Admin Pertama
-
-Karena belum ada akun admin, buat secara manual di Firebase Console:
-
-**Langkah A — Firebase Authentication:**
-1. Firebase Console → Authentication → Add User
-2. Email: `admin@smpmuh1.sch.id`, Password: *(sesuai kebutuhan)*
-3. Catat **UID** yang digenerate
-
-**Langkah B — Firestore:**
-1. Firestore → Collections → `users` → Add Document
-2. Document ID: *(UID dari langkah A)*
-3. Fields:
+1. **Firebase Console** → Authentication → Add User.
+2. Email: `admin@smpmuh1.sch.id`, Password: *(sesuai keinginan)*. Catat **UID** yang dihasilkan.
+3. Buka **Firestore** → Collections → `users` → Add Document.
+4. Document ID: *(UID dari langkah 2)*.
+5. Isi field berikut:
    ```
    name    : "Administrator"
    email   : "admin@smpmuh1.sch.id"
    role    : "admin"
    status  : "active"
    ```
-
-4. Login ke aplikasi dengan kredensial tersebut
+6. Jalankan aplikasi lalu login dengan kredensial tersebut.
 
 ---
 
 ## 🔑 Kredensial Akun Bawaan
 
-> ⚠️ **Akun di bawah ini adalah contoh untuk environment pengujian (development/testing).** Ganti semua password sebelum deployment ke production.
+> ⚠️ **Akun di bawah ini adalah contoh untuk lingkungan pengujian (testing).** Ganti seluruh sandi akun sebelum sistem dideploy secara resmi.
 
 | Role | Email | Password | Akses |
 |---|---|---|---|
-| **Admin** | `admin@smpmuh1.sch.id` | *(setup manual via Firebase Console)* | Full access |
-| **Guru Piket** | *(dibuat oleh Admin via aplikasi)* | *(diset saat pembuatan akun)* | Sesi harian, validasi, rekap |
-| **Guru Mapel** | *(dibuat oleh Admin via aplikasi)* | *(diset saat pembuatan akun)* | Sesi mapel, kehadiran per mapel |
-| **Siswa** | *(dibuat oleh Admin via aplikasi)* | *(diset saat pembuatan akun)* | Scan QR, riwayat, izin |
-
-### Catatan Keamanan
-
-- Admin membuat seluruh akun pengguna via UI aplikasi atau import Excel
-- Password minimum **6 karakter** (enforced by Firebase Auth)
-- Perubahan role berlaku **langsung** tanpa restart (dibaca dari Firestore real-time)
-- Akun dapat dinonaktifkan (`status: "inactive"`) tanpa menghapus data histori
+| **Admin** | `admin@smpmuh1.sch.id` | *(setup manual via Firebase Console)* | Hak Akses Penuh |
+| **Guru Piket** | *(dibuat oleh Admin)* | *(ditentukan saat dibuat)* | Sesi harian, validasi, rekap |
+| **Guru Mapel** | *(dibuat oleh Admin)* | *(ditentukan saat dibuat)* | Sesi mapel, kehadiran per mapel |
+| **Siswa** | *(dibuat oleh Admin)* | *(ditentukan saat dibuat)* | Scan QR mandiri, riwayat, izin |
 
 ---
 
 ## 🛠️ Ringkasan Tech Stack
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                       APLIKASI MOBILE                          │
-│                                                                │
-│   ┌────────────────┐    ┌─────────────────────────────────┐   │
-│   │  Flutter (UI)  │    │      State Management           │   │
-│   │  Dart ^3.12.2  │◄──►│      Provider Pattern           │   │
-│   │  Material 3    │    │  (AuthProvider, AdminProvider,  │   │
-│   │  flutter_animate│   │   PiketProvider, MapelProvider, │   │
-│   │  qr_flutter    │    │   SiswaProvider)                │   │
-│   │  mobile_scanner│    └─────────────────────────────────┘   │
-│   └───────┬────────┘                                          │
-│           │                                                    │
-│  ┌────────▼───────────────────────────────────────────────┐   │
-│  │                   Core Services                        │   │
-│  │  AuthService │ DBService (Firestore) │ QRService       │   │
-│  │  (Firebase    │ (CRUD + 10s Timeout) │ (Base64 +       │   │
-│  │   Auth)       │                      │  Signature)     │   │
-│  └────────────────────────────────────────────────────────┘   │
-└──────────────────────────┬─────────────────────────────────────┘
-                           │  HTTPS / Firebase SDK
-┌──────────────────────────▼─────────────────────────────────────┐
-│                     FIREBASE BACKEND                           │
-│                                                                │
-│  Firebase Auth        Cloud Firestore                          │
-│  (Email/Password)     /users, /classes, /sessions,            │
-│                       /attendances, /leave_requests, /reports  │
-│                                                                │
-│  Firestore Security Rules (RBAC per collection)               │
-└────────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────────┐
-│       MySQL / XAMPP (Pendukung Dokumentasi Skripsi)            │
-│  db_presensi_muh1:                                             │
-│  users, classes, subjects, teacher_subjects, sessions,         │
-│  attendances, leave_requests, reports                          │
-│  → Digunakan untuk pemodelan ERD & analisis relasi (Bab IV)    │
-└────────────────────────────────────────────────────────────────┘
-```
-
-### Tabel Ringkasan Stack
-
 | Layer | Teknologi | Peran |
 |---|---|---|
-| **Bahasa** | Dart 3 | Logika seluruh aplikasi |
+| **Bahasa** | Dart 3 | Logika utama aplikasi |
 | **UI Framework** | Flutter | Cross-platform mobile UI |
-| **State Management** | Provider | Manajemen state reaktif |
+| **State Management** | Provider | Manajemen state reaktif (MVVM ViewModel) |
 | **Autentikasi** | Firebase Authentication | Login email/password |
 | **Database Real-time** | Cloud Firestore | Penyimpanan data operasional |
 | **QR Generate** | qr_flutter | Render QR Code sebagai widget |
@@ -602,7 +533,7 @@ Karena belum ada akun admin, buat secara manual di Firebase Console:
 
 ## 👥 Matriks Hak Akses Lengkap
 
-| Aksi | Admin | Guru Piket | Guru Mapel | Siswa |
+| Aksi | Admin | Guru Piket | Guru Mapel / Kelas | Siswa |
 |---|:---:|:---:|:---:|:---:|
 | Kelola user/kelas | ✅ | ❌ | ❌ | ❌ |
 | Import pengguna (Excel) | ✅ | ❌ | ❌ | ❌ |
@@ -624,9 +555,9 @@ Karena belum ada akun admin, buat secara manual di Firebase Console:
 
 | Jenis | Deskripsi |
 |---|---|
-| **Functional Testing** | Uji setiap fitur per role: login, scan QR, buka/tutup sesi, validasi, laporan |
-| **Non-Functional Testing** | Uji performa real-time, keamanan RBAC, kompatibilitas layar & versi Android |
-| **Regression Testing** | Setiap fitur baru → uji ulang seluruh skenario sebelumnya |
+| **Functional Testing** | Uji setiap fitur per role: login, scan QR, buka/tutup sesi, validasi manual, bulk input, laporan. |
+| **Non-Functional Testing** | Uji performa real-time, keamanan RBAC Firestore, kompatibilitas layar & versi Android. |
+| **Regression Testing** | Pengujian ulang skenario sebelumnya saat menambahkan modul guru atau modifikasi basis data. |
 
 ---
 

@@ -217,6 +217,8 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
                             itemCount: _students.length,
                             itemBuilder: (context, index) {
                               final student = _students[index];
+                              final currentStatus = _studentStatuses[student.uid] ?? 'hadir';
+                              final isHadir = currentStatus == 'hadir';
 
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 12),
@@ -229,26 +231,97 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      student.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                        color: AppTheme.textColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
                                     Row(
                                       children: [
-                                        _buildStatusButton(student.uid, 'hadir', 'Hadir'),
-                                        const SizedBox(width: 6),
-                                        _buildStatusButton(student.uid, 'izin', 'Izin'),
-                                        const SizedBox(width: 6),
-                                        _buildStatusButton(student.uid, 'sakit', 'Sakit'),
-                                        const SizedBox(width: 6),
-                                        _buildStatusButton(student.uid, 'alpa', 'Alpa'),
+                                        Expanded(
+                                          child: Text(
+                                            student.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: AppTheme.textColor,
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  _studentStatuses[student.uid] = 'hadir';
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: isHadir ? AppTheme.hadirColor : Colors.grey.shade100,
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: isHadir ? AppTheme.hadirColor : Colors.grey.shade300,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Hadir',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isHadir ? Colors.white : Colors.grey.shade700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  if (isHadir) {
+                                                    _studentStatuses[student.uid] = 'alpa';
+                                                  }
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: !isHadir ? Colors.redAccent : Colors.grey.shade100,
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: !isHadir ? Colors.redAccent : Colors.grey.shade300,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Tidak Hadir',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: !isHadir ? Colors.white : Colors.grey.shade700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
+                                    if (!isHadir) ...[
+                                      const SizedBox(height: 12),
+                                      const Divider(height: 1),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          const Text(
+                                            'Status: ',
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMutedColor),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildStatusButton(student.uid, 'izin', 'Izin'),
+                                          const SizedBox(width: 6),
+                                          _buildStatusButton(student.uid, 'sakit', 'Sakit'),
+                                          const SizedBox(width: 6),
+                                          _buildStatusButton(student.uid, 'alpa', 'Alpa'),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
                               );
