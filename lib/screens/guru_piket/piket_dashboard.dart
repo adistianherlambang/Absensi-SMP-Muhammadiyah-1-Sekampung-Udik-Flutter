@@ -5,6 +5,7 @@ import '../../providers/mapel_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../models/class_model.dart';
+import '../../models/user_model.dart';
 import '../../app/routes.dart';
 import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,6 +18,24 @@ class PiketDashboard extends StatefulWidget {
 }
 
 class _PiketDashboardState extends State<PiketDashboard> {
+  String _dateFilter = 'Hari Ini'; // 'Hari Ini' | 'Pilih Tanggal' | 'Semua'
+  DateTime? _customFilterDate;
+
+  Future<void> _selectFilterDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _customFilterDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+    );
+    if (picked != null) {
+      setState(() {
+        _dateFilter = 'Pilih Tanggal';
+        _customFilterDate = picked;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -404,6 +423,20 @@ class _PiketDashboardState extends State<PiketDashboard> {
                         }
                         
                         if (myClass == null) return const SizedBox.shrink();
+
+                        // Logika Filter Tanggal
+                        final now = DateTime.now();
+                        final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+                        
+                        final filteredRequests = piketProvider.classLeaveRequests.where((req) {
+                          if (_dateFilter == 'Hari Ini') {
+                            return req.date == todayStr;
+                          } else if (_dateFilter == 'Pilih Tanggal' && _customFilterDate != null) {
+                            final selectedStr = "${_customFilterDate!.year}-${_customFilterDate!.month.toString().padLeft(2, '0')}-${_customFilterDate!.day.toString().padLeft(2, '0')}";
+                            return req.date == selectedStr;
+                          }
+                          return true; // 'Semua'
+                        }).toList();
                         
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,7 +450,35 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                   ),
                             ).animate().fadeIn(delay: 150.ms),
                             const SizedBox(height: 16),
-                            piketProvider.classLeaveRequests.isEmpty
+                            // Filter UI
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _buildFilterChip('Hari Ini', _dateFilter == 'Hari Ini', () {
+                                    setState(() {
+                                      _dateFilter = 'Hari Ini';
+                                    });
+                                  }),
+                                  const SizedBox(width: 8),
+                                  _buildFilterChip(
+                                    _dateFilter == 'Pilih Tanggal' && _customFilterDate != null
+                                        ? "${_customFilterDate!.day}/${_customFilterDate!.month}/${_customFilterDate!.year}"
+                                        : 'Pilih Tanggal',
+                                    _dateFilter == 'Pilih Tanggal',
+                                    () => _selectFilterDate(context),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildFilterChip('Semua', _dateFilter == 'Semua', () {
+                                    setState(() {
+                                      _dateFilter = 'Semua';
+                                    });
+                                  }),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            filteredRequests.isEmpty
                                 ? Container(
                                     padding: const EdgeInsets.all(24),
                                     decoration: BoxDecoration(
@@ -426,28 +487,57 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                       border: Border.all(color: Colors.grey.shade200),
                                     ),
                                     alignment: Alignment.center,
-                                    child: const Text(
-                                      'Belum ada pengajuan izin dari siswa Anda.',
-                                      style: TextStyle(color: Colors.grey),
+                                    child: Text(
+                                      _dateFilter == 'Hari Ini'
+                                          ? 'Belum ada pengajuan izin hari ini.'
+                                          : _dateFilter == 'Pilih Tanggal'
+                                              ? 'Belum ada pengajuan izin untuk tanggal terpilih.'
+                                              : 'Belum ada pengajuan izin dari siswa Anda.',
+                                      style: const TextStyle(color: Colors.grey),
                                     ),
                                   )
                                 : ListView.builder(
                                     shrinkWrap: true,
                                     physics: const NeverScrollableScrollPhysics(),
-                                    itemCount: piketProvider.classLeaveRequests.length,
+                                    itemCount: filteredRequests.length,
                                     itemBuilder: (context, idx) {
-                                      final req = piketProvider.classLeaveRequests[idx];
+                                      final req = filteredRequests[idx];
                                       
-                                      String studentName = 'Siswa';
+                                      UserModel? studentUser;
                                       try {
-                                        studentName = adminProvider.users
-                                            .firstWhere((u) => u.uid == req.studentId)
-                                            .name;
+                                        studentUser = adminProvider.users.firstWhere((u) => u.uid == req.studentId);
                                       } catch (_) {}
+                                      final studentName = studentUser?.name ?? 'Siswa';
                                       
                                       final isSakit = req.status.toLowerCase() == 'sakit';
                                       final statusColor = isSakit ? AppTheme.sakitColor : AppTheme.izinColor;
-                                      final statusLabel = isSakit ? 'Sakit' : 'Izin';
+                                      
+                                      // Dapatkan status presensi saat ini
+                                      final sessionId = 'SESS-HARIAN-${myClass!.id}-${req.date}';
+                                      final attendance = piketProvider.leavesAttendances[sessionId]?[req.studentId];
+                                      final displayStatus = attendance?.status ?? req.status;
+
+                                      Color attColor;
+                                      String attLabel;
+                                      switch (displayStatus.toLowerCase()) {
+                                        case 'hadir':
+                                          attColor = AppTheme.hadirColor;
+                                          attLabel = 'Hadir';
+                                          break;
+                                        case 'izin':
+                                          attColor = AppTheme.izinColor;
+                                          attLabel = 'Izin';
+                                          break;
+                                        case 'sakit':
+                                          attColor = AppTheme.sakitColor;
+                                          attLabel = 'Sakit';
+                                          break;
+                                        case 'alpa':
+                                        default:
+                                          attColor = AppTheme.alpaColor;
+                                          attLabel = 'Alpa';
+                                          break;
+                                      }
                                       
                                       return Container(
                                         margin: const EdgeInsets.only(bottom: 12),
@@ -457,6 +547,21 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                           border: Border.all(color: Colors.grey.shade200),
                                         ),
                                         child: ListTile(
+                                          onTap: () {
+                                            if (studentUser != null) {
+                                              _showChangeAttendanceDialog(
+                                                context: context,
+                                                student: studentUser,
+                                                classId: myClass!.id,
+                                                date: req.date,
+                                                currentStatus: displayStatus,
+                                              );
+                                            } else {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Data siswa tidak ditemukan.')),
+                                              );
+                                            }
+                                          },
                                           leading: CircleAvatar(
                                             backgroundColor: statusColor.withOpacity(0.15),
                                             child: Icon(
@@ -483,20 +588,32 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                               ),
                                             ],
                                           ),
-                                          trailing: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: statusColor.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              statusLabel,
-                                              style: TextStyle(
-                                                color: statusColor,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: attColor.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  border: Border.all(color: attColor.withOpacity(0.3), width: 1),
+                                                ),
+                                                child: Text(
+                                                  attLabel,
+                                                  style: TextStyle(
+                                                    color: attColor,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                              const SizedBox(width: 4),
+                                              Icon(
+                                                Icons.edit_outlined,
+                                                size: 16,
+                                                color: Colors.grey.shade400,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       );
@@ -552,5 +669,214 @@ class _PiketDashboardState extends State<PiketDashboard> {
         ),
       ],
     );
+  }
+
+  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppTheme.textMutedColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            if (label == 'Pilih Tanggal' || (isSelected && _dateFilter == 'Pilih Tanggal')) ...[
+              const SizedBox(width: 4),
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: isSelected ? Colors.white : AppTheme.textMutedColor,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showChangeAttendanceDialog({
+    required BuildContext context,
+    required UserModel student,
+    required String classId,
+    required String date,
+    required String currentStatus,
+  }) {
+    final piketProvider = Provider.of<PiketProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Ubah Presensi: ${student.name}',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ubah status presensi untuk tanggal $date.',
+                style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              _buildAttendanceOptionTile(
+                context,
+                label: 'Hadir',
+                color: AppTheme.hadirColor,
+                isSelected: currentStatus.toLowerCase() == 'hadir',
+                onTap: () => _updateAttendance(context, piketProvider, student.uid, classId, date, 'hadir', authProvider.currentUser!.uid),
+              ),
+              const SizedBox(height: 8),
+              _buildAttendanceOptionTile(
+                context,
+                label: 'Izin',
+                color: AppTheme.izinColor,
+                isSelected: currentStatus.toLowerCase() == 'izin',
+                onTap: () => _updateAttendance(context, piketProvider, student.uid, classId, date, 'izin', authProvider.currentUser!.uid),
+              ),
+              const SizedBox(height: 8),
+              _buildAttendanceOptionTile(
+                context,
+                label: 'Sakit',
+                color: AppTheme.sakitColor,
+                isSelected: currentStatus.toLowerCase() == 'sakit',
+                onTap: () => _updateAttendance(context, piketProvider, student.uid, classId, date, 'sakit', authProvider.currentUser!.uid),
+              ),
+              const SizedBox(height: 8),
+              _buildAttendanceOptionTile(
+                context,
+                label: 'Alpa',
+                color: AppTheme.alpaColor,
+                isSelected: currentStatus.toLowerCase() == 'alpa',
+                onTap: () => _updateAttendance(context, piketProvider, student.uid, classId, date, 'alpa', authProvider.currentUser!.uid),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAttendanceOptionTile(
+    BuildContext context, {
+    required String label,
+    required Color color,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.shade200,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? color : Colors.grey.shade400,
+                  width: 2,
+                ),
+                color: isSelected ? color : Colors.transparent,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? color : AppTheme.textColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateAttendance(
+    BuildContext context,
+    PiketProvider piketProvider,
+    String studentId,
+    String classId,
+    String date,
+    String status,
+    String recorderUid,
+  ) async {
+    Navigator.pop(context); // Tutup dialog
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Memperbarui presensi...')),
+    );
+    try {
+      await piketProvider.updateAttendanceForLeaveRequest(
+        studentId: studentId,
+        classId: classId,
+        date: date,
+        status: status,
+        recorderUid: recorderUid,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Presensi berhasil diperbarui!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memperbarui presensi: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

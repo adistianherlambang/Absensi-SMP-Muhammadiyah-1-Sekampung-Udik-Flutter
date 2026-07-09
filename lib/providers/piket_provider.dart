@@ -12,12 +12,14 @@ class PiketProvider with ChangeNotifier {
   List<UserModel> _students = [];
   Map<String, AttendanceModel> _sessionAttendances = {};
   List<LeaveRequestModel> _classLeaveRequests = [];
+  Map<String, Map<String, AttendanceModel>> _leavesAttendances = {};
   bool _isLoading = false;
 
   List<SessionModel> get sessions => _sessions;
   List<UserModel> get students => _students;
   Map<String, AttendanceModel> get sessionAttendances => _sessionAttendances;
   List<LeaveRequestModel> get classLeaveRequests => _classLeaveRequests;
+  Map<String, Map<String, AttendanceModel>> get leavesAttendances => _leavesAttendances;
   bool get isLoading => _isLoading;
 
   // Memuat daftar sesi presensi
@@ -43,11 +45,34 @@ class PiketProvider with ChangeNotifier {
     try {
       if (studentIds.isEmpty) {
         _classLeaveRequests = [];
+        _leavesAttendances = {};
         return;
       }
       final allLeaves = await _dbService.getLeaveRequests();
       _classLeaveRequests = allLeaves.where((l) => studentIds.contains(l.studentId)).toList();
       _classLeaveRequests.sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+
+      // Ambil data user untuk mendapatkan classId
+      final allUsers = await _dbService.getUsers(role: 'siswa');
+
+      // Ambil kehadiran untuk setiap tanggal di leave requests
+      _leavesAttendances = {};
+      for (var req in _classLeaveRequests) {
+        final student = allUsers.firstWhere(
+          (u) => u.uid == req.studentId,
+          orElse: () => UserModel(uid: req.studentId, name: '', email: '', role: 'siswa', classId: ''),
+        );
+        final classId = student.classId;
+        if (classId != null && classId.isNotEmpty) {
+          final sessionId = 'SESS-HARIAN-$classId-${req.date}';
+          if (!_leavesAttendances.containsKey(sessionId)) {
+            final list = await _dbService.getAttendances(sessionId);
+            _leavesAttendances[sessionId] = {
+              for (var att in list) att.studentId: att
+            };
+          }
+        }
+      }
     } catch (e) {
       // Handle error
     } finally {
@@ -182,6 +207,55 @@ class PiketProvider with ChangeNotifier {
       
       // Update local state
       _sessionAttendances[studentId] = attendance;
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Memperbarui status presensi harian siswa (Hadir, Izin, Sakit, Alpa) untuk tanggal tertentu dari leave requests
+  Future<void> updateAttendanceForLeaveRequest({
+    required String studentId,
+    required String classId,
+    required String date,
+    required String status, // 'hadir' | 'izin' | 'sakit' | 'alpa'
+    required String recorderUid,
+    String? note,
+  }) async {
+    try {
+      final sessionId = 'SESS-HARIAN-$classId-$date';
+      
+      // Pastikan sesi harian ini ada
+      final sessionExists = await _dbService.getSession(sessionId);
+      if (sessionExists == null) {
+        final newSession = SessionModel(
+          id: sessionId,
+          type: 'harian',
+          classId: classId,
+          createdBy: recorderUid,
+          date: date,
+          timeStart: '07:00',
+          status: 'closed', // default closed
+        );
+        await _dbService.createSession(newSession);
+      }
+
+      final attendance = AttendanceModel(
+        studentId: studentId,
+        status: status,
+        timestamp: DateTime.now().toIso8601String(),
+        method: 'manual_override',
+        recordedBy: recorderUid,
+        note: note,
+      );
+
+      await _dbService.recordAttendance(sessionId, studentId, attendance);
+      
+      // Update local state map
+      if (!_leavesAttendances.containsKey(sessionId)) {
+        _leavesAttendances[sessionId] = {};
+      }
+      _leavesAttendances[sessionId]![studentId] = attendance;
       notifyListeners();
     } catch (e) {
       rethrow;
