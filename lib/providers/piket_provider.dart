@@ -3,6 +3,7 @@ import '../core/services/db_service.dart';
 import '../models/session_model.dart';
 import '../models/user_model.dart';
 import '../models/attendance_model.dart';
+import '../models/leave_request_model.dart';
 
 class PiketProvider with ChangeNotifier {
   final DBService _dbService = DBService();
@@ -10,11 +11,13 @@ class PiketProvider with ChangeNotifier {
   List<SessionModel> _sessions = [];
   List<UserModel> _students = [];
   Map<String, AttendanceModel> _sessionAttendances = {};
+  List<LeaveRequestModel> _classLeaveRequests = [];
   bool _isLoading = false;
 
   List<SessionModel> get sessions => _sessions;
   List<UserModel> get students => _students;
   Map<String, AttendanceModel> get sessionAttendances => _sessionAttendances;
+  List<LeaveRequestModel> get classLeaveRequests => _classLeaveRequests;
   bool get isLoading => _isLoading;
 
   // Memuat daftar sesi presensi
@@ -24,6 +27,27 @@ class PiketProvider with ChangeNotifier {
 
     try {
       _sessions = await _dbService.getSessions(type: 'harian');
+    } catch (e) {
+      // Handle error
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Memuat riwayat pengajuan izin siswa kelas (Wali Kelas)
+  Future<void> fetchClassLeaveRequests(List<String> studentIds) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      if (studentIds.isEmpty) {
+        _classLeaveRequests = [];
+        return;
+      }
+      final allLeaves = await _dbService.getLeaveRequests();
+      _classLeaveRequests = allLeaves.where((l) => studentIds.contains(l.studentId)).toList();
+      _classLeaveRequests.sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
     } catch (e) {
       // Handle error
     } finally {
@@ -96,6 +120,38 @@ class PiketProvider with ChangeNotifier {
       _sessionAttendances = {
         for (var att in attendances) att.studentId: att
       };
+
+      // 3. Ambil pengajuan izin/sakit siswa untuk tanggal sesi ini
+      final parts = sessionId.split('-');
+      final dateStr = parts.isNotEmpty ? parts.last : '';
+      final leaveRequests = await _dbService.getLeaveRequests();
+      final todayLeaves = leaveRequests.where((l) => l.date == dateStr).toList();
+
+      for (var student in _students) {
+        if (!_sessionAttendances.containsKey(student.uid)) {
+          LeaveRequestModel? studentLeave;
+          for (var l in todayLeaves) {
+            if (l.studentId == student.uid) {
+              studentLeave = l;
+              break;
+            }
+          }
+
+          if (studentLeave != null) {
+            final autoAttendance = AttendanceModel(
+              studentId: student.uid,
+              status: studentLeave.status, // 'sakit' or 'izin'
+              timestamp: DateTime.now().toIso8601String(),
+              method: 'leave_request',
+              recordedBy: 'system',
+              note: studentLeave.reason,
+            );
+
+            await _dbService.recordAttendance(sessionId, student.uid, autoAttendance);
+            _sessionAttendances[student.uid] = autoAttendance;
+          }
+        }
+      }
     } catch (e) {
       // Handle error
     } finally {

@@ -90,7 +90,20 @@ class SiswaProvider with ChangeNotifier {
         throw Exception("QR Code tidak cocok dengan akun Anda yang sedang login.");
       }
 
-      // 3. Simpan catatan kehadiran ke Firebase
+      // 3. Cek apakah ada pengajuan izin/sakit untuk hari ini
+      final parts = sessionId.split('-');
+      if (parts.length >= 2) {
+        final sessionDate = parts.last;
+        final leaveRequests = await _dbService.getLeaveRequests(studentId: currentStudentUid);
+        final todayLeave = leaveRequests.where((r) => r.date == sessionDate).toList();
+        if (todayLeave.isNotEmpty) {
+          final leave = todayLeave.first;
+          final statusLabel = leave.status == 'sakit' ? 'Sakit' : 'Izin';
+          throw Exception("Presensi ditolak karena Anda sudah mengajukan $statusLabel untuk hari ini.");
+        }
+      }
+
+      // 4. Simpan catatan kehadiran ke Firebase
       final attendance = AttendanceModel(
         studentId: currentStudentUid,
         status: 'hadir',
@@ -115,6 +128,7 @@ class SiswaProvider with ChangeNotifier {
     required String studentId,
     required String date,
     required String reason,
+    required String status,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -126,7 +140,7 @@ class SiswaProvider with ChangeNotifier {
         studentId: studentId,
         date: date,
         reason: reason,
-        status: 'pending',
+        status: status,
         submittedAt: DateTime.now().toIso8601String(),
       );
 

@@ -311,8 +311,81 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                           delay: 50.ms,
                         )
                         .fadeIn(),
-                    const SizedBox(height: 32),
-                    const SizedBox(height: 32),
+                    // Sesi Presensi Aktif
+                    if (siswaProvider.activeSessions.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Sesi Presensi Aktif',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2D3142),
+                            ),
+                      ).animate().fadeIn(delay: 75.ms),
+                      const SizedBox(height: 12),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: siswaProvider.activeSessions.length,
+                        itemBuilder: (context, index) {
+                          final session = siswaProvider.activeSessions[index];
+                          final hasAttended = siswaProvider.history.containsKey(session.id);
+                          final isMapel = session.type == 'mapel';
+                          final title = isMapel ? 'Sesi Mapel: ${session.subject ?? ""}' : 'Sesi Harian Kelas';
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.qr_code_scanner, color: AppTheme.primaryColor),
+                              ),
+                              title: Text(
+                                title,
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                              ),
+                              subtitle: Text('Dibuka: ${session.timeStart}', style: const TextStyle(color: AppTheme.textMutedColor)),
+                              trailing: hasAttended
+                                  ? const Icon(Icons.check_circle, color: AppTheme.hadirColor)
+                                  : ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.primaryColor,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          AppRoutes.siswaScanQR,
+                                          arguments: {
+                                            'session_id': session.id,
+                                            'qr_id': user?.qrCodeId ?? '',
+                                          },
+                                        ).then((_) {
+                                          if (classId.isNotEmpty) {
+                                            siswaProvider.fetchActiveSessions(classId);
+                                            siswaProvider.fetchAttendanceHistory(user!.uid);
+                                          }
+                                        });
+                                      },
+                                      child: const Text('Scan QR'),
+                                    ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ] else ...[
+                      const SizedBox(height: 32),
+                    ],
 
                     // Riwayat Kehadiran Terbaru
                     Row(

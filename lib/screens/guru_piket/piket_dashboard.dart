@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/piket_provider.dart';
+import '../../models/class_model.dart';
 import '../../app/routes.dart';
 import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -20,14 +22,30 @@ class _PiketDashboardState extends State<PiketDashboard> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final piketProvider = Provider.of<PiketProvider>(context, listen: false);
+      final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+
       Provider.of<MapelProvider>(
         context,
         listen: false,
       ).fetchSessions(authProvider.currentUser!.uid);
-      Provider.of<AdminProvider>(
-        context,
-        listen: false,
-      ).fetchData(); // Load classes info
+
+      adminProvider.fetchData().then((_) {
+        ClassModel? myClass;
+        for (var c in adminProvider.classes) {
+          if (c.homeroomTeacherId == authProvider.currentUser?.uid) {
+            myClass = c;
+            break;
+          }
+        }
+        if (myClass != null) {
+          final studentIds = adminProvider.users
+              .where((u) => u.role == 'siswa' && u.classId == myClass!.id)
+              .map((u) => u.uid)
+              .toList();
+          piketProvider.fetchClassLeaveRequests(studentIds);
+        }
+      });
     });
   }
 
@@ -372,6 +390,122 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                   .fadeIn();
                             },
                           ),
+                    // Riwayat Pengajuan Izin Siswa Kelas (Wali Kelas)
+                    Builder(
+                      builder: (context) {
+                        final piketProvider = context.watch<PiketProvider>();
+                        
+                        ClassModel? myClass;
+                        for (var c in adminProvider.classes) {
+                          if (c.homeroomTeacherId == authProvider.currentUser?.uid) {
+                            myClass = c;
+                            break;
+                          }
+                        }
+                        
+                        if (myClass == null) return const SizedBox.shrink();
+                        
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 32),
+                            Text(
+                              'Riwayat Pengajuan Izin Siswa (Kelas ${myClass.name})',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF2D3142),
+                                  ),
+                            ).animate().fadeIn(delay: 150.ms),
+                            const SizedBox(height: 16),
+                            piketProvider.classLeaveRequests.isEmpty
+                                ? Container(
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.grey.shade200),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      'Belum ada pengajuan izin dari siswa Anda.',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: piketProvider.classLeaveRequests.length,
+                                    itemBuilder: (context, idx) {
+                                      final req = piketProvider.classLeaveRequests[idx];
+                                      
+                                      String studentName = 'Siswa';
+                                      try {
+                                        studentName = adminProvider.users
+                                            .firstWhere((u) => u.uid == req.studentId)
+                                            .name;
+                                      } catch (_) {}
+                                      
+                                      final isSakit = req.status.toLowerCase() == 'sakit';
+                                      final statusColor = isSakit ? AppTheme.sakitColor : AppTheme.izinColor;
+                                      final statusLabel = isSakit ? 'Sakit' : 'Izin';
+                                      
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: Colors.grey.shade200),
+                                        ),
+                                        child: ListTile(
+                                          leading: CircleAvatar(
+                                            backgroundColor: statusColor.withOpacity(0.15),
+                                            child: Icon(
+                                              isSakit ? Icons.sick_outlined : Icons.assignment_turned_in_outlined,
+                                              color: statusColor,
+                                            ),
+                                          ),
+                                          title: Text(
+                                            studentName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.textColor,
+                                            ),
+                                          ),
+                                          subtitle: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 4),
+                                              Text('Alasan: ${req.reason}'),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'Tanggal Izin: ${req.date}',
+                                                style: const TextStyle(fontSize: 11, color: AppTheme.textMutedColor),
+                                              ),
+                                            ],
+                                          ),
+                                          trailing: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: statusColor.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              statusLabel,
+                                              style: TextStyle(
+                                                color: statusColor,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

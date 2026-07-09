@@ -15,6 +15,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  String _selectedStatus = 'izin';
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         studentId: authProvider.currentUser!.uid,
         date: dateStr,
         reason: _reasonController.text.trim(),
+        status: _selectedStatus,
       );
 
       _reasonController.clear();
@@ -86,21 +88,16 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     String label;
 
     switch (status.toLowerCase()) {
-      case 'approved':
-        color = AppTheme.hadirColor;
-        icon = Icons.check_circle_outline;
-        label = 'Disetujui';
-        break;
-      case 'rejected':
-        color = AppTheme.alpaColor;
-        icon = Icons.cancel_outlined;
-        label = 'Ditolak';
-        break;
-      case 'pending':
-      default:
+      case 'sakit':
         color = AppTheme.sakitColor;
-        icon = Icons.hourglass_empty;
-        label = 'Menunggu';
+        icon = Icons.warning_amber_outlined;
+        label = 'Sakit';
+        break;
+      case 'izin':
+      default:
+        color = AppTheme.izinColor;
+        icon = Icons.info_outline;
+        label = 'Izin';
         break;
     }
 
@@ -163,6 +160,37 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               onTap: () => _selectDate(context),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Pilih Status Kehadiran',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textColor),
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              value: _selectedStatus,
+                              items: const [
+                                DropdownMenuItem(value: 'izin', child: Text('Izin')),
+                                DropdownMenuItem(value: 'sakit', child: Text('Sakit')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _selectedStatus = val;
+                                  });
+                                }
+                              },
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(color: Colors.grey.shade200),
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(

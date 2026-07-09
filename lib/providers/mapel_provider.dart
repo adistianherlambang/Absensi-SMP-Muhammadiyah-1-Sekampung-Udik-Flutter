@@ -3,6 +3,7 @@ import '../core/services/db_service.dart';
 import '../models/session_model.dart';
 import '../models/user_model.dart';
 import '../models/attendance_model.dart';
+import '../models/leave_request_model.dart';
 
 class MapelProvider with ChangeNotifier {
   final DBService _dbService = DBService();
@@ -100,6 +101,38 @@ class MapelProvider with ChangeNotifier {
       _sessionAttendances = {
         for (var att in attendances) att.studentId: att
       };
+
+      // Cek pengajuan izin/sakit siswa untuk tanggal sesi ini
+      final parts = sessionId.split('-');
+      final dateStr = parts.isNotEmpty ? parts.last : '';
+      final leaveRequests = await _dbService.getLeaveRequests();
+      final todayLeaves = leaveRequests.where((l) => l.date == dateStr).toList();
+
+      for (var student in _students) {
+        if (!_sessionAttendances.containsKey(student.uid)) {
+          LeaveRequestModel? studentLeave;
+          for (var l in todayLeaves) {
+            if (l.studentId == student.uid) {
+              studentLeave = l;
+              break;
+            }
+          }
+
+          if (studentLeave != null) {
+            final autoAttendance = AttendanceModel(
+              studentId: student.uid,
+              status: studentLeave.status, // 'sakit' or 'izin'
+              timestamp: DateTime.now().toIso8601String(),
+              method: 'leave_request',
+              recordedBy: 'system',
+              note: studentLeave.reason,
+            );
+
+            await _dbService.recordAttendance(sessionId, student.uid, autoAttendance);
+            _sessionAttendances[student.uid] = autoAttendance;
+          }
+        }
+      }
     } catch (e) {
       // Handle error
     } finally {

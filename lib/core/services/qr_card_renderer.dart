@@ -39,11 +39,22 @@ Future<Uint8List> renderQRCardToPng({
 
   double y = padding;
 
-  void drawText(String text, double fontSize, FontWeight weight, Color color, double yPos) {
+  void drawText(
+    String text,
+    double fontSize,
+    FontWeight weight,
+    Color color,
+    double yPos,
+  ) {
     final tp = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(fontSize: fontSize, fontWeight: weight, color: color, height: 1.2),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: weight,
+          color: color,
+          height: 1.2,
+        ),
       ),
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
@@ -55,15 +66,6 @@ Future<Uint8List> renderQRCardToPng({
   y += 22;
   drawText('SEKAMPUNG UDIK', 13, FontWeight.w900, Colors.black, y);
   y += 18;
-
-  canvas.drawLine(
-    Offset(padding + 20, y),
-    Offset(cardWidth - padding - 20, y),
-    Paint()
-      ..color = Colors.black
-      ..strokeWidth = 2,
-  );
-  y += 14;
 
   const double qrSize = 200;
   final QrPainter qrPainter = QrPainter(
@@ -93,7 +95,9 @@ Future<Uint8List> renderQRCardToPng({
 
   final ui.Picture picture = recorder.endRecording();
   final ui.Image image = await picture.toImage(pWidth.toInt(), pHeight.toInt());
-  final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+  final ByteData? byteData = await image.toByteData(
+    format: ui.ImageByteFormat.png,
+  );
   if (byteData == null) throw 'Gagal merender data gambar';
   return byteData.buffer.asUint8List();
 }

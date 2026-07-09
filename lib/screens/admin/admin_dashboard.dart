@@ -420,21 +420,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
 
     return Container(
-      height: isFullWidth ? 100 : 160,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(28),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.pushNamed(context, route),
-          child: cardContent,
-        ),
-      ),
-    )
+          height: isFullWidth ? 100 : 170,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(28),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.pushNamed(context, route),
+              child: cardContent,
+            ),
+          ),
+        )
         .animate()
         .slideY(
           begin: 0.1,
