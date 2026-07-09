@@ -197,14 +197,27 @@ class MapelProvider with ChangeNotifier {
       );
       await _dbService.createSession(session);
 
+      // Cek pengajuan izin hari ini untuk presensi massal
+      final leaveRequests = await _dbService.getLeaveRequests();
+      final todayLeaves = leaveRequests.where((l) => l.date == dateStr).toList();
+
       final Map<String, AttendanceModel> attendances = {};
       studentStatuses.forEach((studentId, status) {
+        LeaveRequestModel? studentLeave;
+        for (var l in todayLeaves) {
+          if (l.studentId == studentId) {
+            studentLeave = l;
+            break;
+          }
+        }
+
         attendances[studentId] = AttendanceModel(
           studentId: studentId,
           status: status,
           timestamp: now.toIso8601String(),
-          method: 'manual_override',
+          method: studentLeave != null ? 'leave_request' : 'manual_override',
           recordedBy: teacherUid,
+          note: studentLeave != null ? studentLeave.reason : 'Presensi Massal oleh Guru Mapel',
         );
       });
 

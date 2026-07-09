@@ -153,4 +153,53 @@ class SiswaProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Mengedit pengajuan izin
+  Future<void> editLeaveRequest({
+    required String requestId,
+    required String studentId,
+    required String oldDate,
+    required String newDate,
+    required String reason,
+    required String status,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      if (oldDate != newDate) {
+        await _dbService.deleteAttendanceForDate(studentId, oldDate);
+      }
+      await _dbService.updateLeaveRequest(requestId, newDate, status, reason);
+      await fetchLeaveRequests(studentId);
+      await fetchAttendanceHistory(studentId);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Menghapus pengajuan izin
+  Future<void> deleteLeaveRequest({
+    required String requestId,
+    required String studentId,
+    required String date,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _dbService.deleteLeaveRequest(requestId);
+      await _dbService.deleteAttendanceForDate(studentId, date);
+      await fetchLeaveRequests(studentId);
+      await fetchAttendanceHistory(studentId);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/siswa_provider.dart';
+import '../../models/leave_request_model.dart';
 import '../../app/theme.dart';
 
 class LeaveRequestScreen extends StatefulWidget {
@@ -114,6 +115,206 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     );
   }
 
+  Future<void> _confirmDeleteLeave(LeaveRequestModel req) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Pengajuan'),
+        content: Text('Apakah Anda yakin ingin menghapus pengajuan izin untuk tanggal ${req.date}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final siswaProvider = Provider.of<SiswaProvider>(context, listen: false);
+
+      try {
+        await siswaProvider.deleteLeaveRequest(
+          requestId: req.id,
+          studentId: authProvider.currentUser!.uid,
+          date: req.date,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pengajuan izin berhasil dihapus!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus pengajuan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showEditLeaveDialog(LeaveRequestModel req) async {
+    final editFormKey = GlobalKey<FormState>();
+    final editReasonController = TextEditingController(text: req.reason);
+    DateTime editDate;
+    try {
+      editDate = DateTime.parse(req.date);
+    } catch (_) {
+      editDate = DateTime.now();
+    }
+    String editStatus = req.status;
+
+    Future<void> selectEditDate(BuildContext context, StateSetter setState) async {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: editDate,
+        firstDate: DateTime.now().subtract(const Duration(days: 7)),
+        lastDate: DateTime.now().add(const Duration(days: 30)),
+      );
+      if (picked != null) {
+        setState(() {
+          editDate = picked;
+        });
+      }
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final formattedDate = "${editDate.day}/${editDate.month}/${editDate.year}";
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 24,
+                left: 24,
+                right: 24,
+              ),
+              child: Form(
+                key: editFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Edit Pengajuan Izin',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textColor),
+                    ),
+                    const SizedBox(height: 20),
+                    ListTile(
+                      title: const Text('Tanggal Izin'),
+                      subtitle: Text(formattedDate),
+                      trailing: const Icon(Icons.calendar_month),
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      onTap: () => selectEditDate(context, setModalState),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Pilih Status Kehadiran',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textColor),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: editStatus,
+                      items: const [
+                        DropdownMenuItem(value: 'izin', child: Text('Izin')),
+                        DropdownMenuItem(value: 'sakit', child: Text('Sakit')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setModalState(() {
+                            editStatus = val;
+                          });
+                        }
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: editReasonController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Alasan Tidak Hadir',
+                      ),
+                      validator: (v) => v == null || v.isEmpty ? 'Masukkan alasan Anda' : null,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (!editFormKey.currentState!.validate()) return;
+                        Navigator.pop(context);
+
+                        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                        final siswaProvider = Provider.of<SiswaProvider>(context, listen: false);
+
+                        final newDateStr = "${editDate.year}-${editDate.month.toString().padLeft(2, '0')}-${editDate.day.toString().padLeft(2, '0')}";
+
+                        try {
+                          await siswaProvider.editLeaveRequest(
+                            requestId: req.id,
+                            studentId: authProvider.currentUser!.uid,
+                            oldDate: req.date,
+                            newDate: newDateStr,
+                            reason: editReasonController.text.trim(),
+                            status: editStatus,
+                          );
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Pengajuan izin berhasil diubah!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Gagal mengubah pengajuan: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Simpan Perubahan'),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final siswaProvider = context.watch<SiswaProvider>();
@@ -127,10 +328,10 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       ),
       body: siswaProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          : RefreshIndicator(
+              onRefresh: () => siswaProvider.fetchLeaveRequests(authProvider.currentUser!.uid),
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
                 children: [
                   // Form pengajuan izin
                   Form(
@@ -220,38 +421,76 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () => siswaProvider.fetchLeaveRequests(authProvider.currentUser!.uid),
-                      child: siswaProvider.leaveRequests.isEmpty
-                          ? const Center(
-                              child: Text('Belum ada pengajuan izin sebelumnya.'),
-                            )
-                          : ListView.builder(
-                              itemCount: siswaProvider.leaveRequests.length,
-                              itemBuilder: (context, index) {
-                                final req = siswaProvider.leaveRequests[index];
+                  siswaProvider.leaveRequests.isEmpty
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32.0),
+                            child: Text('Belum ada pengajuan izin sebelumnya.'),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: siswaProvider.leaveRequests.length,
+                          itemBuilder: (context, index) {
+                            final req = siswaProvider.leaveRequests[index];
 
-                                 return Container(
-                                   margin: const EdgeInsets.only(bottom: 12),
-                                   decoration: BoxDecoration(
-                                     color: Colors.white,
-                                     borderRadius: BorderRadius.circular(16),
-                                     border: Border.all(color: Colors.grey.shade200),
-                                   ),
-                                   child: ListTile(
-                                     title: Text(
-                                       'Tanggal Izin: ${req.date}',
-                                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                                     ),
-                                     subtitle: Text('Alasan: ${req.reason}', style: const TextStyle(color: AppTheme.textMutedColor)),
-                                     trailing: _buildStatusWidget(req.status),
-                                   ),
-                                 );
-                              },
-                            ),
-                    ),
-                  ),
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: ListTile(
+                                title: Text(
+                                  'Tanggal Izin: ${req.date}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                                ),
+                                subtitle: Text('Alasan: ${req.reason}', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildStatusWidget(req.status),
+                                    const SizedBox(width: 4),
+                                    PopupMenuButton<String>(
+                                      icon: const Icon(Icons.more_vert, size: 20, color: AppTheme.textMutedColor),
+                                      onSelected: (action) {
+                                        if (action == 'edit') {
+                                          _showEditLeaveDialog(req);
+                                        } else if (action == 'delete') {
+                                          _confirmDeleteLeave(req);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.edit, size: 16, color: AppTheme.primaryColor),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete, size: 16, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Hapus', style: TextStyle(color: Colors.red)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ],
               ),
             ),

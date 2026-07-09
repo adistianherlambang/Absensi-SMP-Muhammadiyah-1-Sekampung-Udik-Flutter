@@ -193,6 +193,36 @@ class DBService {
     });
   }
 
+  // Edit Pengajuan Izin
+  Future<void> updateLeaveRequest(String requestId, String date, String status, String reason) async {
+    await _firestore.collection('leave_requests').doc(requestId).update({
+      'date': date,
+      'status': status,
+      'reason': reason,
+      'submitted_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Hapus Pengajuan Izin
+  Future<void> deleteLeaveRequest(String requestId) async {
+    await _firestore.collection('leave_requests').doc(requestId).delete();
+  }
+
+  // Hapus catatan kehadiran siswa untuk tanggal tertentu (saat izin dihapus/diedit)
+  Future<void> deleteAttendanceForDate(String studentId, String date) async {
+    final sessionSnapshot = await _getWithTimeout(
+      _firestore.collection('sessions').where('date', isEqualTo: date)
+    );
+    for (var doc in sessionSnapshot.docs) {
+      final sessionId = doc.id;
+      await _firestore.collection('attendances').doc(sessionId).update({
+        studentId: FieldValue.delete(),
+      }).catchError((_) {
+        // Jika dokumen attendance tidak memiliki map tersebut atau tidak ada, abaikan error
+      });
+    }
+  }
+
   // ==========================================
   // MANAJEMEN LAPORAN (REPORTS)
   // ==========================================

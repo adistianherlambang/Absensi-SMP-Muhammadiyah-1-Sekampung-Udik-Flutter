@@ -4,6 +4,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../models/user_model.dart';
+import '../../models/leave_request_model.dart';
+import '../../core/services/db_service.dart';
 import '../../app/theme.dart';
 
 class InputAttendanceScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
   // Menyimpan status kehadiran siswa (studentId -> status)
   // Status: 'hadir', 'izin', 'sakit', 'alpa'
   final Map<String, String> _studentStatuses = {};
+  final Map<String, LeaveRequestModel> _todayLeaves = {};
 
   @override
   void dispose() {
@@ -57,6 +60,30 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
       for (final student in _students) {
         _studentStatuses[student.uid] = 'hadir';
       }
+
+      // Ambil data pengajuan izin/sakit hari ini untuk pre-populasi
+      final now = DateTime.now();
+      final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+      DBService().getLeaveRequests().then((leaves) {
+        if (!mounted) return;
+        final todayLeaves = leaves.where((l) => l.date == dateStr).toList();
+        setState(() {
+          for (final student in _students) {
+            LeaveRequestModel? studentLeave;
+            for (var l in todayLeaves) {
+              if (l.studentId == student.uid) {
+                studentLeave = l;
+                break;
+              }
+            }
+            if (studentLeave != null) {
+              _studentStatuses[student.uid] = studentLeave.status; // 'sakit' atau 'izin'
+              _todayLeaves[student.uid] = studentLeave;
+            }
+          }
+        });
+      });
 
       _initialized = true;
     }
@@ -234,13 +261,31 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
                                     Row(
                                       children: [
                                         Expanded(
-                                          child: Text(
-                                            student.name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color: AppTheme.textColor,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                student.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                  color: AppTheme.textColor,
+                                                ),
+                                              ),
+                                              if (_todayLeaves.containsKey(student.uid)) ...[
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'Izin/Sakit: ${_todayLeaves[student.uid]!.reason}',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: _todayLeaves[student.uid]!.status == 'sakit'
+                                                        ? AppTheme.sakitColor
+                                                        : AppTheme.izinColor,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                         ),
                                         Row(
