@@ -91,9 +91,9 @@ class SiswaProvider with ChangeNotifier {
       }
 
       // 3. Cek apakah ada pengajuan izin/sakit untuk hari ini
-      final parts = sessionId.split('-');
-      if (parts.length >= 2) {
-        final sessionDate = parts.last;
+      final sessionDoc = await _dbService.getSession(sessionId);
+      if (sessionDoc != null) {
+        final sessionDate = sessionDoc.date;
         final leaveRequests = await _dbService.getLeaveRequests(studentId: currentStudentUid);
         final todayLeave = leaveRequests.where((r) => r.date == sessionDate).toList();
         if (todayLeave.isNotEmpty) {

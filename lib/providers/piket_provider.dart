@@ -122,8 +122,8 @@ class PiketProvider with ChangeNotifier {
       };
 
       // 3. Ambil pengajuan izin/sakit siswa untuk tanggal sesi ini
-      final parts = sessionId.split('-');
-      final dateStr = parts.isNotEmpty ? parts.last : '';
+      final session = await _dbService.getSession(sessionId);
+      final dateStr = session?.date ?? '';
       final leaveRequests = await _dbService.getLeaveRequests();
       final todayLeaves = leaveRequests.where((l) => l.date == dateStr).toList();
 

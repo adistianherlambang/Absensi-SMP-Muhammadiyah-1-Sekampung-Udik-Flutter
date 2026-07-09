@@ -118,7 +118,8 @@ Sistem menerapkan kontrol akses peran pengguna (**Role-Based Access Control**) s
 | **Kelola Kelas** | CRUD kelas beserta penugasan wali kelas |
 | **Generate QR Code** | Generate QR unik per siswa kelas 9 dengan tanda tangan digital (`SMP-MUH-1-ABSENSI-SECURE`) |
 | **Export QR** | Export kartu QR siswa sebagai berkas gambar untuk dicetak/dibagikan |
-| **Laporan Komprehensif** | Rekap presensi harian/mingguan/bulanan/semesteran dengan statistik ringkasan |
+| **Laporan & Ekspor Excel** | Rekap presensi harian/mingguan/bulanan/semesteran dengan ekspor file Excel (.xlsx) ter-styling lengkap (lebar kolom proporsional, warna header, dan baris selang-seling) secara lokal |
+| **Reset Tahun Ajaran** | Pembersihan/reset seluruh data sesi presensi, kehadiran, dan surat izin dengan dialog konfirmasi keamanan untuk memulai tahun ajaran baru |
 | **Filter & Pencarian** | Pencarian pengguna berdasarkan nama dan filterisasi berdasarkan kelas |
 
 ### 🛡️ Modul Guru Piket
@@ -127,6 +128,7 @@ Sistem menerapkan kontrol akses peran pengguna (**Role-Based Access Control**) s
 | **Dashboard Real-time** | Pantau kehadiran siswa seluruh kelas secara langsung |
 | **Buka/Tutup Sesi Harian** | Buat sesi presensi harian per kelas dengan timestamp otomatis |
 | **Validasi Kehadiran** | Override status kehadiran siswa (Hadir / Izin / Sakit / Alpa) + catatan |
+| **Riwayat Izin Wali Kelas** | Menampilkan log riwayat pengajuan izin khusus dari siswa kelas asuhannya secara real-time |
 | **Rekap Mingguan** | Generate rekap akhir minggu dengan statistik kehadiran per kelas |
 | **Unduh Laporan** | Export rekap kehadiran harian untuk keperluan pelaporan fisik |
 
@@ -135,7 +137,8 @@ Sistem menerapkan kontrol akses peran pengguna (**Role-Based Access Control**) s
 |---|---|
 | **Scan QR Meja Kelas** | Pindai QR Code yang ditempel pada meja/dinding kelas untuk mengidentifikasi kelas secara cepat tanpa memilih manual |
 | **Buka Sesi & Input Massal (Fokus Absen)** | Masukkan mata pelajaran dengan seluruh siswa otomatis diset default "Hadir", lalu guru cukup memilih "Tidak Hadir" dan menentukan status (Izin/Sakit/Alpa) hanya untuk siswa yang absen (layar ringkas & efisien) |
-| **Kirim Kehadiran Massal** | Simpan sesi presensi mata pelajaran dan catatan kehadiran massal secara instan ke Cloud Firestore |
+| **Pre-populasi Izin Otomatis** | Otomatis mendeteksi siswa yang berizin/sakit untuk hari ini, men-set statusnya secara langsung, dan menampilkan alasan izin di bawah nama siswa pada daftar presensi massal |
+| **Kirim Kehadiran Massal** | Simpan sesi presensi mata pelajaran dan catatan kehadiran massal secara instan ke Cloud Firestore (alasan izin siswa otomatis disinkronisasikan sebagai catatan absensi) |
 | **Histori Sesi Presensi** | Lihat daftar histori sesi pelajaran yang pernah diajarkan oleh guru bersangkutan |
 | **Edit & Hapus Sesi** | Lakukan pembaruan (edit) status kehadiran siswa di masa lalu atau hapus sesi presensi beserta catatan kehadirannya secara langsung |
 
@@ -145,7 +148,8 @@ Sistem menerapkan kontrol akses peran pengguna (**Role-Based Access Control**) s
 | **Scan QR Presensi** | Presensi mandiri dengan memindai QR Code kartu siswa dalam sesi presensi aktif |
 | **Dashboard Personal** | Tampilan status kehadiran hari ini beserta statistik ringkasan semester |
 | **Riwayat Kehadiran** | Lihat seluruh histori kehadiran pribadi dengan filter status |
-| **Ajukan Izin Digital** | Submit formulir pengajuan izin/sakit digital beserta unggah alasan ketidakhadiran |
+| **Ajukan Izin Digital** | Submit formulir pengajuan izin/sakit digital secara langsung (auto-approval) dengan memilih status (Izin/Sakit) di atas form alasan ketidakhadiran |
+| **Edit & Hapus Izin** | Siswa dapat memperbarui atau menghapus surat izin yang sudah diajukan sebelumnya (absensi pada tanggal terkait akan disinkronisasikan/dibersihkan otomatis di database) |
 | **Status Izin** | Pantau status persetujuan pengajuan izin oleh Guru Piket/Admin |
 
 ### ⚡ Keunggulan Teknis
@@ -483,13 +487,13 @@ flutter build apk --release
 
 ### Langkah 6 — Buat Akun Admin Pertama
 1. **Firebase Console** → Authentication → Add User.
-2. Email: `admin@smpmuh1.sch.id`, Password: *(sesuai keinginan)*. Catat **UID** yang dihasilkan.
+2. Email: `admin@smpm1.sch.id`, Password: *(sesuai keinginan)*. Catat **UID** yang dihasilkan.
 3. Buka **Firestore** → Collections → `users` → Add Document.
 4. Document ID: *(UID dari langkah 2)*.
 5. Isi field berikut:
    ```
    name    : "Administrator"
-   email   : "admin@smpmuh1.sch.id"
+   email   : "admin@smpm1.sch.id"
    role    : "admin"
    status  : "active"
    ```
@@ -503,10 +507,12 @@ flutter build apk --release
 
 | Role | Email | Password | Akses |
 |---|---|---|---|
-| **Admin** | `admin@smpmuh1.sch.id` | *(setup manual via Firebase Console)* | Hak Akses Penuh |
-| **Guru Piket** | *(dibuat oleh Admin)* | *(ditentukan saat dibuat)* | Sesi harian, validasi, rekap |
-| **Guru Mapel** | *(dibuat oleh Admin)* | *(ditentukan saat dibuat)* | Sesi mapel, kehadiran per mapel |
-| **Siswa** | *(dibuat oleh Admin)* | *(ditentukan saat dibuat)* | Scan QR mandiri, riwayat, izin |
+| **Admin** | `admin@smpm1.sch.id` | `admin123` | Hak Akses Penuh |
+| **Guru Piket** | `piket@smpm1.sch.id` | `piket123` | Sesi harian, validasi, rekap |
+| **Guru Mapel 1** | `mapel1@smpm1.sch.id` | `mapel123` | Sesi mapel, kehadiran per mapel |
+| **Guru Mapel 2** | `mapel2@smpm1.sch.id` | `mapel123` | Sesi mapel, kehadiran per mapel |
+| **Siswa 1** | `siswa1@smpm1.sch.id` | `siswa123` | Scan QR mandiri, riwayat, izin |
+| **Siswa 2** | `siswa2@smpm1.sch.id` | `siswa123` | Scan QR mandiri, riwayat, izin |
 
 ---
 

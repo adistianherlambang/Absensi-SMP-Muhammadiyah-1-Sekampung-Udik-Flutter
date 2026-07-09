@@ -208,6 +208,15 @@ class DBService {
     await _firestore.collection('leave_requests').doc(requestId).delete();
   }
 
+  // Ambil Satu Sesi berdasarkan ID
+  Future<SessionModel?> getSession(String sessionId) async {
+    final doc = await _firestore.collection('sessions').doc(sessionId).get();
+    if (doc.exists) {
+      return SessionModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+    }
+    return null;
+  }
+
   // Hapus catatan kehadiran siswa untuk tanggal tertentu (saat izin dihapus/diedit)
   Future<void> deleteAttendanceForDate(String studentId, String date) async {
     final sessionSnapshot = await _getWithTimeout(
