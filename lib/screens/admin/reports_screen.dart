@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:excel/excel.dart' hide Border;
 import '../../providers/admin_provider.dart';
 import '../../core/services/db_service.dart';
 import '../../app/theme.dart';
@@ -59,7 +59,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
-  Future<void> _generateCSVReport() async {
+  Future<void> _generateExcelReport() async {
     if (_selectedClassId == null || _students.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tidak ada data siswa untuk dibuat laporan.')),
@@ -75,14 +75,82 @@ class _ReportsScreenState extends State<ReportsScreen> {
       final adminProvider = Provider.of<AdminProvider>(context, listen: false);
       final className = adminProvider.classes.firstWhere((c) => c.id == _selectedClassId).name;
 
-      // Header CSV
-      StringBuffer csvBuffer = StringBuffer();
-      csvBuffer.writeln('LAPORAN PRESENSI KELAS $className');
-      csvBuffer.writeln('Tanggal Cetak,${DateTime.now().toLocal().toString().split('.')[0]}');
-      csvBuffer.writeln();
-      csvBuffer.writeln('No,Nama Siswa,Email,QR Code ID,Hadir,Izin,Sakit,Alpa,Persentase');
+      var excel = Excel.createExcel();
+      String defaultSheet = excel.getDefaultSheet() ?? 'Sheet1';
+      excel.rename(defaultSheet, 'Laporan Presensi');
+      Sheet sheet = excel['Laporan Presensi'];
 
+      // Set column widths
+      sheet.setColumnWidth(0, 6.0);
+      sheet.setColumnWidth(1, 28.0);
+      sheet.setColumnWidth(2, 28.0);
+      sheet.setColumnWidth(3, 20.0);
+      sheet.setColumnWidth(4, 10.0);
+      sheet.setColumnWidth(5, 10.0);
+      sheet.setColumnWidth(6, 10.0);
+      sheet.setColumnWidth(7, 10.0);
+      sheet.setColumnWidth(8, 14.0);
+
+      // Title Styles
+      // Title Styles
+      final titleStyle = CellStyle(
+        bold: true,
+        fontSize: 16,
+        fontColorHex: ExcelColor.fromHexString('FF4F46E5'), // Indigo primary
+      );
+
+      final subtitleStyle = CellStyle(
+        fontSize: 11,
+        fontColorHex: ExcelColor.fromHexString('FF4B5563'), // Slate-600
+      );
+
+      final dateStyle = CellStyle(
+        italic: true,
+        fontSize: 9,
+        fontColorHex: ExcelColor.fromHexString('FF9CA3AF'), // Gray-400
+      );
+
+      // Write Title Block
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0)).value = TextCellValue('LAPORAN PRESENSI KELAS $className');
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0)).cellStyle = titleStyle;
+
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1)).value = TextCellValue('SMP Muhammadiyah 1 Sekampung Udik');
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1)).cellStyle = subtitleStyle;
+
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2)).value = TextCellValue('Tanggal Cetak: ${DateTime.now().toLocal().toString().split('.')[0]}');
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2)).cellStyle = dateStyle;
+
+      // Table Headers style
+      final headerStyle = CellStyle(
+        bold: true,
+        fontColorHex: ExcelColor.fromHexString('FFFFFFFF'),
+        backgroundColorHex: ExcelColor.fromHexString('FF4F46E5'), // Indigo header fill
+        fontSize: 10,
+        horizontalAlign: HorizontalAlign.Center,
+      );
+
+      final List<String> headers = [
+        'No',
+        'Nama Siswa',
+        'Email',
+        'QR Code ID',
+        'Hadir',
+        'Izin',
+        'Sakit',
+        'Alpa',
+        'Persentase'
+      ];
+
+      for (int i = 0; i < headers.length; i++) {
+        var cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 4));
+        cell.value = TextCellValue(headers[i]);
+        cell.cellStyle = headerStyle;
+      }
+
+      // Write Data Rows
       int studentIndex = 1;
+      int currentRowIndex = 5;
+
       for (var student in _students) {
         int hadirCount = 0;
         int izinCount = 0;
@@ -99,66 +167,103 @@ class _ReportsScreenState extends State<ReportsScreen> {
             else if (status == 'sakit') sakitCount++;
             else alpaCount++;
           } else {
-            alpaCount++; // Jika tidak ada record, dianggap alpa
+            alpaCount++;
           }
         }
 
         int totalSessions = _sessions.length;
         double percentage = totalSessions > 0 ? (hadirCount / totalSessions) * 100 : 0.0;
 
-        csvBuffer.writeln(
-          '$studentIndex,'
-          '"${student.name}",'
-          '"${student.email}",'
-          '"${student.qrCodeId ?? ''}",'
-          '$hadirCount,'
-          '$izinCount,'
-          '$sakitCount,'
-          '$alpaCount,'
-          '"${percentage.toStringAsFixed(1)}%"'
+        // Alternating row background
+        final isEven = studentIndex % 2 == 0;
+        final rowBgColor = isEven ? 'FFF9FAFB' : 'FFFFFFFF';
+
+        final dataStyleLeft = CellStyle(
+          backgroundColorHex: ExcelColor.fromHexString(rowBgColor),
+          fontColorHex: ExcelColor.fromHexString('FF1F2937'),
+          fontSize: 9,
+          horizontalAlign: HorizontalAlign.Left,
         );
+
+        final dataStyleCenter = CellStyle(
+          backgroundColorHex: ExcelColor.fromHexString(rowBgColor),
+          fontColorHex: ExcelColor.fromHexString('FF1F2937'),
+          fontSize: 9,
+          horizontalAlign: HorizontalAlign.Center,
+        );
+
+        // 0: No
+        var cellNo = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRowIndex));
+        cellNo.value = IntCellValue(studentIndex);
+        cellNo.cellStyle = dataStyleCenter;
+
+        // 1: Nama
+        var cellName = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: currentRowIndex));
+        cellName.value = TextCellValue(student.name);
+        cellName.cellStyle = dataStyleLeft;
+
+        // 2: Email
+        var cellEmail = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: currentRowIndex));
+        cellEmail.value = TextCellValue(student.email);
+        cellEmail.cellStyle = dataStyleLeft;
+
+        // 3: QR Code ID
+        var cellQR = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: currentRowIndex));
+        cellQR.value = TextCellValue(student.qrCodeId ?? '-');
+        cellQR.cellStyle = dataStyleCenter;
+
+        // 4: Hadir
+        var cellHadir = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: currentRowIndex));
+        cellHadir.value = IntCellValue(hadirCount);
+        cellHadir.cellStyle = dataStyleCenter;
+
+        // 5: Izin
+        var cellIzin = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: currentRowIndex));
+        cellIzin.value = IntCellValue(izinCount);
+        cellIzin.cellStyle = dataStyleCenter;
+
+        // 6: Sakit
+        var cellSakit = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: currentRowIndex));
+        cellSakit.value = IntCellValue(sakitCount);
+        cellSakit.cellStyle = dataStyleCenter;
+
+        // 7: Alpa
+        var cellAlpa = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: currentRowIndex));
+        cellAlpa.value = IntCellValue(alpaCount);
+        cellAlpa.cellStyle = dataStyleCenter;
+
+        // 8: Persentase
+        var cellPerc = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: currentRowIndex));
+        cellPerc.value = TextCellValue("${percentage.toStringAsFixed(1)}%");
+        cellPerc.cellStyle = dataStyleCenter;
+
         studentIndex++;
+        currentRowIndex++;
       }
 
-      final csvString = csvBuffer.toString();
-      final bytes = utf8.encode(csvString);
-      String path = '';
+      final fileBytes = excel.save();
+      if (fileBytes == null) throw Exception('Gagal membuat byte file Excel');
 
       if (Platform.isAndroid || Platform.isIOS) {
         Directory? directory = await getExternalStorageDirectory();
         directory ??= await getApplicationDocumentsDirectory();
-        path = '${directory.path}/Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.csv';
+        final path = '${directory.path}/Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.xlsx';
         final file = File(path);
         await file.create(recursive: true);
-        await file.writeAsBytes(bytes);
+        await file.writeAsBytes(fileBytes);
 
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Laporan berhasil disimpan ke: $path'),
-            backgroundColor: Colors.green.shade600,
-          ),
-        );
-
+        // Native share sheet (no path save toast message as requested)
         await Share.shareXFiles([XFile(path)], text: 'Laporan Presensi Kelas $className');
       } else {
         String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Pilih lokasi penyimpanan Laporan CSV:',
-          fileName: 'Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.csv',
+          dialogTitle: 'Pilih lokasi penyimpanan Laporan Excel:',
+          fileName: 'Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.xlsx',
         );
         if (outputFile != null) {
-          path = outputFile;
-          final file = File(path);
+          final file = File(outputFile);
           await file.create(recursive: true);
-          await file.writeAsBytes(bytes);
-
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Laporan berhasil diunduh ke: $path'),
-              backgroundColor: Colors.green.shade600,
-            ),
-          );
+          await file.writeAsBytes(fileBytes);
+          // No path save toast message as requested
         }
       }
     } catch (e) {
@@ -317,8 +422,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     const Spacer(),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.download),
-                      label: const Text('Unduh Laporan (CSV)'),
-                      onPressed: _students.isEmpty ? null : _generateCSVReport,
+                      label: const Text('Unduh Laporan (Excel)'),
+                      onPressed: _students.isEmpty ? null : _generateExcelReport,
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
