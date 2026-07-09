@@ -1,5 +1,10 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../providers/admin_provider.dart';
 import '../../core/services/db_service.dart';
 import '../../app/theme.dart';
@@ -115,56 +120,113 @@ class _ReportsScreenState extends State<ReportsScreen> {
         studentIndex++;
       }
 
-      // Simulasi penyimpanan CSV
       final csvString = csvBuffer.toString();
-      debugPrint("=== LAPORAN CSV ===\n$csvString");
+      final bytes = utf8.encode(csvString);
+      String path = '';
 
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Laporan Berhasil Dibuat'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Laporan presensi kelas $className berformat CSV berhasil disusun.'),
-                const SizedBox(height: 12),
-                const Text(
-                  'Catatan: Laporan telah dicetak ke sistem log konsol. Anda dapat menyalin data tersebut untuk diimpor ke Excel.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+      if (Platform.isAndroid || Platform.isIOS) {
+        Directory? directory = await getExternalStorageDirectory();
+        directory ??= await getApplicationDocumentsDirectory();
+        path = '${directory.path}/Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.csv';
+        final file = File(path);
+        await file.create(recursive: true);
+        await file.writeAsBytes(bytes);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Laporan berhasil disimpan ke: $path'),
+            backgroundColor: Colors.green.shade600,
+          ),
+        );
+
+        await Share.shareXFiles([XFile(path)], text: 'Laporan Presensi Kelas $className');
+      } else {
+        String? outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Pilih lokasi penyimpanan Laporan CSV:',
+          fileName: 'Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.csv',
+        );
+        if (outputFile != null) {
+          path = outputFile;
+          final file = File(path);
+          await file.create(recursive: true);
+          await file.writeAsBytes(bytes);
+
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Laporan berhasil diunduh ke: $path'),
+              backgroundColor: Colors.green.shade600,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Tutup'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Action to copy or share can be added here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Laporan disalin ke Clipboard.')),
-                  );
-                },
-                child: const Text('Salin CSV'),
-              ),
-            ],
           );
-        },
-      );
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal membuat laporan: $e')),
+        SnackBar(content: Text('Gagal mengunduh laporan: $e')),
       );
     } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _confirmResetData() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Data Kehadiran'),
+        content: const Text(
+          'Apakah Anda yakin ingin melakukan reset semua data kehadiran dan pengajuan izin untuk memulai tahun ajaran baru? Tindakan ini tidak dapat dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Ya, Reset', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
+
+      try {
+        await _dbService.resetAttendanceData();
+        await _loadClassData();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Semua data kehadiran berhasil direset untuk tahun ajaran baru!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal melakukan reset data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -255,8 +317,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     const Spacer(),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.download),
-                      label: const Text('Ekspor Laporan (CSV / Excel)'),
+                      label: const Text('Unduh Laporan (CSV)'),
                       onPressed: _students.isEmpty ? null : _generateCSVReport,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.restart_alt, color: Colors.red),
+                      label: const Text('Reset Data Tahun Ajaran Baru', style: TextStyle(color: Colors.red)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: _confirmResetData,
                     ),
                     const SizedBox(height: 16),
                   ]

@@ -223,6 +223,24 @@ class DBService {
     }
   }
 
+  // Reset data kehadiran untuk tahun ajaran baru
+  Future<void> resetAttendanceData() async {
+    // 1. Hapus semua sesi
+    final sessionsSnapshot = await _firestore.collection('sessions').get();
+    final sessionDeleteFutures = sessionsSnapshot.docs.map((doc) => doc.reference.delete());
+    await Future.wait(sessionDeleteFutures);
+    
+    // 2. Hapus semua catatan kehadiran
+    final attendancesSnapshot = await _firestore.collection('attendances').get();
+    final attendanceDeleteFutures = attendancesSnapshot.docs.map((doc) => doc.reference.delete());
+    await Future.wait(attendanceDeleteFutures);
+    
+    // 3. Hapus semua pengajuan izin
+    final leaveRequestsSnapshot = await _firestore.collection('leave_requests').get();
+    final leaveDeleteFutures = leaveRequestsSnapshot.docs.map((doc) => doc.reference.delete());
+    await Future.wait(leaveDeleteFutures);
+  }
+
   // ==========================================
   // MANAJEMEN LAPORAN (REPORTS)
   // ==========================================
