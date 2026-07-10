@@ -23,6 +23,7 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
   late String _classId;
   String _className = '';
   List<UserModel> _students = [];
+  bool _isLoadingData = false;
   
   // Menyimpan status kehadiran siswa (studentId -> status)
   // Status: 'hadir', 'izin', 'sakit', 'alpa'
@@ -44,45 +45,66 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
 
       final adminProvider = Provider.of<AdminProvider>(context, listen: false);
       
-      // Ambil data kelas
-      try {
-        final cls = adminProvider.classes.firstWhere((c) => c.id == _classId);
-        _className = cls.name;
-      } catch (_) {
-        _className = 'Tidak Diketahui';
-      }
+      setState(() {
+        _isLoadingData = true;
+      });
 
-      // Ambil daftar siswa di kelas ini
-      _students = adminProvider.users.where((u) => u.role == 'siswa' && u.classId == _classId).toList();
-      _students.sort((a, b) => a.name.compareTo(b.name));
-
-      // Inisialisasi status default: semua siswa hadir
-      for (final student in _students) {
-        _studentStatuses[student.uid] = 'hadir';
-      }
-
-      // Ambil data pengajuan izin/sakit hari ini untuk pre-populasi
-      final now = DateTime.now();
-      final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-
-      DBService().getLeaveRequests().then((leaves) {
+      adminProvider.fetchData().then((_) {
         if (!mounted) return;
-        final todayLeaves = leaves.where((l) => l.date == dateStr).toList();
-        setState(() {
-          for (final student in _students) {
-            LeaveRequestModel? studentLeave;
-            for (var l in todayLeaves) {
-              if (l.studentId == student.uid) {
-                studentLeave = l;
-                break;
+        
+        // Ambil data kelas
+        try {
+          final cls = adminProvider.classes.firstWhere((c) => c.id == _classId);
+          _className = cls.name;
+        } catch (_) {
+          _className = 'Tidak Diketahui';
+        }
+
+        // Ambil daftar siswa di kelas ini
+        _students = adminProvider.users.where((u) => u.role == 'siswa' && u.classId == _classId).toList();
+        _students.sort((a, b) => a.name.compareTo(b.name));
+
+        // Inisialisasi status default: semua siswa hadir
+        for (final student in _students) {
+          _studentStatuses[student.uid] = 'hadir';
+        }
+
+        // Ambil data pengajuan izin/sakit hari ini untuk pre-populasi
+        final now = DateTime.now();
+        final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+        DBService().getLeaveRequests().then((leaves) {
+          if (!mounted) return;
+          final todayLeaves = leaves.where((l) => l.date == dateStr).toList();
+          setState(() {
+            for (final student in _students) {
+              LeaveRequestModel? studentLeave;
+              for (var l in todayLeaves) {
+                if (l.studentId == student.uid) {
+                  studentLeave = l;
+                  break;
+                }
+              }
+              if (studentLeave != null) {
+                _studentStatuses[student.uid] = studentLeave.status; // 'sakit' atau 'izin'
+                _todayLeaves[student.uid] = studentLeave;
               }
             }
-            if (studentLeave != null) {
-              _studentStatuses[student.uid] = studentLeave.status; // 'sakit' atau 'izin'
-              _todayLeaves[student.uid] = studentLeave;
-            }
+            _isLoadingData = false;
+          });
+        }).catchError((_) {
+          if (mounted) {
+            setState(() {
+              _isLoadingData = false;
+            });
           }
         });
+      }).catchError((_) {
+        if (mounted) {
+          setState(() {
+            _isLoadingData = false;
+          });
+        }
       });
 
       _initialized = true;
@@ -181,7 +203,7 @@ class _InputAttendanceScreenState extends State<InputAttendanceScreen> {
       appBar: AppBar(
         title: Text('Presensi Kelas $_className'),
       ),
-      body: mapelProvider.isLoading
+      body: (mapelProvider.isLoading || _isLoadingData)
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,

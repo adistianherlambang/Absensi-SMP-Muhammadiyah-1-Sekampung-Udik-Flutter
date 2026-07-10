@@ -420,7 +420,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
 
     return Container(
-          height: isFullWidth ? 100 : 170,
+          height: isFullWidth ? 150 : 190,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(28),

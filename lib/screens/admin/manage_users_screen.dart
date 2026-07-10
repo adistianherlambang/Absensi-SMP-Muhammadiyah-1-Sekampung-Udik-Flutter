@@ -167,7 +167,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
 
             if (name.isEmpty || email.isEmpty || password.isEmpty) continue;
 
-            String? classId = (role == 'siswa') ? info : null;
+            String? classId;
+            if (role == 'siswa') {
+              try {
+                final matchedClass = adminProvider.classes.firstWhere(
+                  (c) => c.name.trim().toLowerCase() == info.trim().toLowerCase(),
+                );
+                classId = matchedClass.id;
+              } catch (_) {
+                classId = info;
+              }
+            }
             List<String>? subjects = (role == 'guru_mapel')
                 ? info.split(',').map((e) => e.trim()).toList()
                 : null;
