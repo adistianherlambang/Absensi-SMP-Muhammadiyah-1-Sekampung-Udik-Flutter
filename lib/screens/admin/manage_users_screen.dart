@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/searchable_select.dart';
 import '../../providers/admin_provider.dart';
@@ -91,27 +92,26 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
       var fileBytes = excel.save();
       if (fileBytes != null) {
         if (Platform.isAndroid || Platform.isIOS) {
-          Directory? directory = await getExternalStorageDirectory();
-          directory ??= await getApplicationDocumentsDirectory();
+          final directory = await getTemporaryDirectory();
+          final path = '${directory.path}/Template_Pengguna.xlsx';
+          final file = File(path);
+          if (await file.exists()) {
+            await file.delete();
+          }
+          await file.create(recursive: true);
+          await file.writeAsBytes(fileBytes);
 
-          String path = '${directory.path}/Template_Pengguna.xlsx';
-          File(path)
-            ..createSync(recursive: true)
-            ..writeAsBytesSync(fileBytes);
-
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Template tersimpan di: $path')),
-          );
+          // Native share sheet
+          await Share.shareXFiles([XFile(path)], text: 'Template Pengguna Excel');
         } else {
           String? outputFile = await FilePicker.platform.saveFile(
             dialogTitle: 'Pilih lokasi penyimpanan template:',
             fileName: 'Template_Pengguna.xlsx',
           );
           if (outputFile != null) {
-            File(outputFile)
-              ..createSync(recursive: true)
-              ..writeAsBytesSync(fileBytes);
+            final file = File(outputFile);
+            await file.create(recursive: true);
+            await file.writeAsBytes(fileBytes);
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Template tersimpan di: $outputFile')),
@@ -1162,13 +1162,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'download',
-                child: Text('Unduh Template Excel'),
+                child: Text(Platform.isAndroid || Platform.isIOS ? 'Bagikan Template Excel' : 'Unduh Template Excel'),
               ),
               const PopupMenuItem(
                 value: 'import',
-                child: Text('Import Data (Excel)'),
+                child: Text('Import Data Excel'),
               ),
             ],
           ),
