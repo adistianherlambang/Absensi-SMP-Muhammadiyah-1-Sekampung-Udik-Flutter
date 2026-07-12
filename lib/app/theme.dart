@@ -46,6 +46,24 @@ class AppTheme {
           side: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        elevation: 0,
+      ),
+      dialogTheme: const DialogTheme(
+        elevation: 0,
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        elevation: 0,
+        hoverElevation: 0,
+        focusElevation: 0,
+        highlightElevation: 0,
+      ),
+      popupMenuTheme: const PopupMenuThemeData(
+        elevation: 0,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        elevation: 0,
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
