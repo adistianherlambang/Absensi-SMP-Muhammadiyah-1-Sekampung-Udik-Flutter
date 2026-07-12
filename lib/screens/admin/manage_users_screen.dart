@@ -170,7 +170,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             if (role == 'siswa') {
               try {
                 final matchedClass = adminProvider.classes.firstWhere(
-                  (c) => c.name.trim().toLowerCase() == info.trim().toLowerCase(),
+                  (c) =>
+                      c.name.trim().toLowerCase() == info.trim().toLowerCase(),
                 );
                 classId = matchedClass.id;
               } catch (_) {
@@ -274,7 +275,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                             decoration: const InputDecoration(
                               labelText: 'Tipe Guru',
                             ),
-                            value: _selectedRole.startsWith('guru_') ? _selectedRole : 'guru_mapel',
+                            value: _selectedRole.startsWith('guru_')
+                                ? _selectedRole
+                                : 'guru_mapel',
                             items: const [
                               DropdownMenuItem(
                                 value: 'guru_mapel',
@@ -494,7 +497,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                             decoration: const InputDecoration(
                               labelText: 'Tipe Guru',
                             ),
-                            value: _selectedRole.startsWith('guru_') ? _selectedRole : user.role,
+                            value: _selectedRole.startsWith('guru_')
+                                ? _selectedRole
+                                : user.role,
                             items: const [
                               DropdownMenuItem(
                                 value: 'guru_mapel',
@@ -624,7 +629,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                 classId: _selectedRole == 'siswa'
                                     ? _selectedClassId
                                     : null,
-                                subjects: _selectedRole == 'guru_mapel' ? subjectsList : null,
+                                subjects: _selectedRole == 'guru_mapel'
+                                    ? subjectsList
+                                    : null,
                               );
 
                               if (!mounted) return;
@@ -1063,12 +1070,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                               '${user.role == 'admin'
                                                   ? 'ADMIN'
                                                   : user.role == 'siswa'
-                                                      ? 'SISWA'
-                                                      : user.role == 'guru_mapel'
-                                                          ? 'GURU MAPEL'
-                                                          : user.role == 'guru_piket'
-                                                              ? 'GURU PIKET'
-                                                              : 'GURU WALI KELAS'}'
+                                                  ? 'SISWA'
+                                                  : user.role == 'guru_mapel'
+                                                  ? 'GURU MAPEL'
+                                                  : user.role == 'guru_piket'
+                                                  ? 'GURU PIKET'
+                                                  : 'GURU WALI KELAS'}'
                                               '$extraInfo',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
@@ -1173,10 +1180,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
           unselectedLabelColor: Colors.black54,
           indicatorSize: TabBarIndicatorSize.label,
           indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(16),
             color: AppTheme.primaryColor, // Ungu untuk indicator
           ),
-          splashBorderRadius: BorderRadius.circular(50),
+          splashBorderRadius: BorderRadius.circular(25),
           tabs: const [
             Tab(
               child: Padding(
