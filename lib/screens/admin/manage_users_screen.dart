@@ -905,6 +905,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                   onChanged: (val) {
                     setState(() {
                       _searchQuery = val;
+                      _selectedUsers.clear();
                     });
                   },
                 ),
@@ -944,6 +945,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     onChanged: (val) {
                       setState(() {
                         _filterClassId = (val == null || val.id == 'all') ? null : val.id;
+                        _selectedUsers.clear();
                       });
                     },
                   ),
@@ -974,6 +976,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     onChanged: (val) {
                       setState(() {
                         _filterTeacherRole = val?.role;
+                        _selectedUsers.clear();
                       });
                     },
                   ),
