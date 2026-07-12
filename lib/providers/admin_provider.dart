@@ -96,6 +96,20 @@ class AdminProvider with ChangeNotifier {
         await _dbService.saveClass(updatedClass);
       }
 
+      // Jika role guru_wali_kelas, pasang sebagai wali kelas di kelas bersangkutan
+      if (role == 'guru_wali_kelas' && classId != null && classId.isNotEmpty) {
+        try {
+          final cl = _classes.firstWhere((c) => c.id == classId);
+          final updatedClass = ClassModel(
+            id: cl.id,
+            name: cl.name,
+            homeroomTeacherId: uid,
+            studentIds: cl.studentIds,
+          );
+          await _dbService.saveClass(updatedClass);
+        } catch (_) {}
+      }
+
       // Refresh list lokal
       await fetchData();
     } catch (e) {
@@ -294,6 +308,53 @@ class AdminProvider with ChangeNotifier {
             );
             await _dbService.saveClass(updatedClass);
           } catch (_) {}
+        }
+      }
+
+      // 1.5 Update kelas jika role guru_wali_kelas dan kelas bimbingannya berubah
+      if (role == 'guru_wali_kelas') {
+        // Hapus guru wali kelas ini dari kelas mana pun yang sebelumnya dia ampu
+        for (final cl in _classes) {
+          if (cl.homeroomTeacherId == uid && cl.id != classId) {
+            try {
+              final updatedClass = ClassModel(
+                id: cl.id,
+                name: cl.name,
+                homeroomTeacherId: '',
+                studentIds: cl.studentIds,
+              );
+              await _dbService.saveClass(updatedClass);
+            } catch (_) {}
+          }
+        }
+        
+        // Pasang guru wali kelas ini ke kelas yang baru dipilih (jika ada)
+        if (classId != null && classId.isNotEmpty) {
+          try {
+            final targetCl = _classes.firstWhere((c) => c.id == classId);
+            final updatedClass = ClassModel(
+              id: targetCl.id,
+              name: targetCl.name,
+              homeroomTeacherId: uid,
+              studentIds: targetCl.studentIds,
+            );
+            await _dbService.saveClass(updatedClass);
+          } catch (_) {}
+        }
+      } else if (existingUser.role == 'guru_wali_kelas') {
+        // Jika role berubah dari guru wali kelas ke tipe lain, hapus status wali kelas dari kelas lama
+        for (final cl in _classes) {
+          if (cl.homeroomTeacherId == uid) {
+            try {
+              final updatedClass = ClassModel(
+                id: cl.id,
+                name: cl.name,
+                homeroomTeacherId: '',
+                studentIds: cl.studentIds,
+              );
+              await _dbService.saveClass(updatedClass);
+            } catch (_) {}
+          }
         }
       }
 

@@ -299,6 +299,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                               setModalState(() {
                                 if (val != null) {
                                   _selectedRole = val;
+                                  _selectedClassId = null;
                                 }
                               });
                             },
@@ -366,6 +367,45 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                           const SizedBox(height: 16),
                         ],
 
+                        // Kondisional khusus Wali Kelas: Pilih Kelas yang diampu (atau tidak sama sekali)
+                        if (_selectedRole == 'guru_wali_kelas') ...[
+                          SearchableSelect<ClassModel>(
+                            labelText: 'Kelas Bimbingan',
+                            items: [
+                              ClassModel(
+                                id: 'none',
+                                name: 'Tidak Mengampu Kelas',
+                                homeroomTeacherId: '',
+                                studentIds: const [],
+                              ),
+                              ...adminProvider.classes
+                            ],
+                            itemLabel: (c) => c.name,
+                            selectedValue: _selectedClassId != null
+                                ? adminProvider.classes.firstWhere(
+                                    (c) => c.id == _selectedClassId,
+                                    orElse: () => ClassModel(
+                                      id: 'none',
+                                      name: 'Tidak Mengampu Kelas',
+                                      homeroomTeacherId: '',
+                                      studentIds: const [],
+                                    ),
+                                  )
+                                : ClassModel(
+                                    id: 'none',
+                                    name: 'Tidak Mengampu Kelas',
+                                    homeroomTeacherId: '',
+                                    studentIds: const [],
+                                  ),
+                            onChanged: (val) {
+                              setModalState(() {
+                                _selectedClassId = (val == null || val.id == 'none') ? null : val.id;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
                         // Kondisional khusus Guru Mapel: Masukkan Mapel
                         if (_selectedRole == 'guru_mapel') ...[
                           TextFormField(
@@ -414,7 +454,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                 email: _emailController.text.trim(),
                                 password: _passwordController.text.trim(),
                                 role: _selectedRole,
-                                classId: _selectedRole == 'siswa'
+                                classId: (_selectedRole == 'siswa' || _selectedRole == 'guru_wali_kelas')
                                     ? _selectedClassId
                                     : null,
                                 subjects: subjectsList,
@@ -458,8 +498,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
     _passwordController.clear();
     _subjectController.text = user.subjects?.join(', ') ?? '';
 
+    // Temukan kelas bimbingan jika user adalah guru_wali_kelas
+    String? initialClassId = user.classId;
+    if (user.role == 'guru_wali_kelas') {
+      try {
+        final cl = adminProvider.classes.firstWhere((c) => c.homeroomTeacherId == user.uid);
+        initialClassId = cl.id;
+      } catch (_) {
+        initialClassId = null;
+      }
+    }
+
     setState(() {
-      _selectedClassId = user.classId;
+      _selectedClassId = initialClassId;
       _selectedRole = user.role;
     });
 
@@ -575,6 +626,45 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                           const SizedBox(height: 16),
                         ],
 
+                        // Kondisional khusus Wali Kelas: Pilih Kelas yang diampu (atau tidak sama sekali)
+                        if (_selectedRole == 'guru_wali_kelas') ...[
+                          SearchableSelect<ClassModel>(
+                            labelText: 'Kelas Bimbingan',
+                            items: [
+                              ClassModel(
+                                id: 'none',
+                                name: 'Tidak Mengampu Kelas',
+                                homeroomTeacherId: '',
+                                studentIds: const [],
+                              ),
+                              ...adminProvider.classes
+                            ],
+                            itemLabel: (c) => c.name,
+                            selectedValue: _selectedClassId != null
+                                ? adminProvider.classes.firstWhere(
+                                    (c) => c.id == _selectedClassId,
+                                    orElse: () => ClassModel(
+                                      id: 'none',
+                                      name: 'Tidak Mengampu Kelas',
+                                      homeroomTeacherId: '',
+                                      studentIds: const [],
+                                    ),
+                                  )
+                                : ClassModel(
+                                    id: 'none',
+                                    name: 'Tidak Mengampu Kelas',
+                                    homeroomTeacherId: '',
+                                    studentIds: const [],
+                                  ),
+                            onChanged: (val) {
+                              setModalState(() {
+                                _selectedClassId = (val == null || val.id == 'none') ? null : val.id;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
                         // Kondisional khusus Guru Mapel: Masukkan Mapel
                         if (_selectedRole == 'guru_mapel') ...[
                           TextFormField(
@@ -629,7 +719,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                 uid: user.uid,
                                 name: _nameController.text.trim(),
                                 role: _selectedRole,
-                                classId: _selectedRole == 'siswa'
+                                classId: (_selectedRole == 'siswa' || _selectedRole == 'guru_wali_kelas')
                                     ? _selectedClassId
                                     : null,
                                 subjects: _selectedRole == 'guru_mapel'
