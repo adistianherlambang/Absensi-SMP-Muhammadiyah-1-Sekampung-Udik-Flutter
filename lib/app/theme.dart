@@ -49,7 +49,7 @@ class AppTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         elevation: 0,
       ),
-      dialogTheme: const DialogTheme(
+      dialogTheme: const DialogThemeData(
         elevation: 0,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
