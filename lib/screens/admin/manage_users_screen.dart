@@ -1205,37 +1205,46 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             ],
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.black54,
-          indicatorSize: TabBarIndicatorSize.label,
-          indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: AppTheme.primaryColor, // Ungu untuk indicator
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.black54,
+                indicatorSize: TabBarIndicatorSize.label,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppTheme.primaryColor,
+                ),
+                splashBorderRadius: BorderRadius.circular(25),
+                tabs: const [
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Admin'),
+                    ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Guru'),
+                    ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Siswa'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          splashBorderRadius: BorderRadius.circular(25),
-          tabs: const [
-            Tab(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Admin'),
-              ),
-            ),
-            Tab(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Guru'),
-              ),
-            ),
-            Tab(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Siswa'),
-              ),
-            ),
-          ],
         ),
       ),
       body: adminProvider.isLoading
