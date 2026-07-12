@@ -937,17 +937,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                   : Colors.grey.shade200,
                               width: isSelected ? 2 : 1,
                             ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: AppTheme.primaryColor.withOpacity(
-                                        0.08,
-                                      ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ]
-                                : null,
                           ),
                           child: Material(
                             color: Colors.transparent,
