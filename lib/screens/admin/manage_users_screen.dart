@@ -40,14 +40,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {
         if (_tabController.index == 0) {
           _selectedRole = 'admin';
         } else if (_tabController.index == 1) {
-          _selectedRole = 'guru_piket';
-        } else if (_tabController.index == 2) {
           _selectedRole = 'guru_mapel';
         } else {
           _selectedRole = 'siswa';
@@ -221,8 +219,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
       if (_tabController.index == 0) {
         _selectedRole = 'admin';
       } else if (_tabController.index == 1) {
-        _selectedRole = 'guru_piket';
-      } else if (_tabController.index == 2) {
         _selectedRole = 'guru_mapel';
       } else {
         _selectedRole = 'siswa';
@@ -261,14 +257,47 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                         Text(
                           'Tambah Pengguna Baru (${_selectedRole == "admin"
                               ? "Administrator"
+                              : _selectedRole == "siswa"
+                              ? "Siswa"
                               : _selectedRole == "guru_piket"
                               ? "Guru Piket"
                               : _selectedRole == "guru_mapel"
                               ? "Guru Mapel"
-                              : "Siswa"})',
+                              : "Guru Wali Kelas"})',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 20),
+
+                        if (_tabController.index == 1) ...[
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              labelText: 'Tipe Guru',
+                            ),
+                            value: _selectedRole.startsWith('guru_') ? _selectedRole : 'guru_mapel',
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'guru_mapel',
+                                child: Text('Guru Mata Pelajaran'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'guru_piket',
+                                child: Text('Guru Piket'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'guru_wali_kelas',
+                                child: Text('Guru Wali Kelas'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              setModalState(() {
+                                if (val != null) {
+                                  _selectedRole = val;
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         // Input Nama
                         TextFormField(
@@ -424,6 +453,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
 
     setState(() {
       _selectedClassId = user.classId;
+      _selectedRole = user.role;
     });
 
     showModalBottomSheet(
@@ -457,6 +487,37 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 20),
+
+                        if (user.role.startsWith('guru_')) ...[
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              labelText: 'Tipe Guru',
+                            ),
+                            value: _selectedRole.startsWith('guru_') ? _selectedRole : user.role,
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'guru_mapel',
+                                child: Text('Guru Mata Pelajaran'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'guru_piket',
+                                child: Text('Guru Piket'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'guru_wali_kelas',
+                                child: Text('Guru Wali Kelas'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              setModalState(() {
+                                if (val != null) {
+                                  _selectedRole = val;
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         // Input Nama
                         TextFormField(
@@ -506,7 +567,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                         ],
 
                         // Kondisional khusus Guru Mapel: Masukkan Mapel
-                        if (user.role == 'guru_mapel') ...[
+                        if (_selectedRole == 'guru_mapel') ...[
                           TextFormField(
                             controller: _subjectController,
                             decoration: const InputDecoration(
@@ -515,7 +576,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                               helperText: 'Contoh: Matematika, Fisika, IPA',
                             ),
                             validator: (v) =>
-                                user.role == 'guru_mapel' &&
+                                _selectedRole == 'guru_mapel' &&
                                     (v == null || v.isEmpty)
                                 ? 'Masukkan minimal 1 mata pelajaran'
                                 : null,
@@ -546,7 +607,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
 
                             try {
                               List<String>? subjectsList;
-                              if (user.role == 'guru_mapel' &&
+                              if (_selectedRole == 'guru_mapel' &&
                                   _subjectController.text.isNotEmpty) {
                                 subjectsList = _subjectController.text
                                     .split(',')
@@ -558,11 +619,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                               await adminProvider.updateUser(
                                 uid: user.uid,
                                 name: _nameController.text.trim(),
-                                role: user.role,
-                                classId: user.role == 'siswa'
+                                role: _selectedRole,
+                                classId: _selectedRole == 'siswa'
                                     ? _selectedClassId
                                     : null,
-                                subjects: subjectsList,
+                                subjects: _selectedRole == 'guru_mapel' ? subjectsList : null,
                               );
 
                               if (!mounted) return;
@@ -822,7 +883,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                   itemBuilder: (context, index) {
                     final user = filteredUsers[index];
                     final isSiswa = user.role == 'siswa';
-                    final isMapel = user.role == 'guru_mapel';
 
                     String extraInfo = '';
                     if (isSiswa && user.classId != null) {
@@ -834,8 +894,25 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                       } catch (e) {
                         extraInfo = ' • Kelas ?';
                       }
-                    } else if (isMapel && user.subjects != null) {
-                      extraInfo = ' • ${user.subjects!.join(', ')}';
+                    } else if (user.role.startsWith('guru_')) {
+                      String roleText = '';
+                      if (user.role == 'guru_mapel') {
+                        roleText = 'Mapel';
+                        if (user.subjects != null) {
+                          roleText += ' (${user.subjects!.join(', ')})';
+                        }
+                      } else if (user.role == 'guru_piket') {
+                        roleText = 'Piket';
+                      } else if (user.role == 'guru_wali_kelas') {
+                        roleText = 'Wali Kelas';
+                        try {
+                          final cl = adminProvider.classes.firstWhere(
+                            (c) => c.homeroomTeacherId == user.uid,
+                          );
+                          roleText += ' (${cl.name})';
+                        } catch (_) {}
+                      }
+                      extraInfo = ' • $roleText';
                     }
 
                     final isSelected = _selectedUsers.contains(user);
@@ -993,7 +1070,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                                   BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              '${user.role.toUpperCase()}$extraInfo',
+                                              '${user.role == 'admin'
+                                                  ? 'ADMIN'
+                                                  : user.role == 'siswa'
+                                                      ? 'SISWA'
+                                                      : user.role == 'guru_mapel'
+                                                          ? 'GURU MAPEL'
+                                                          : user.role == 'guru_piket'
+                                                              ? 'GURU PIKET'
+                                                              : 'GURU WALI KELAS'}'
+                                              '$extraInfo',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 11,
@@ -1051,11 +1137,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
     final adminUsers = adminProvider.users
         .where((u) => u.role == 'admin')
         .toList();
-    final guruPiketUsers = adminProvider.users
-        .where((u) => u.role == 'guru_piket')
-        .toList();
-    final guruMapelUsers = adminProvider.users
-        .where((u) => u.role == 'guru_mapel')
+    final guruUsers = adminProvider.users
+        .where((u) => u.role.startsWith('guru_'))
         .toList();
     final siswaUsers = adminProvider.users
         .where((u) => u.role == 'siswa')
@@ -1114,13 +1197,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             Tab(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Guru Piket'),
-              ),
-            ),
-            Tab(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Guru Mapel'),
+                child: Text('Guru'),
               ),
             ),
             Tab(
@@ -1138,8 +1215,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
               controller: _tabController,
               children: [
                 _buildUserList(adminUsers, adminProvider, 'admin'),
-                _buildUserList(guruPiketUsers, adminProvider, 'guru_piket'),
-                _buildUserList(guruMapelUsers, adminProvider, 'guru_mapel'),
+                _buildUserList(guruUsers, adminProvider, 'guru'),
                 _buildUserList(siswaUsers, adminProvider, 'siswa'),
               ],
             ),

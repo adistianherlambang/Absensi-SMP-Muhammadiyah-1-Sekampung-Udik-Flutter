@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToDashboard(String? role) {
     if (role == 'admin') {
       Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
-    } else if (role == 'guru_piket') {
+    } else if (role == 'guru_piket' || role == 'guru_wali_kelas') {
       Navigator.pushReplacementNamed(context, AppRoutes.piketDashboard);
     } else if (role == 'guru_mapel') {
       Navigator.pushReplacementNamed(context, AppRoutes.mapelDashboard);

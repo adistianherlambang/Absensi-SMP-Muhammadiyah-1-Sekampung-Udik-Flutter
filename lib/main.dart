@@ -82,6 +82,7 @@ class AuthWrapper extends StatelessWidget {
       case 'admin':
         return const AdminDashboard();
       case 'guru_piket':
+      case 'guru_wali_kelas':
         return const PiketDashboard();
       case 'guru_mapel':
         return const MapelDashboard();

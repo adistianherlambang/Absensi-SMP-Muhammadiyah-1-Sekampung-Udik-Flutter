@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/services/db_service.dart';
 import '../../models/session_model.dart';
 import '../../models/user_model.dart';
+import '../../models/class_model.dart';
 import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
 
@@ -26,9 +28,25 @@ class _WeeklyRecapScreenState extends State<WeeklyRecapScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    if (_selectedClassId == null && adminProvider.classes.isNotEmpty) {
-      _selectedClassId = adminProvider.classes.first.id;
-      _loadWeeklyRecap();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (_selectedClassId == null) {
+      if (authProvider.currentUser?.role == 'guru_wali_kelas') {
+        ClassModel? myClass;
+        for (var c in adminProvider.classes) {
+          if (c.homeroomTeacherId == authProvider.currentUser?.uid) {
+            myClass = c;
+            break;
+          }
+        }
+        if (myClass != null) {
+          _selectedClassId = myClass.id;
+          _loadWeeklyRecap();
+        }
+      } else if (adminProvider.classes.isNotEmpty) {
+        _selectedClassId = adminProvider.classes.first.id;
+        _loadWeeklyRecap();
+      }
     }
   }
 
@@ -94,10 +112,12 @@ class _WeeklyRecapScreenState extends State<WeeklyRecapScreen> {
   @override
   Widget build(BuildContext context) {
     final adminProvider = context.watch<AdminProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final isWali = authProvider.currentUser?.role == 'guru_wali_kelas';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rekap Mingguan Piket'),
+        title: Text(isWali ? 'Rekap Mingguan Kelas Saya' : 'Rekap Mingguan Piket'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -109,20 +129,40 @@ class _WeeklyRecapScreenState extends State<WeeklyRecapScreen> {
                   if (adminProvider.classes.isEmpty)
                     const Center(child: Text('Tidak ada kelas terdaftar.'))
                   else ...[
-                    SearchableSelect<dynamic>(
-                      labelText: 'Pilih Kelas',
-                      items: adminProvider.classes,
-                      itemLabel: (c) => c.name as String,
-                      selectedValue: _selectedClassId != null
-                          ? adminProvider.classes.firstWhere((c) => c.id == _selectedClassId, orElse: () => adminProvider.classes.first)
-                          : null,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedClassId = val?.id;
-                        });
-                        _loadWeeklyRecap();
-                      },
-                    ),
+                    if (isWali)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.meeting_room, color: AppTheme.primaryColor),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Kelas Bimbingan: ${_selectedClassId != null ? adminProvider.classes.firstWhere((c) => c.id == _selectedClassId, orElse: () => adminProvider.classes.first).name : "Tidak ada"}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textColor),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      SearchableSelect<dynamic>(
+                        labelText: 'Pilih Kelas',
+                        items: adminProvider.classes,
+                        itemLabel: (c) => c.name as String,
+                        selectedValue: _selectedClassId != null
+                            ? adminProvider.classes.firstWhere((c) => c.id == _selectedClassId, orElse: () => adminProvider.classes.first)
+                            : null,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedClassId = val?.id;
+                          });
+                          _loadWeeklyRecap();
+                        },
+                      ),
                     const SizedBox(height: 16),
                     Text(
                       'Statistik Kehadiran 7 Hari Terakhir (${_sessions.length} Sesi)',

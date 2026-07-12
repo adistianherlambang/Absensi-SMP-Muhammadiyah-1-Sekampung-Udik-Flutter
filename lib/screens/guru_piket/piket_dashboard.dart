@@ -6,6 +6,7 @@ import '../../providers/admin_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../models/class_model.dart';
 import '../../models/user_model.dart';
+import '../../models/session_model.dart';
 import '../../app/routes.dart';
 import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -48,6 +49,8 @@ class _PiketDashboardState extends State<PiketDashboard> {
         context,
         listen: false,
       ).fetchSessions(authProvider.currentUser!.uid);
+
+      piketProvider.fetchSessions();
 
       adminProvider.fetchData().then((_) {
         ClassModel? myClass;
@@ -107,7 +110,10 @@ class _PiketDashboardState extends State<PiketDashboard> {
       body: mapelProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () => mapelProvider.fetchSessions(teacherUid),
+              onRefresh: () async {
+                await mapelProvider.fetchSessions(teacherUid);
+                await Provider.of<PiketProvider>(context, listen: false).fetchSessions();
+              },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20.0),
@@ -182,9 +188,11 @@ class _PiketDashboardState extends State<PiketDashboard> {
                     const SizedBox(height: 28),
                     const SizedBox(height: 24),
 
-                    // Ringkasan Statistik Guru Piket
+                    // Ringkasan Statistik Guru Piket/Wali Kelas
                     Text(
-                      'Overview Presensi Guru Piket',
+                      authProvider.currentUser?.role == 'guru_piket'
+                          ? 'Overview Presensi Guru Piket'
+                          : 'Overview Presensi Wali Kelas',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF2D3142),
@@ -228,7 +236,9 @@ class _PiketDashboardState extends State<PiketDashboard> {
                     const SizedBox(height: 24),
 
                     // Quick Actions
-                    Row(
+                    Column(
+                      children: [
+                        Row(
                           children: [
                             Expanded(
                               child: ElevatedButton.icon(
@@ -275,15 +285,99 @@ class _PiketDashboardState extends State<PiketDashboard> {
                               ),
                             ),
                           ],
-                        )
-                        .animate()
-                        .slideY(
-                          begin: 0.05,
-                          end: 0,
-                          duration: 300.ms,
-                          delay: 50.ms,
-                        )
-                        .fadeIn(),
+                        ),
+                        if (authProvider.currentUser?.role == 'guru_piket') ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.add_alarm_outlined),
+                                  label: const Text('Buka Sesi Harian'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.hadirColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.piketOpenSession,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(Icons.view_week_outlined),
+                                  label: const Text('Rekap Mingguan'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppTheme.primaryColor,
+                                    side: const BorderSide(
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.piketWeeklyRecap,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (authProvider.currentUser?.role == 'guru_wali_kelas') ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.view_week_outlined),
+                                  label: const Text('Rekap Kelas Saya'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.piketWeeklyRecap,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    )
+                    .animate()
+                    .slideY(
+                      begin: 0.05,
+                      end: 0,
+                      duration: 300.ms,
+                      delay: 50.ms,
+                    )
+                    .fadeIn(),
                     const SizedBox(height: 32),
 
                     // Daftar Sesi Presensi Harian Aktif/Tutup
@@ -409,6 +503,154 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                   .fadeIn();
                             },
                           ),
+                    const SizedBox(height: 32),
+                    // Sesi Presensi Harian Section
+                    Builder(
+                      builder: (context) {
+                        final piketProvider = context.watch<PiketProvider>();
+                        
+                        // Filter sessions based on role
+                        List<SessionModel> displayHarianSessions = [];
+                        if (authProvider.currentUser?.role == 'guru_piket') {
+                          displayHarianSessions = piketProvider.sessions;
+                        } else if (authProvider.currentUser?.role == 'guru_wali_kelas') {
+                          ClassModel? myClass;
+                          for (var c in adminProvider.classes) {
+                            if (c.homeroomTeacherId == authProvider.currentUser?.uid) {
+                              myClass = c;
+                              break;
+                            }
+                          }
+                          if (myClass != null) {
+                            displayHarianSessions = piketProvider.sessions.where((s) => s.classId == myClass!.id).toList();
+                          }
+                        }
+
+                        if (authProvider.currentUser?.role != 'guru_piket' && authProvider.currentUser?.role != 'guru_wali_kelas') {
+                          return const SizedBox.shrink();
+                        }
+
+                        final title = authProvider.currentUser?.role == 'guru_piket'
+                            ? 'Sesi Presensi Harian (Seluruh Kelas)'
+                            : 'Sesi Presensi Harian Kelas Saya';
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF2D3142),
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            displayHarianSessions.isEmpty
+                                ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      child: Text(
+                                        'Belum ada sesi presensi harian dibuka.',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: displayHarianSessions.length > 5 ? 5 : displayHarianSessions.length,
+                                    itemBuilder: (context, index) {
+                                      final session = displayHarianSessions[index];
+                                      
+                                      String className = 'Tidak diketahui';
+                                      try {
+                                        final cls = adminProvider.classes.firstWhere(
+                                          (c) => c.id == session.classId,
+                                        );
+                                        className = cls.name;
+                                      } catch (_) {}
+
+                                      final isSessionActive = session.status == 'active';
+
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade50,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: Colors.grey.shade200,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(20),
+                                          onTap: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              AppRoutes.piketValidate,
+                                              arguments: {
+                                                'session_id': session.id,
+                                                'class_id': session.classId,
+                                                'class_name': className,
+                                                'status': session.status,
+                                              },
+                                            );
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    color: isSessionActive ? AppTheme.hadirColor : Colors.grey,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.calendar_today_outlined,
+                                                    color: Colors.white,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        'Kelas $className — Presensi Harian',
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 15,
+                                                          color: AppTheme.textColor,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        'Tanggal: ${session.date} • Status: ${isSessionActive ? "Aktif (Buka)" : "Tutup"}',
+                                                        style: TextStyle(
+                                                          color: Colors.grey.shade600,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.chevron_right_rounded,
+                                                  color: AppTheme.primaryColor,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ],
+                        );
+                      },
+                    ),
                     // Riwayat Pengajuan Izin Siswa Kelas (Wali Kelas)
                     Builder(
                       builder: (context) {

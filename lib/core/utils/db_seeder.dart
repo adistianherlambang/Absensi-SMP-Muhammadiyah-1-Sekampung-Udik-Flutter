@@ -40,6 +40,12 @@ class DatabaseSeeder {
         'subjects': ['Matematika', 'IPA'],
       },
       {
+        'email': 'wali@smpm1.sch.id',
+        'password': 'wali123',
+        'name': 'Drs. H. Mulyono (Wali Kelas)',
+        'role': 'guru_wali_kelas',
+      },
+      {
         'email': 'siswa1@smpm1.sch.id',
         'password': 'siswa123',
         'name': 'Ahmad Fauzi (Siswa IX-A)',
@@ -70,6 +76,7 @@ class DatabaseSeeder {
         ),
       );
 
+      String guruWaliUid = '';
       String guruPiketUid = '';
       List<String> studentUids = [];
 
@@ -97,6 +104,8 @@ class DatabaseSeeder {
 
         if (u['role'] == 'guru_piket') {
           guruPiketUid = uid;
+        } else if (u['role'] == 'guru_wali_kelas') {
+          guruWaliUid = uid;
         } else if (u['role'] == 'siswa') {
           studentUids.add(uid);
         }
@@ -124,7 +133,7 @@ class DatabaseSeeder {
       final updatedClass = ClassModel(
         id: 'CLASS-IX-A',
         name: 'IX-A',
-        homeroomTeacherId: guruPiketUid,
+        homeroomTeacherId: guruWaliUid,
         studentIds: studentUids,
       );
       await firestore.collection('classes').doc('CLASS-IX-A').set(updatedClass.toMap()).timeout(

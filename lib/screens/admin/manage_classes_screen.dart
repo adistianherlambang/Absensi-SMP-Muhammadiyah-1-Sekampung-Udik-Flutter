@@ -35,7 +35,7 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     _classNameController.clear();
 
-    final teachers = adminProvider.users.where((u) => u.role == 'guru_piket' || u.role == 'guru_mapel').toList();
+    final teachers = adminProvider.users.where((u) => u.role == 'guru_wali_kelas').toList();
     setState(() {
       _selectedTeacherId = teachers.isNotEmpty ? teachers.first.uid : null;
     });

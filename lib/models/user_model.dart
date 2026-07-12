@@ -2,7 +2,7 @@ class UserModel {
   final String uid;
   final String name;
   final String email;
-  final String role; // 'admin' | 'guru_piket' | 'guru_mapel' | 'siswa'
+  final String role; // 'admin' | 'guru_piket' | 'guru_mapel' | 'guru_wali_kelas' | 'siswa'
   final String? classId; // Khusus siswa/wali kelas
   final List<String>? subjects; // Khusus guru mapel
   final String? qrCodeId; // Khusus siswa

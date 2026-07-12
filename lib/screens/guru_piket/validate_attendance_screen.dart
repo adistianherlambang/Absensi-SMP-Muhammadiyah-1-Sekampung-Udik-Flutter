@@ -40,6 +40,13 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
   }
 
   void _showOverrideDialog(UserModel student, AttendanceModel? currentAttendance) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUser?.role == 'guru_wali_kelas') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Guru Wali Kelas hanya memiliki hak akses melihat presensi.')),
+      );
+      return;
+    }
     if (_sessionStatus != 'active') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sesi sudah ditutup. Tidak dapat mengubah kehadiran.')),
@@ -48,7 +55,6 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
     }
 
     final piketProvider = Provider.of<PiketProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     String selectedStatus = currentAttendance?.status ?? 'hadir';
     final noteController = TextEditingController(text: currentAttendance?.note ?? '');
@@ -207,7 +213,9 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     final piketProvider = context.watch<PiketProvider>();
+    final authProvider = context.watch<AuthProvider>();
     final isActive = _sessionStatus == 'active';
+    final isWali = authProvider.currentUser?.role == 'guru_wali_kelas';
 
     return Scaffold(
       appBar: AppBar(
@@ -279,7 +287,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                             },
                           ),
                   ),
-                  if (isActive) ...[
+                  if (isActive && !isWali) ...[
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _handleCloseSession,

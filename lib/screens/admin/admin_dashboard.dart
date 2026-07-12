@@ -188,7 +188,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               Expanded(
                                 child: _buildStatItem(
                                   'Guru / Staf',
-                                  '${adminProvider.users.where((u) => u.role == 'guru_mapel' || u.role == 'guru_piket').length}',
+                                  '${adminProvider.users.where((u) => u.role.startsWith('guru_')).length}',
                                   const Color(0xFFFF416C),
                                 ),
                               ),

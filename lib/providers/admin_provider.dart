@@ -134,6 +134,22 @@ class AdminProvider with ChangeNotifier {
         }
       }
 
+      if (role == 'guru_wali_kelas') {
+        for (final cl in _classes) {
+          if (cl.homeroomTeacherId == uid) {
+            try {
+              final updatedClass = ClassModel(
+                id: cl.id,
+                name: cl.name,
+                homeroomTeacherId: '',
+                studentIds: cl.studentIds,
+              );
+              await _dbService.saveClass(updatedClass);
+            } catch (_) {}
+          }
+        }
+      }
+
       await fetchData();
     } catch (e) {
       rethrow;
@@ -166,6 +182,22 @@ class AdminProvider with ChangeNotifier {
             await _dbService.saveClass(updatedClass);
           } catch (e) {
             // Abaikan jika kelas tidak ditemukan
+          }
+        }
+
+        if (user.role == 'guru_wali_kelas') {
+          for (final cl in _classes) {
+            if (cl.homeroomTeacherId == user.uid) {
+              try {
+                final updatedClass = ClassModel(
+                  id: cl.id,
+                  name: cl.name,
+                  homeroomTeacherId: '',
+                  studentIds: cl.studentIds,
+                );
+                await _dbService.saveClass(updatedClass);
+              } catch (_) {}
+            }
           }
         }
       }
