@@ -52,6 +52,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
         }
         _searchQuery = '';
         _filterClassId = null;
+        _selectedUsers.clear();
       });
     });
   }
