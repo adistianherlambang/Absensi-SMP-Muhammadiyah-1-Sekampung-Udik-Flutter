@@ -34,6 +34,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
   // Filter properties
   String _searchQuery = '';
   String? _filterClassId;
+  String? _filterTeacherRole;
 
   // Set untuk menyimpan UID dari pengguna yang dipilih (checkbox)
   final Set<UserModel> _selectedUsers = {};
@@ -53,6 +54,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
         }
         _searchQuery = '';
         _filterClassId = null;
+        _filterTeacherRole = null;
         _selectedUsers.clear();
       });
     });
@@ -767,14 +769,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
     AdminProvider adminProvider,
     String role,
   ) {
-    // 1. Filter local users berdasarkan search query & class filter
+    // 1. Filter local users berdasarkan search query, filter kelas, & filter tipe guru
     final filteredUsers = users.where((u) {
       final matchesSearch =
           u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           u.email.toLowerCase().contains(_searchQuery.toLowerCase());
+      
       final matchesClass =
-          _filterClassId == null || u.classId == _filterClassId;
-      return matchesSearch && matchesClass;
+          role != 'siswa' || _filterClassId == null || u.classId == _filterClassId;
+
+      final matchesTeacherRole =
+          role != 'guru' || _filterTeacherRole == null || u.role == _filterTeacherRole;
+
+      return matchesSearch && matchesClass && matchesTeacherRole;
     }).toList();
 
     return Column(
@@ -814,44 +821,68 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
               if (role == 'siswa') ...[
                 const SizedBox(width: 12),
                 SizedBox(
-                  width: 140,
-                  child: DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
-                      ),
-                      labelText: 'Kelas',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                    ),
-                    value: _filterClassId,
+                  width: 160,
+                  child: SearchableSelect<ClassModel>(
+                    labelText: 'Kelas',
                     items: [
-                      const DropdownMenuItem<String>(
-                        value: null,
-                        child: Text('Semua', style: TextStyle(fontSize: 13)),
+                      ClassModel(
+                        id: 'all',
+                        name: 'Semua Kelas',
+                        homeroomTeacherId: '',
+                        studentIds: const [],
                       ),
-                      ...adminProvider.classes.map(
-                        (c) => DropdownMenuItem<String>(
-                          value: c.id,
-                          child: Text(
-                            c.name,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ),
+                      ...adminProvider.classes
                     ],
+                    itemLabel: (c) => c.name,
+                    selectedValue: _filterClassId != null
+                        ? adminProvider.classes.firstWhere(
+                            (c) => c.id == _filterClassId,
+                            orElse: () => ClassModel(
+                              id: 'all',
+                              name: 'Semua Kelas',
+                              homeroomTeacherId: '',
+                              studentIds: const [],
+                            ),
+                          )
+                        : ClassModel(
+                            id: 'all',
+                            name: 'Semua Kelas',
+                            homeroomTeacherId: '',
+                            studentIds: const [],
+                          ),
                     onChanged: (val) {
                       setState(() {
-                        _filterClassId = val;
+                        _filterClassId = (val == null || val.id == 'all') ? null : val.id;
+                      });
+                    },
+                  ),
+                ),
+              ],
+              if (role == 'guru') ...[
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 160,
+                  child: SearchableSelect<TeacherTypeFilter>(
+                    labelText: 'Tipe Guru',
+                    items: const [
+                      TeacherTypeFilter(null, 'Semua Tipe'),
+                      TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
+                      TeacherTypeFilter('guru_piket', 'Guru Piket'),
+                      TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
+                    ],
+                    itemLabel: (t) => t.name,
+                    selectedValue: const [
+                      TeacherTypeFilter(null, 'Semua Tipe'),
+                      TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
+                      TeacherTypeFilter('guru_piket', 'Guru Piket'),
+                      TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
+                    ].firstWhere(
+                      (t) => t.role == _filterTeacherRole,
+                      orElse: () => const TeacherTypeFilter(null, 'Semua Tipe'),
+                    ),
+                    onChanged: (val) {
+                      setState(() {
+                        _filterTeacherRole = val?.role;
                       });
                     },
                   ),
@@ -1265,4 +1296,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             ),
     );
   }
+}
+
+class TeacherTypeFilter {
+  final String? role;
+  final String name;
+  const TeacherTypeFilter(this.role, this.name);
 }
