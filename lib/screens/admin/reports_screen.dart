@@ -245,14 +245,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (fileBytes == null) throw Exception('Gagal membuat byte file Excel');
 
       if (Platform.isAndroid || Platform.isIOS) {
-        Directory? directory = await getExternalStorageDirectory();
-        directory ??= await getApplicationDocumentsDirectory();
+        final directory = await getTemporaryDirectory();
         final path = '${directory.path}/Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.xlsx';
         final file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+        }
         await file.create(recursive: true);
         await file.writeAsBytes(fileBytes);
 
-        // Native share sheet (no path save toast message as requested)
+        // Native share sheet
         await Share.shareXFiles([XFile(path)], text: 'Laporan Presensi Kelas $className');
       } else {
         String? outputFile = await FilePicker.platform.saveFile(
@@ -263,7 +265,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
           final file = File(outputFile);
           await file.create(recursive: true);
           await file.writeAsBytes(fileBytes);
-          // No path save toast message as requested
         }
       }
     } catch (e) {
@@ -421,8 +422,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     ),
                     const Spacer(),
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.download),
-                      label: const Text('Unduh Laporan (Excel)'),
+                      icon: Icon(Platform.isAndroid || Platform.isIOS ? Icons.share : Icons.download),
+                      label: Text(Platform.isAndroid || Platform.isIOS ? 'Bagikan Laporan (Excel)' : 'Unduh Laporan (Excel)'),
                       onPressed: _students.isEmpty ? null : _generateExcelReport,
                     ),
                     const SizedBox(height: 12),
