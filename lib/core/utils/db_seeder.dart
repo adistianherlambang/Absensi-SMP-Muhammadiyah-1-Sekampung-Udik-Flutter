@@ -77,7 +77,6 @@ class DatabaseSeeder {
       );
 
       String guruWaliUid = '';
-      String guruPiketUid = '';
       List<String> studentUids = [];
 
       // 2. Buat akun Auth dan tulis profil pengguna di Firestore
@@ -102,9 +101,7 @@ class DatabaseSeeder {
 
         final uid = creds.user!.uid;
 
-        if (u['role'] == 'guru_piket') {
-          guruPiketUid = uid;
-        } else if (u['role'] == 'guru_wali_kelas') {
+        if (u['role'] == 'guru_wali_kelas') {
           guruWaliUid = uid;
         } else if (u['role'] == 'siswa') {
           studentUids.add(uid);

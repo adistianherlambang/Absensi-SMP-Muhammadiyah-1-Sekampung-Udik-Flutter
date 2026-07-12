@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/searchable_select.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
+import '../../models/class_model.dart';
 import '../../app/theme.dart';
 
 class ManageUsersScreen extends StatefulWidget {
