@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
+import '../../app/routes.dart';
 import '../../app/theme.dart';
 
 class OpenMapelSessionScreen extends StatefulWidget {
@@ -37,19 +38,35 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
     if (_selectedClassId == null || _selectedSubject == null) return;
 
     final mapelProvider = Provider.of<MapelProvider>(context, listen: false);
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      await mapelProvider.openMapelSession(
+      final className = adminProvider.classes.firstWhere((c) => c.id == _selectedClassId).name;
+
+      final sessionId = await mapelProvider.openMapelSession(
         classId: _selectedClassId!,
         subject: _selectedSubject!,
         creatorUid: authProvider.currentUser!.uid,
       );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sesi presensi mata pelajaran berhasil dibuka!')),
+        const SnackBar(content: Text('Sesi presensi mata pelajaran berhasil dibuka & dicatat ke histori!')),
       );
-      Navigator.pop(context);
+
+      // Navigasi langsung ke layar presensi & scan QR siswa
+      Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.mapelAttendance,
+        arguments: {
+          'session_id': sessionId,
+          'class_id': _selectedClassId!,
+          'class_name': className,
+          'subject': _selectedSubject!,
+          'status': 'active',
+        },
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +88,7 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buka Sesi Mapel'),
+        title: const Text('Buka Sesi Presensi Pelajaran'),
       ),
       body: mapelProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -81,23 +98,23 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Icon(
-                    Icons.history_edu_outlined,
+                    Icons.school_rounded,
                     size: 80,
                     color: AppTheme.primaryColor,
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Buka Sesi Presensi Mapel Baru',
+                    'Buka Sesi Presensi Kelas',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Pilih kelas dan mata pelajaran yang sedang diampu untuk memulai pencatatan absensi jam pelajaran.',
+                    'Pilih kelas dan mata pelajaran. Sesi akan langsung dicatat ke histori database dengan status default Tidak Hadir (Alpa) untuk seluruh siswa di kelas tersebut.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppTheme.textMutedColor),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
                   if (adminProvider.classes.isEmpty)
                     const Text(
                       'Tidak ada kelas terdaftar di sistem. Hubungi administrator.',
@@ -121,7 +138,7 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Dropdown Mata Pelajaran yang Diampu
+                    // Dropdown Mata Pelajaran
                     if (subjects.isEmpty)
                       const Text(
                         'Peringatan: Anda belum terdaftar mengampu mata pelajaran apa pun. Hubungi admin.',
@@ -141,9 +158,14 @@ class _OpenMapelSessionScreenState extends State<OpenMapelSessionScreen> {
                         },
                       ),
                     const SizedBox(height: 32),
-                    ElevatedButton(
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppTheme.primaryColor,
+                      ),
+                      icon: const Icon(Icons.qr_code_scanner_rounded),
+                      label: const Text('Buka Sesi & Mulai Scan QR Siswa'),
                       onPressed: subjects.isEmpty ? null : _handleOpenSession,
-                      child: const Text('Buka Sesi Mapel Sekarang'),
                     ),
                   ],
                 ],

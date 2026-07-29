@@ -34,8 +34,8 @@ class MapelProvider with ChangeNotifier {
     }
   }
 
-  // Buka Sesi Mapel Baru
-  Future<void> openMapelSession({
+  // Buka Sesi Mapel Baru (Langsung tersimpan ke histori database & inisialisasi default Alpa)
+  Future<String> openMapelSession({
     required String classId,
     required String subject,
     required String creatorUid,
@@ -47,7 +47,7 @@ class MapelProvider with ChangeNotifier {
       final now = DateTime.now();
       final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-      final sessionId = 'SESS-MAPEL-$classId-${subject.replaceAll(' ', '_')}-$dateStr';
+      final sessionId = 'SESS-MAPEL-$classId-${subject.replaceAll(' ', '_')}-${now.millisecondsSinceEpoch}';
 
       final newSession = SessionModel(
         id: sessionId,
@@ -61,13 +61,100 @@ class MapelProvider with ChangeNotifier {
       );
 
       await _dbService.createSession(newSession);
+
+      // Fetch seluruh siswa di kelas ini
+      final allUsers = await _dbService.getUsers(role: 'siswa');
+      _students = allUsers.where((u) => u.classId == classId).toList();
+
+      // Cek pengajuan izin hari ini
+      final leaveRequests = await _dbService.getLeaveRequests();
+      final todayLeaves = leaveRequests.where((l) => l.date == dateStr).toList();
+
+      // Inisialisasi entri presensi default: Alpa (kecuali jika ada pengajuan Izin/Sakit)
+      final Map<String, AttendanceModel> initialAttendances = {};
+      for (var student in _students) {
+        LeaveRequestModel? studentLeave;
+        for (var l in todayLeaves) {
+          if (l.studentId == student.uid) {
+            studentLeave = l;
+            break;
+          }
+        }
+
+        if (studentLeave != null) {
+          initialAttendances[student.uid] = AttendanceModel(
+            studentId: student.uid,
+            status: studentLeave.status, // 'sakit' or 'izin'
+            timestamp: now.toIso8601String(),
+            method: 'leave_request',
+            recordedBy: 'system',
+            note: studentLeave.reason,
+          );
+        } else {
+          initialAttendances[student.uid] = AttendanceModel(
+            studentId: student.uid,
+            status: 'alpa',
+            timestamp: now.toIso8601String(),
+            method: 'system_default',
+            recordedBy: creatorUid,
+            note: 'Belum di-scan (Default Tidak Hadir)',
+          );
+        }
+      }
+
+      await _dbService.saveBulkAttendance(sessionId, initialAttendances);
+      _sessionAttendances = initialAttendances;
+
       await fetchSessions(creatorUid);
+      return sessionId;
     } catch (e) {
       rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Pemindaian QR Siswa secara otomatis (Tanpa persetujuan manual sistem & Validasi Kelas)
+  Future<UserModel> scanStudentQR({
+    required String sessionId,
+    required String studentId,
+    required String classId,
+    required String recorderUid,
+  }) async {
+    // 1. Cek apakah siswa terdaftar di kelas sesi ini (Kontrol Berbasis Kelas)
+    UserModel? student;
+    try {
+      student = _students.firstWhere((s) => s.uid == studentId || s.qrCodeId == studentId);
+    } catch (_) {
+      // Jika belum di-load di _students, cek dari DB
+      final allUsers = await _dbService.getUsers(role: 'siswa');
+      try {
+        student = allUsers.firstWhere((u) => (u.uid == studentId || u.qrCodeId == studentId) && u.classId == classId);
+      } catch (_) {
+        throw Exception("Siswa tidak terdaftar di kelas sesi ini!");
+      }
+    }
+
+    if (student.classId != classId) {
+      throw Exception("Siswa ${student.name} bukan anggota kelas ini!");
+    }
+
+    // 2. Langsung ubah status menjadi HADIR secara otomatis
+    final updatedAttendance = AttendanceModel(
+      studentId: student.uid,
+      status: 'hadir',
+      timestamp: DateTime.now().toIso8601String(),
+      method: 'qr_scan',
+      recordedBy: recorderUid,
+      note: 'Presensi via Scan QR Siswa',
+    );
+
+    await _dbService.recordAttendance(sessionId, student.uid, updatedAttendance);
+    _sessionAttendances[student.uid] = updatedAttendance;
+    notifyListeners();
+
+    return student;
   }
 
   // Tutup Sesi Mapel
@@ -102,7 +189,7 @@ class MapelProvider with ChangeNotifier {
         for (var att in attendances) att.studentId: att
       };
 
-      // Cek pengajuan izin/sakit siswa untuk tanggal sesi ini
+      // Inisialisasi siswa yang belum memiliki entri presensi
       final session = await _dbService.getSession(sessionId);
       final dateStr = session?.date ?? '';
       final leaveRequests = await _dbService.getLeaveRequests();
@@ -118,19 +205,17 @@ class MapelProvider with ChangeNotifier {
             }
           }
 
-          if (studentLeave != null) {
-            final autoAttendance = AttendanceModel(
-              studentId: student.uid,
-              status: studentLeave.status, // 'sakit' or 'izin'
-              timestamp: DateTime.now().toIso8601String(),
-              method: 'leave_request',
-              recordedBy: 'system',
-              note: studentLeave.reason,
-            );
+          final autoAttendance = AttendanceModel(
+            studentId: student.uid,
+            status: studentLeave != null ? studentLeave.status : 'alpa',
+            timestamp: DateTime.now().toIso8601String(),
+            method: studentLeave != null ? 'leave_request' : 'system_default',
+            recordedBy: 'system',
+            note: studentLeave != null ? studentLeave.reason : 'Default Tidak Hadir',
+          );
 
-            await _dbService.recordAttendance(sessionId, student.uid, autoAttendance);
-            _sessionAttendances[student.uid] = autoAttendance;
-          }
+          await _dbService.recordAttendance(sessionId, student.uid, autoAttendance);
+          _sessionAttendances[student.uid] = autoAttendance;
         }
       }
     } catch (e) {
@@ -141,7 +226,7 @@ class MapelProvider with ChangeNotifier {
     }
   }
 
-  // Update kehadiran siswa oleh Guru Mapel
+  // Update kehadiran siswa secara manual oleh Guru Mapel (jika diperlukan koreksi)
   Future<void> updateAttendance({
     required String sessionId,
     required String studentId,
@@ -181,7 +266,6 @@ class MapelProvider with ChangeNotifier {
       final now = DateTime.now();
       final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-      
       final sessionId = 'SESS-MAPEL-$classId-${subject.replaceAll(' ', '_')}-${now.millisecondsSinceEpoch}';
 
       final session = SessionModel(
@@ -197,27 +281,15 @@ class MapelProvider with ChangeNotifier {
       );
       await _dbService.createSession(session);
 
-      // Cek pengajuan izin hari ini untuk presensi massal
-      final leaveRequests = await _dbService.getLeaveRequests();
-      final todayLeaves = leaveRequests.where((l) => l.date == dateStr).toList();
-
       final Map<String, AttendanceModel> attendances = {};
       studentStatuses.forEach((studentId, status) {
-        LeaveRequestModel? studentLeave;
-        for (var l in todayLeaves) {
-          if (l.studentId == studentId) {
-            studentLeave = l;
-            break;
-          }
-        }
-
         attendances[studentId] = AttendanceModel(
           studentId: studentId,
           status: status,
           timestamp: now.toIso8601String(),
-          method: studentLeave != null ? 'leave_request' : 'manual_override',
+          method: 'manual_override',
           recordedBy: teacherUid,
-          note: studentLeave != null ? studentLeave.reason : 'Presensi Massal oleh Guru Mapel',
+          note: 'Presensi Massal oleh Guru',
         );
       });
 
@@ -283,3 +355,4 @@ class MapelProvider with ChangeNotifier {
     }
   }
 }
+

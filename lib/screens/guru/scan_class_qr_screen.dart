@@ -1,133 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../core/services/qr_service.dart';
+import '../../app/routes.dart';
 import '../../app/theme.dart';
 
-class ScanClassQRScreen extends StatefulWidget {
+class ScanClassQRScreen extends StatelessWidget {
   const ScanClassQRScreen({super.key});
-
-  @override
-  State<ScanClassQRScreen> createState() => _ScanClassQRScreenState();
-}
-
-class _ScanClassQRScreenState extends State<ScanClassQRScreen> {
-  final MobileScannerController _cameraController = MobileScannerController();
-  final QRService _qrService = QRService();
-  bool _isProcessing = false;
-
-  @override
-  void dispose() {
-    _cameraController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan QR Meja Kelas'),
+        title: const Text('Presensi Pelajaran Guru'),
       ),
-      body: Stack(
-        children: [
-          // Scanner View
-          MobileScanner(
-            controller: _cameraController,
-            onDetect: (capture) async {
-              if (_isProcessing) return;
-
-              final List<Barcode> barcodes = capture.barcodes;
-              if (barcodes.isEmpty) return;
-
-              final qrVal = barcodes.first.rawValue;
-              if (qrVal == null) return;
-
-              setState(() {
-                _isProcessing = true;
-              });
-
-              // Stop camera scan temporarily
-              await _cameraController.stop();
-
-              // Parse QR
-              final parsed = _qrService.parseClassQRContent(qrVal);
-              if (parsed == null) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Format QR Code tidak valid / bukan milik kelas SMPM 1.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                // Restart scanner
-                await _cameraController.start();
-                setState(() {
-                  _isProcessing = false;
-                });
-                return;
-              }
-
-              final classId = parsed['class_id']!;
-
-              // Navigate to Input Attendance Screen
-              if (!mounted) return;
-              Navigator.pushReplacementNamed(
-                context,
-                '/guru/input-attendance',
-                arguments: {'class_id': classId},
-              );
-            },
-          ),
-
-          // Custom scan overlay frame
-          Center(
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.primaryColor, width: 4),
-                borderRadius: BorderRadius.circular(24),
-              ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.qr_code_scanner_rounded,
+              size: 90,
+              color: AppTheme.primaryColor,
             ),
-          ),
-
-          // Loading/processing overlay
-          if (_isProcessing)
-            Container(
-              color: Colors.black54,
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text(
-                      'Memproses QR Kelas...',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
+            const SizedBox(height: 24),
+            const Text(
+              'Alur Presensi Berbasis QR Siswa',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+              textAlign: TextAlign.center,
             ),
-
-          // Teks Petunjuk
-          Positioned(
-            bottom: 60,
-            left: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'Arahkan kamera ke QR Code yang berada di meja kelas.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
+            const SizedBox(height: 12),
+            const Text(
+              'Setiap siswa kini memiliki QR Code masing-masing. Buka Sesi Pelajaran untuk memilih Kelas & Mata Pelajaran, lalu pindai QR Code siswa di kelas.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppTheme.textMutedColor, height: 1.4),
             ),
-          )
-        ],
+            const SizedBox(height: 36),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              icon: const Icon(Icons.add_task_rounded),
+              label: const Text('Buka Sesi Presensi Pelajaran', style: TextStyle(fontSize: 16)),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, AppRoutes.mapelOpenSession);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

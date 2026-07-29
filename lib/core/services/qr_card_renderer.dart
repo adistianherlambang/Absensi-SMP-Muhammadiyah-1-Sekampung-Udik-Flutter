@@ -3,16 +3,15 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-/// Renders the QR desk card to PNG bytes completely off-screen.
-/// No RepaintBoundary or widget tree dependency — avoids the
-/// '!semantics.parentDataDirty' assertion error.
-Future<Uint8List> renderQRCardToPng({
+/// Renders the Student QR card to PNG bytes off-screen.
+Future<Uint8List> renderStudentQRCardToPng({
   required String qrData,
+  required String studentName,
   required String className,
   double pixelRatio = 3.0,
 }) async {
   const double cardWidth = 300;
-  const double cardHeight = 420;
+  const double cardHeight = 440;
   const double padding = 20;
 
   final double pWidth = cardWidth * pixelRatio;
@@ -32,7 +31,7 @@ Future<Uint8List> renderQRCardToPng({
   canvas.drawRRect(
     cardRRect,
     Paint()
-      ..color = Colors.black
+      ..color = const Color(0xFF1E88E5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3,
   );
@@ -62,12 +61,12 @@ Future<Uint8List> renderQRCardToPng({
     tp.paint(canvas, Offset((cardWidth - tp.width) / 2, yPos));
   }
 
-  drawText('SMP MUHAMMADIYAH 1', 16, FontWeight.w900, Colors.black, y);
-  y += 22;
-  drawText('SEKAMPUNG UDIK', 13, FontWeight.w900, Colors.black, y);
+  drawText('SMP MUHAMMADIYAH 1', 15, FontWeight.w900, const Color(0xFF1E88E5), y);
+  y += 20;
+  drawText('SEKAMPUNG UDIK', 12, FontWeight.w900, Colors.black87, y);
   y += 18;
 
-  const double qrSize = 200;
+  const double qrSize = 190;
   final QrPainter qrPainter = QrPainter(
     data: qrData,
     version: QrVersions.auto,
@@ -81,15 +80,17 @@ Future<Uint8List> renderQRCardToPng({
   canvas.restore();
   y += qrSize + 12;
 
-  drawText('KARTU MEJA PRESENSI', 10, FontWeight.bold, Colors.black54, y);
-  y += 14;
-  drawText('KELAS $className', 24, FontWeight.bold, Colors.black, y);
-  y += 34;
+  drawText('KARTU PRESENSI SISWA', 10, FontWeight.bold, Colors.black54, y);
+  y += 16;
+  drawText(studentName, 18, FontWeight.bold, Colors.black, y);
+  y += 24;
+  drawText('KELAS: $className', 13, FontWeight.bold, const Color(0xFF1E88E5), y);
+  y += 22;
   drawText(
-    'Scan kartu ini menggunakan aplikasi Guru untuk mencatat kehadiran kelas.',
+    'Tunjukkan QR Code ini kepada Guru untuk dicatat kehadirannya.',
     9,
     FontWeight.normal,
-    Colors.black87,
+    Colors.black54,
     y,
   );
 
@@ -100,4 +101,18 @@ Future<Uint8List> renderQRCardToPng({
   );
   if (byteData == null) throw 'Gagal merender data gambar';
   return byteData.buffer.asUint8List();
+}
+
+/// Legacy render for class card if needed
+Future<Uint8List> renderQRCardToPng({
+  required String qrData,
+  required String className,
+  double pixelRatio = 3.0,
+}) async {
+  return renderStudentQRCardToPng(
+    qrData: qrData,
+    studentName: 'KELAS $className',
+    className: className,
+    pixelRatio: pixelRatio,
+  );
 }

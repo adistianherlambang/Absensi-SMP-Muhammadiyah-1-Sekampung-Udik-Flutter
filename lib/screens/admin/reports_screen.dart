@@ -1,12 +1,10 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:excel/excel.dart' hide Border;
 import '../../providers/admin_provider.dart';
 import '../../core/services/db_service.dart';
+import '../../core/utils/file_download_helper.dart';
 import '../../app/theme.dart';
 import '../../models/session_model.dart';
 import '../../models/user_model.dart';
@@ -92,22 +90,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
       sheet.setColumnWidth(8, 14.0);
 
       // Title Styles
-      // Title Styles
       final titleStyle = CellStyle(
         bold: true,
         fontSize: 16,
-        fontColorHex: ExcelColor.fromHexString('FF4F46E5'), // Indigo primary
+        fontColorHex: ExcelColor.fromHexString('FF4F46E5'),
       );
 
       final subtitleStyle = CellStyle(
         fontSize: 11,
-        fontColorHex: ExcelColor.fromHexString('FF4B5563'), // Slate-600
+        fontColorHex: ExcelColor.fromHexString('FF4B5563'),
       );
 
       final dateStyle = CellStyle(
         italic: true,
         fontSize: 9,
-        fontColorHex: ExcelColor.fromHexString('FF9CA3AF'), // Gray-400
+        fontColorHex: ExcelColor.fromHexString('FF9CA3AF'),
       );
 
       // Write Title Block
@@ -124,7 +121,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       final headerStyle = CellStyle(
         bold: true,
         fontColorHex: ExcelColor.fromHexString('FFFFFFFF'),
-        backgroundColorHex: ExcelColor.fromHexString('FF4F46E5'), // Indigo header fill
+        backgroundColorHex: ExcelColor.fromHexString('FF4F46E5'),
         fontSize: 10,
         horizontalAlign: HorizontalAlign.Center,
       );
@@ -174,7 +171,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
         int totalSessions = _sessions.length;
         double percentage = totalSessions > 0 ? (hadirCount / totalSessions) * 100 : 0.0;
 
-        // Alternating row background
         final isEven = studentIndex % 2 == 0;
         final rowBgColor = isEven ? 'FFF9FAFB' : 'FFFFFFFF';
 
@@ -192,47 +188,38 @@ class _ReportsScreenState extends State<ReportsScreen> {
           horizontalAlign: HorizontalAlign.Center,
         );
 
-        // 0: No
         var cellNo = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRowIndex));
         cellNo.value = IntCellValue(studentIndex);
         cellNo.cellStyle = dataStyleCenter;
 
-        // 1: Nama
         var cellName = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: currentRowIndex));
         cellName.value = TextCellValue(student.name);
         cellName.cellStyle = dataStyleLeft;
 
-        // 2: Email
         var cellEmail = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: currentRowIndex));
         cellEmail.value = TextCellValue(student.email);
         cellEmail.cellStyle = dataStyleLeft;
 
-        // 3: QR Code ID
         var cellQR = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: currentRowIndex));
         cellQR.value = TextCellValue(student.qrCodeId ?? '-');
         cellQR.cellStyle = dataStyleCenter;
 
-        // 4: Hadir
         var cellHadir = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: currentRowIndex));
         cellHadir.value = IntCellValue(hadirCount);
         cellHadir.cellStyle = dataStyleCenter;
 
-        // 5: Izin
         var cellIzin = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: currentRowIndex));
         cellIzin.value = IntCellValue(izinCount);
         cellIzin.cellStyle = dataStyleCenter;
 
-        // 6: Sakit
         var cellSakit = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: currentRowIndex));
         cellSakit.value = IntCellValue(sakitCount);
         cellSakit.cellStyle = dataStyleCenter;
 
-        // 7: Alpa
         var cellAlpa = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: currentRowIndex));
         cellAlpa.value = IntCellValue(alpaCount);
         cellAlpa.cellStyle = dataStyleCenter;
 
-        // 8: Persentase
         var cellPerc = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: currentRowIndex));
         cellPerc.value = TextCellValue("${percentage.toStringAsFixed(1)}%");
         cellPerc.cellStyle = dataStyleCenter;
@@ -244,29 +231,63 @@ class _ReportsScreenState extends State<ReportsScreen> {
       final fileBytes = excel.save();
       if (fileBytes == null) throw Exception('Gagal membuat byte file Excel');
 
-      if (Platform.isAndroid || Platform.isIOS) {
-        final directory = await getTemporaryDirectory();
-        final path = '${directory.path}/Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.xlsx';
-        final file = File(path);
-        if (await file.exists()) {
-          await file.delete();
-        }
-        await file.create(recursive: true);
-        await file.writeAsBytes(fileBytes);
+      final Uint8List uint8Bytes = Uint8List.fromList(fileBytes);
+      final fileName = 'Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.xlsx';
 
-        // Native share sheet
-        await Share.shareXFiles([XFile(path)], text: 'Laporan Presensi Kelas $className');
-      } else {
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Pilih lokasi penyimpanan Laporan Excel:',
-          fileName: 'Laporan_Presensi_Kelas_${className.replaceAll(' ', '_')}.xlsx',
-        );
-        if (outputFile != null) {
-          final file = File(outputFile);
-          await file.create(recursive: true);
-          await file.writeAsBytes(fileBytes);
-        }
-      }
+      if (!mounted) return;
+
+      // Tampilkan pilihan Unduh / Bagikan
+      showDialog(
+        context: context,
+        builder: (dialogCtx) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text('Laporan Presensi Kelas $className'),
+            content: const Text(
+              'Laporan Excel berhasil dibuat. Silakan pilih opsi ekspor:',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Batal'),
+              ),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.share_rounded),
+                label: const Text('Bagikan'),
+                onPressed: () async {
+                  Navigator.pop(dialogCtx);
+                  await FileDownloadHelper.shareFile(
+                    bytes: uint8Bytes,
+                    fileName: fileName,
+                    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    subjectText: 'Laporan Presensi Kelas $className',
+                  );
+                },
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+                icon: const Icon(Icons.download_rounded),
+                label: const Text('Unduh'),
+                onPressed: () async {
+                  Navigator.pop(dialogCtx);
+                  final savedPath = await FileDownloadHelper.saveToPublicDownloads(
+                    bytes: uint8Bytes,
+                    fileName: fileName,
+                  );
+                  if (savedPath != null && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Laporan Excel berhasil diunduh ke Folder Download: $savedPath'),
+                        backgroundColor: Colors.green.shade600,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -422,8 +443,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     ),
                     const Spacer(),
                     ElevatedButton.icon(
-                      icon: Icon(Platform.isAndroid || Platform.isIOS ? Icons.share : Icons.download),
-                      label: Text(Platform.isAndroid || Platform.isIOS ? 'Bagikan Laporan (Excel)' : 'Unduh Laporan (Excel)'),
+                      icon: const Icon(Icons.table_chart_rounded),
+                      label: const Text('Ekspor Laporan Presensi (Excel)'),
                       onPressed: _students.isEmpty ? null : _generateExcelReport,
                     ),
                     const SizedBox(height: 12),

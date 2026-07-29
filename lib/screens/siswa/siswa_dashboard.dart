@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/siswa_provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../core/services/qr_service.dart';
+import '../../core/services/qr_card_renderer.dart';
+import '../../core/utils/file_download_helper.dart';
 import '../../app/routes.dart';
 import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -15,6 +19,8 @@ class SiswaDashboard extends StatefulWidget {
 }
 
 class _SiswaDashboardState extends State<SiswaDashboard> {
+  final QRService _qrService = QRService();
+
   @override
   void initState() {
     super.initState();
@@ -22,14 +28,168 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final siswaProvider = Provider.of<SiswaProvider>(context, listen: false);
 
-      // Load data kelas admin untuk menampilkan nama kelas
       Provider.of<AdminProvider>(context, listen: false).fetchData();
 
       if (authProvider.currentUser?.classId != null) {
-        siswaProvider.fetchActiveSessions(authProvider.currentUser!.classId!);
         siswaProvider.fetchAttendanceHistory(authProvider.currentUser!.uid);
       }
     });
+  }
+
+  Future<void> _showMyQRModal(String studentName, String className, String studentId, String qrCodeId) async {
+    final qrData = _qrService.generateQRContent(studentId, qrCodeId);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Kartu Presensi QR Saya',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textColor,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tunjukkan QR ini kepada Guru saat presensi pelajaran',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+                ),
+                child: QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 200.0,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                studentName,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textColor),
+              ),
+              Text(
+                className,
+                style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+
+              // 2 Opsi: Unduh & Bagikan
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: const BorderSide(color: AppTheme.primaryColor),
+                        foregroundColor: AppTheme.primaryColor,
+                      ),
+                      icon: const Icon(Icons.share_rounded, size: 18),
+                      label: const Text('Bagikan'),
+                      onPressed: () async {
+                        try {
+                          final pngBytes = await renderStudentQRCardToPng(
+                            qrData: qrData,
+                            studentName: studentName,
+                            className: className,
+                          );
+                          final fileName = 'QR_Siswa_${studentName.replaceAll(' ', '_')}.png';
+                          await FileDownloadHelper.shareFile(
+                            bytes: pngBytes,
+                            fileName: fileName,
+                            mimeType: 'image/png',
+                            subjectText: 'Kartu QR Presensi - $studentName',
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Gagal membagikan: $e')),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: const Text('Unduh QR'),
+                      onPressed: () async {
+                        try {
+                          final pngBytes = await renderStudentQRCardToPng(
+                            qrData: qrData,
+                            studentName: studentName,
+                            className: className,
+                          );
+                          final fileName = 'QR_Siswa_${studentName.replaceAll(' ', '_')}.png';
+                          final savedPath = await FileDownloadHelper.saveToPublicDownloads(
+                            bytes: pngBytes,
+                            fileName: fileName,
+                          );
+                          if (savedPath != null && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Kartu QR disimpan di Folder Download: $savedPath'),
+                                backgroundColor: Colors.green.shade600,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Gagal mengunduh: $e')),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -43,23 +203,12 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
 
     // Hitung metrik kehadiran
     final totalSessions = siswaProvider.history.length;
-    final totalHadir = siswaProvider.history.values
-        .where((att) => att.status == 'hadir')
-        .length;
-    final totalIzin = siswaProvider.history.values
-        .where((att) => att.status == 'izin')
-        .length;
-    final totalSakit = siswaProvider.history.values
-        .where((att) => att.status == 'sakit')
-        .length;
-    final totalAlpa = siswaProvider.history.values
-        .where((att) => att.status == 'alpa')
-        .length;
-    final attendanceRate = totalSessions > 0
-        ? (totalHadir / totalSessions * 100).toStringAsFixed(0)
-        : '0';
+    final totalHadir = siswaProvider.history.values.where((att) => att.status == 'hadir').length;
+    final totalIzin = siswaProvider.history.values.where((att) => att.status == 'izin').length;
+    final totalSakit = siswaProvider.history.values.where((att) => att.status == 'sakit').length;
+    final totalAlpa = siswaProvider.history.values.where((att) => att.status == 'alpa').length;
+    final attendanceRate = totalSessions > 0 ? (totalHadir / totalSessions * 100).toStringAsFixed(0) : '0';
 
-    // Ambil nama kelas siswa
     String className = 'Tidak terdaftar kelas';
     if (classId.isNotEmpty) {
       try {
@@ -97,9 +246,8 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () async {
-                if (classId.isNotEmpty) {
-                  await siswaProvider.fetchActiveSessions(classId);
-                  await siswaProvider.fetchAttendanceHistory(user!.uid);
+                if (user != null) {
+                  await siswaProvider.fetchAttendanceHistory(user.uid);
                 }
               },
               child: SingleChildScrollView(
@@ -108,284 +256,200 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Custom Header
-                    // Row(
-                    //   children: [
-                    // CircleAvatar(
-                    //   radius: 24,
-                    //   backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
-                    //   child: Icon(Icons.school_rounded, color: AppTheme.primaryColor, size: 28),
-                    // ),
-                    // const SizedBox(width: 12),
-                    // Expanded(
-                    //   child: Column(
-                    //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     children: [
-                    //       Text(
-                    //         'Selamat Datang, Siswa',
-                    //         style: TextStyle(
-                    //           fontSize: 14,
-                    //           color: Colors.grey.shade600,
-                    //           fontWeight: FontWeight.w500,
-                    //         ),
-                    //       ),
-                    //       Text(
-                    //         user?.name ?? '',
-                    //         style: const TextStyle(
-                    //           fontSize: 16,
-                    //           fontWeight: FontWeight.bold,
-                    //           color: AppTheme.textColor,
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
-                    // Container(
-                    //   padding: const EdgeInsets.all(10),
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.grey.shade100,
-                    //     shape: BoxShape.circle,
-                    //   ),
-                    //   child: Icon(
-                    //     Icons.notifications_outlined,
-                    //     color: AppTheme.textColor,
-                    //     size: 22,
-                    //   ),
-                    // ),
-                    //   ],
-                    // ).animate().fadeIn(),
-                    const SizedBox(height: 24),
                     Text(
-                          'Mari Mulai Presensi!\n$className',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.textColor,
-                            height: 1.2,
-                          ),
-                        )
-                        .animate()
-                        .slideY(begin: 0.1, end: 0, duration: 300.ms)
-                        .fadeIn(),
-                    const SizedBox(height: 28),
+                      'Selamat Datang,\n${user?.name ?? "Siswa"}!',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.textColor,
+                        height: 1.2,
+                      ),
+                    ).animate().slideY(begin: 0.1, end: 0, duration: 300.ms).fadeIn(),
+                    const SizedBox(height: 4),
+                    Text(
+                      className,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
                     const SizedBox(height: 24),
+
+                    // Card Tampilkan QR Code Siswa
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1E88E5), Color(0xFF1565C0)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1E88E5).withOpacity(0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () {
+                            if (user != null) {
+                              _showMyQRModal(
+                                user.name,
+                                className,
+                                user.uid,
+                                user.qrCodeId ?? user.uid,
+                              );
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(
+                                    Icons.qr_code_2_rounded,
+                                    size: 48,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: const [
+                                      Text(
+                                        'QR Code Presensi Saya',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        'Ketuk untuk menampilkan, mengunduh, atau membagikan Kartu QR',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 50.ms),
+
+                    const SizedBox(height: 28),
 
                     // Ringkasan Kehadiran
                     Text(
                       'Ringkasan Kehadiran Anda',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2D3142),
-                      ),
-                    ).animate().fadeIn(delay: 50.ms),
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2D3142),
+                          ),
+                    ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
                     Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: Column(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildStatItem(
-                                      'Kehadiran',
-                                      '$attendanceRate%',
-                                      AppTheme.hadirColor,
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 1,
-                                    height: 40,
-                                    color: Colors.grey.shade200,
-                                  ),
-                                  Expanded(
-                                    child: _buildStatItem(
-                                      'Sakit',
-                                      '$totalSakit Hari',
-                                      AppTheme.sakitColor,
-                                    ),
-                                  ),
-                                ],
+                              Expanded(
+                                child: _buildStatItem('Kehadiran', '$attendanceRate%', AppTheme.hadirColor),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                child: Divider(
-                                  color: Colors.grey.shade200,
-                                  height: 1,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildStatItem(
-                                      'Izin',
-                                      '$totalIzin Hari',
-                                      AppTheme.izinColor,
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 1,
-                                    height: 40,
-                                    color: Colors.grey.shade200,
-                                  ),
-                                  Expanded(
-                                    child: _buildStatItem(
-                                      'Alpa / Tanpa Ket.',
-                                      '$totalAlpa Hari',
-                                      AppTheme.alpaColor,
-                                    ),
-                                  ),
-                                ],
+                              Container(width: 1, height: 40, color: Colors.grey.shade200),
+                              Expanded(
+                                child: _buildStatItem('Sakit', '$totalSakit Hari', AppTheme.sakitColor),
                               ),
                             ],
                           ),
-                        )
-                        .animate()
-                        .slideY(begin: 0.05, end: 0, duration: 300.ms)
-                        .fadeIn(),
-                    const SizedBox(height: 32),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Divider(color: Colors.grey.shade200, height: 1),
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatItem('Izin', '$totalIzin Hari', AppTheme.izinColor),
+                              ),
+                              Container(width: 1, height: 40, color: Colors.grey.shade200),
+                              Expanded(
+                                child: _buildStatItem('Alpa / Tanpa Ket.', '$totalAlpa Hari', AppTheme.alpaColor),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
+
+                    const SizedBox(height: 28),
 
                     // Quick Actions
                     Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.history_rounded),
-                                label: const Text('Riwayat Hadir'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.siswaHistory,
-                                  );
-                                },
-                              ),
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.history_rounded),
+                            label: const Text('Riwayat Hadir'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                icon: const Icon(Icons.card_travel_rounded),
-                                label: const Text('Ajukan Izin'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.primaryColor,
-                                  side: const BorderSide(
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.siswaLeaveRequest,
-                                  );
-                                },
-                              ),
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRoutes.siswaHistory);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.card_travel_rounded),
+                            label: const Text('Ajukan Izin'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.primaryColor,
+                              side: const BorderSide(color: AppTheme.primaryColor),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                          ],
-                        )
-                        .animate()
-                        .slideY(
-                          begin: 0.05,
-                          end: 0,
-                          duration: 300.ms,
-                          delay: 50.ms,
-                        )
-                        .fadeIn(),
-                    // Sesi Presensi Aktif
-                    if (siswaProvider.activeSessions.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        'Sesi Presensi Aktif',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2D3142),
-                            ),
-                      ).animate().fadeIn(delay: 75.ms),
-                      const SizedBox(height: 12),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: siswaProvider.activeSessions.length,
-                        itemBuilder: (context, index) {
-                          final session = siswaProvider.activeSessions[index];
-                          final hasAttended = siswaProvider.history.containsKey(session.id);
-                          final isMapel = session.type == 'mapel';
-                          final title = isMapel ? 'Sesi Mapel: ${session.subject ?? ""}' : 'Sesi Harian Kelas';
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRoutes.siswaLeaveRequest);
+                            },
+                          ),
+                        ),
+                      ],
+                    ).animate().slideY(begin: 0.05, end: 0, duration: 300.ms).fadeIn(),
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: ListTile(
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(Icons.qr_code_scanner, color: AppTheme.primaryColor),
-                              ),
-                              title: Text(
-                                title,
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                              ),
-                              subtitle: Text('Dibuka: ${session.timeStart}', style: const TextStyle(color: AppTheme.textMutedColor)),
-                              trailing: hasAttended
-                                  ? const Icon(Icons.check_circle, color: AppTheme.hadirColor)
-                                  : ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppTheme.primaryColor,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.siswaScanQR,
-                                          arguments: {
-                                            'session_id': session.id,
-                                            'qr_id': user?.qrCodeId ?? '',
-                                          },
-                                        ).then((_) {
-                                          if (classId.isNotEmpty) {
-                                            siswaProvider.fetchActiveSessions(classId);
-                                            siswaProvider.fetchAttendanceHistory(user!.uid);
-                                          }
-                                        });
-                                      },
-                                      child: const Text('Scan QR'),
-                                    ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                    ] else ...[
-                      const SizedBox(height: 32),
-                    ],
+                    const SizedBox(height: 28),
 
                     // Riwayat Kehadiran Terbaru
                     Row(
@@ -393,56 +457,43 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                       children: [
                         Text(
                           'Riwayat Kehadiran Terbaru',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF2D3142),
                               ),
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.siswaHistory,
-                            );
+                            Navigator.pushNamed(context, AppRoutes.siswaHistory);
                           },
                           child: const Text('Lihat Semua'),
                         ),
                       ],
-                    ).animate().fadeIn(delay: 100.ms),
-                    const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 12),
                     siswaProvider.history.isEmpty
                         ? const Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 32),
-                              child: Text(
-                                'Belum ada riwayat kehadiran tercatat.',
-                                style: TextStyle(color: Colors.grey),
-                              ),
+                              child: Text('Belum ada riwayat kehadiran tercatat.', style: TextStyle(color: Colors.grey)),
                             ),
                           )
                         : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: siswaProvider.history.length > 5
-                                ? 5
-                                : siswaProvider.history.length,
+                            itemCount: siswaProvider.history.length > 5 ? 5 : siswaProvider.history.length,
                             itemBuilder: (context, index) {
-                              final entry = siswaProvider.history.entries
-                                  .toList()[index];
+                              final entry = siswaProvider.history.entries.toList()[index];
                               final sessionId = entry.key;
                               final attendance = entry.value;
 
                               final isMapel = sessionId.contains('MAPEL');
-                              String title = isMapel
-                                  ? 'Sesi Mapel'
-                                  : 'Sesi Harian Kelas';
+                              String title = isMapel ? 'Sesi Mapel' : 'Sesi Harian Kelas';
 
                               if (isMapel) {
                                 final parts = sessionId.split('-');
                                 if (parts.length > 3) {
-                                  title =
-                                      'Sesi Mapel: ${parts[3].replaceAll('_', ' ')}';
+                                  title = 'Sesi Mapel: ${parts[3].replaceAll('_', ' ')}';
                                 }
                               }
 
@@ -456,54 +507,39 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                               }
 
                               return Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Colors.grey.shade200,
-                                      ),
+                                      color: AppTheme.primaryColor.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: ListTile(
-                                      leading: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.primaryColor
-                                              .withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          isMapel
-                                              ? Icons.menu_book
-                                              : Icons.calendar_month,
-                                          color: AppTheme.primaryColor,
-                                        ),
-                                      ),
-                                      title: Text(
-                                        title,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.textColor,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      subtitle: Text(
-                                        'Waktu: $dateStr',
-                                        style: const TextStyle(
-                                          color: AppTheme.textMutedColor,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      trailing: _buildStatusWidget(
-                                        attendance.status,
-                                      ),
+                                    child: Icon(
+                                      isMapel ? Icons.menu_book : Icons.calendar_month,
+                                      color: AppTheme.primaryColor,
                                     ),
-                                  )
-                                  .animate()
-                                  .slideY(begin: 0.05, end: 0, duration: 300.ms)
-                                  .fadeIn();
+                                  ),
+                                  title: Text(
+                                    title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.textColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'Waktu: $dateStr',
+                                    style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 11),
+                                  ),
+                                  trailing: _buildStatusWidget(attendance.status),
+                                ),
+                              );
                             },
                           ),
                   ],
