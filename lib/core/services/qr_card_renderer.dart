@@ -103,16 +103,4 @@ Future<Uint8List> renderStudentQRCardToPng({
   return byteData.buffer.asUint8List();
 }
 
-/// Legacy render for class card if needed
-Future<Uint8List> renderQRCardToPng({
-  required String qrData,
-  required String className,
-  double pixelRatio = 3.0,
-}) async {
-  return renderStudentQRCardToPng(
-    qrData: qrData,
-    studentName: 'KELAS $className',
-    className: className,
-    pixelRatio: pixelRatio,
-  );
-}
+

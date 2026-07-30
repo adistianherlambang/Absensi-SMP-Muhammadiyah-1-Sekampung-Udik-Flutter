@@ -184,6 +184,44 @@ class PiketProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+  // Pemindaian QR Siswa secara otomatis oleh Guru Piket
+  Future<UserModel> scanStudentQR({
+    required String sessionId,
+    required String studentId,
+    required String classId,
+    required String recorderUid,
+  }) async {
+    UserModel? student;
+    try {
+      student = _students.firstWhere((s) => s.uid == studentId || s.qrCodeId == studentId);
+    } catch (_) {
+      final allUsers = await _dbService.getUsers(role: 'siswa');
+      try {
+        student = allUsers.firstWhere((u) => (u.uid == studentId || u.qrCodeId == studentId) && u.classId == classId);
+      } catch (_) {
+        throw Exception("Siswa tidak terdaftar di kelas sesi ini!");
+      }
+    }
+
+    if (student.classId != classId) {
+      throw Exception("Siswa ${student.name} bukan anggota kelas ini!");
+    }
+
+    final updatedAttendance = AttendanceModel(
+      studentId: student.uid,
+      status: 'hadir',
+      timestamp: DateTime.now().toIso8601String(),
+      method: 'qr_scan',
+      recordedBy: recorderUid,
+      note: 'Presensi via Scan QR Siswa',
+    );
+
+    await _dbService.recordAttendance(sessionId, student.uid, updatedAttendance);
+    _sessionAttendances[student.uid] = updatedAttendance;
+    notifyListeners();
+
+    return student;
+  }
 
   // Validasi manual status kehadiran oleh guru piket
   Future<void> updateAttendanceManual({

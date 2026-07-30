@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/attendance_model.dart';
+import '../../core/services/qr_service.dart';
 import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
 
@@ -20,6 +22,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
   late String _classId;
   late String _className;
   late String _sessionStatus;
+  final QRService _qrService = QRService();
 
   @override
   void didChangeDependencies() {
@@ -37,6 +40,171 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
       });
       _initialized = true;
     }
+  }
+
+  /// Buka Modal Scanner Kamera Pemindaian QR Siswa secara Kontinu
+  void _openStudentQRScanner() {
+    if (_sessionStatus != 'active') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sesi presensi sudah ditutup.')),
+      );
+      return;
+    }
+
+    final piketProvider = Provider.of<PiketProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final MobileScannerController cameraController = MobileScannerController();
+    bool isProcessingScan = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: false,
+      backgroundColor: Colors.black,
+      builder: (modalCtx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                title: const Text('Scan QR Code Siswa'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.flash_on),
+                    onPressed: () => cameraController.toggleTorch(),
+                  ),
+                ],
+              ),
+              body: Stack(
+                children: [
+                  MobileScanner(
+                    controller: cameraController,
+                    onDetect: (capture) async {
+                      if (isProcessingScan) return;
+
+                      final List<Barcode> barcodes = capture.barcodes;
+                      if (barcodes.isEmpty) return;
+
+                      final qrVal = barcodes.first.rawValue;
+                      if (qrVal == null) return;
+
+                      setModalState(() {
+                        isProcessingScan = true;
+                      });
+
+                      final parsed = _qrService.parseQRContent(qrVal);
+                      final studentId = parsed != null ? parsed['student_id']! : qrVal;
+
+                      try {
+                        final student = await piketProvider.scanStudentQR(
+                          sessionId: _sessionId,
+                          studentId: studentId,
+                          classId: _classId,
+                          recorderUid: authProvider.currentUser!.uid,
+                        );
+
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${student.name} - HADIR',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: Colors.green.shade600,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(e.toString().replaceAll('Exception: ', ''))),
+                              ],
+                            ),
+                            backgroundColor: Colors.redAccent,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+
+                      await Future.delayed(const Duration(milliseconds: 1500));
+                      if (mounted) {
+                        setModalState(() {
+                          isProcessingScan = false;
+                        });
+                      }
+                    },
+                  ),
+
+                  Center(
+                    child: Container(
+                      width: 260,
+                      height: 260,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.greenAccent, width: 4),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+
+                  if (isProcessingScan)
+                    Container(
+                      color: Colors.black45,
+                      child: const Center(
+                        child: CircularProgressIndicator(color: Colors.greenAccent),
+                      ),
+                    ),
+
+                  Positioned(
+                    bottom: 40,
+                    left: 20,
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Arahkan kamera ke QR Siswa Kelas $_className',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Siswa otomatis bertambah HADIR saat QR berhasil dipindai.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showOverrideDialog(UserModel student, AttendanceModel? currentAttendance) {
@@ -255,6 +423,27 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // Tombol Utama: Scan QR Code Siswa
+                  if (isActive && !isWali) ...[
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E88E5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 4,
+                      ),
+                      icon: const Icon(Icons.qr_code_scanner_rounded, size: 26),
+                      label: const Text(
+                        'SCAN QR CODE SISWA',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
+                      onPressed: _openStudentQRScanner,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   Text(
                     'Daftar Kehadiran Siswa',
                     style: Theme.of(context).textTheme.titleLarge,

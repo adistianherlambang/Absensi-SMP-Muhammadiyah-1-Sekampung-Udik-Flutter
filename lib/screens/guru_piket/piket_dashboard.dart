@@ -238,53 +238,23 @@ class _PiketDashboardState extends State<PiketDashboard> {
                     // Quick Actions
                     Column(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.qr_code_scanner),
-                                label: const Text('Scan Meja Kelas'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/guru/scan-class',
-                                  );
-                                },
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.history_rounded),
+                            label: const Text('Riwayat Presensi Guru'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                icon: const Icon(Icons.history),
-                                label: const Text('Riwayat Presensi'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.primaryColor,
-                                  side: const BorderSide(
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/guru/history');
-                                },
-                              ),
-                            ),
-                          ],
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/guru/history');
+                            },
+                          ),
                         ),
                         if (authProvider.currentUser?.role == 'guru_piket') ...[
                           const SizedBox(height: 16),

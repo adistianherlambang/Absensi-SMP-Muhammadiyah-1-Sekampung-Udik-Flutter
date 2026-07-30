@@ -25,7 +25,6 @@ migrate_working_dir/
 
 # Markdown files
 *.md
-!/README.md
 
 # Temporary and unnecessary files
 a.html
@@ -59,4 +58,5 @@ app.*.map.json
 .flutter-plugins
 .flutter-plugins-dependencies
 
-agent.md
+agent.
+
