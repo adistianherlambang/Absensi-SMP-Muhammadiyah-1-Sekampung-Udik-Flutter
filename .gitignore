@@ -25,6 +25,8 @@ migrate_working_dir/
 
 # Markdown files
 *.md
+!README.md
+!**/README.md
 
 # Temporary and unnecessary files
 a.html
