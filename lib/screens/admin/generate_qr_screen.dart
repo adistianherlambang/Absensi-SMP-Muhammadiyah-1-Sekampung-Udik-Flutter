@@ -298,7 +298,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                         if (savedPath != null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Berhasil diunduh ke Folder Download: $savedPath'),
+                              content: Text('Berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}'),
                               backgroundColor: Colors.green.shade600,
                             ),
                           );
@@ -405,7 +405,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                   if (savedPath != null && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('ZIP Berhasil disimpan di Folder Download: $savedPath'),
+                        content: Text('ZIP berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}'),
                         backgroundColor: Colors.green.shade600,
                       ),
                     );

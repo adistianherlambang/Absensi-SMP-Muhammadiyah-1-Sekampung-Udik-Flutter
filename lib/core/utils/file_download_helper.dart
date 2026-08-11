@@ -17,17 +17,25 @@ class FileDownloadHelper {
       if (Platform.isAndroid) {
         // Coba akses folder Downloads publik Android: /storage/emulated/0/Download
         final downloadDir = Directory('/storage/emulated/0/Download');
-        if (await downloadDir.exists()) {
-          targetPath = '${downloadDir.path}/$fileName';
-        } else {
-          // Fallback jika direktori publik tidak langsung terdeteksi
-          final extDir = await getExternalStorageDirectory();
-          if (extDir != null) {
-            targetPath = '${extDir.path}/$fileName';
-          } else {
-            final appDocDir = await getApplicationDocumentsDirectory();
-            targetPath = '${appDocDir.path}/$fileName';
+        try {
+          if (await downloadDir.exists()) {
+            targetPath = '${downloadDir.path}/$fileName';
+            final file = File(targetPath);
+            await file.create(recursive: true);
+            await file.writeAsBytes(bytes);
+            return targetPath;
           }
+        } catch (_) {
+          // Fallback jika Scoped Storage Android 10+ menolak penulisan langsung
+        }
+
+        // Fallback jika direktori publik tidak langsung dapat ditulis
+        final extDir = await getExternalStorageDirectory();
+        if (extDir != null) {
+          targetPath = '${extDir.path}/$fileName';
+        } else {
+          final appDocDir = await getApplicationDocumentsDirectory();
+          targetPath = '${appDocDir.path}/$fileName';
         }
 
         final file = File(targetPath);
@@ -58,6 +66,17 @@ class FileDownloadHelper {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Mengubah path teknis sistem menjadi teks yang ramah pengguna
+  static String getUserFriendlyPath(String path) {
+    if (path.contains('/Download/') || path.endsWith('/Download')) {
+      final fileName = path.split('/').last;
+      return 'Folder Download HP ($fileName)';
+    } else {
+      final fileName = path.split('/').last;
+      return 'Penyimpanan HP ($fileName)';
     }
   }
 

@@ -168,7 +168,7 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                           if (savedPath != null && mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Kartu QR disimpan di Folder Download: $savedPath'),
+                                content: Text('Kartu QR berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}'),
                                 backgroundColor: Colors.green.shade600,
                               ),
                             );

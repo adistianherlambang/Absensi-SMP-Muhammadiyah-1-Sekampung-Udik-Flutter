@@ -277,7 +277,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   if (savedPath != null && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Laporan Excel berhasil diunduh ke Folder Download: $savedPath'),
+                        content: Text('Laporan Excel berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}'),
                         backgroundColor: Colors.green.shade600,
                       ),
                     );

@@ -876,115 +876,148 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
     }).toList();
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Filter bar
+        // Total count & Filter bar
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama atau email...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                  ),
-                  onChanged: (val) {
-                    setState(() {
-                      _searchQuery = val;
-                      _selectedUsers.clear();
-                    });
-                  },
+              Text(
+                '${filteredUsers.length} pengguna tersedia',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              if (role == 'siswa') ...[
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 160,
-                  child: SearchableSelect<ClassModel>(
-                    labelText: 'Kelas',
-                    items: [
-                      ClassModel(
-                        id: 'all',
-                        name: 'Semua Kelas',
-                        homeroomTeacherId: '',
-                        studentIds: const [],
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Cari nama atau email...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey.shade500,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(
+                            color: AppTheme.primaryColor,
+                            width: 1.5,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
-                      ...adminProvider.classes
-                    ],
-                    itemLabel: (c) => c.name,
-                    selectedValue: _filterClassId != null
-                        ? adminProvider.classes.firstWhere(
-                            (c) => c.id == _filterClassId,
-                            orElse: () => ClassModel(
-                              id: 'all',
-                              name: 'Semua Kelas',
-                              homeroomTeacherId: '',
-                              studentIds: const [],
-                            ),
-                          )
-                        : ClassModel(
+                      onChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                          _selectedUsers.clear();
+                        });
+                      },
+                    ),
+                  ),
+                  if (role == 'siswa') ...[
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 135,
+                      child: SearchableSelect<ClassModel>(
+                        labelText: 'Kelas',
+                        items: [
+                          ClassModel(
                             id: 'all',
                             name: 'Semua Kelas',
                             homeroomTeacherId: '',
                             studentIds: const [],
                           ),
-                    onChanged: (val) {
-                      setState(() {
-                        _filterClassId = (val == null || val.id == 'all') ? null : val.id;
-                        _selectedUsers.clear();
-                      });
-                    },
-                  ),
-                ),
-              ],
-              if (role == 'guru') ...[
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 160,
-                  child: SearchableSelect<TeacherTypeFilter>(
-                    labelText: 'Tipe Guru',
-                    items: const [
-                      TeacherTypeFilter(null, 'Semua Tipe'),
-                      TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
-                      TeacherTypeFilter('guru_piket', 'Guru Piket'),
-                      TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
-                    ],
-                    itemLabel: (t) => t.name,
-                    selectedValue: const [
-                      TeacherTypeFilter(null, 'Semua Tipe'),
-                      TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
-                      TeacherTypeFilter('guru_piket', 'Guru Piket'),
-                      TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
-                    ].firstWhere(
-                      (t) => t.role == _filterTeacherRole,
-                      orElse: () => const TeacherTypeFilter(null, 'Semua Tipe'),
+                          ...adminProvider.classes,
+                        ],
+                        itemLabel: (c) => c.name,
+                        selectedValue: _filterClassId != null
+                            ? adminProvider.classes.firstWhere(
+                                (c) => c.id == _filterClassId,
+                                orElse: () => ClassModel(
+                                  id: 'all',
+                                  name: 'Semua Kelas',
+                                  homeroomTeacherId: '',
+                                  studentIds: const [],
+                                ),
+                              )
+                            : ClassModel(
+                                id: 'all',
+                                name: 'Semua Kelas',
+                                homeroomTeacherId: '',
+                                studentIds: const [],
+                              ),
+                        onChanged: (val) {
+                          setState(() {
+                            _filterClassId = (val == null || val.id == 'all')
+                                ? null
+                                : val.id;
+                            _selectedUsers.clear();
+                          });
+                        },
+                      ),
                     ),
-                    onChanged: (val) {
-                      setState(() {
-                        _filterTeacherRole = val?.role;
-                        _selectedUsers.clear();
-                      });
-                    },
-                  ),
-                ),
-              ],
+                  ],
+                  if (role == 'guru') ...[
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 135,
+                      child: SearchableSelect<TeacherTypeFilter>(
+                        labelText: 'Tipe Guru',
+                        items: const [
+                          TeacherTypeFilter(null, 'Semua Tipe'),
+                          TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
+                          TeacherTypeFilter('guru_piket', 'Guru Piket'),
+                          TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
+                        ],
+                        itemLabel: (t) => t.name,
+                        selectedValue: const [
+                          TeacherTypeFilter(null, 'Semua Tipe'),
+                          TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
+                          TeacherTypeFilter('guru_piket', 'Guru Piket'),
+                          TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
+                        ].firstWhere(
+                          (t) => t.role == _filterTeacherRole,
+                          orElse: () =>
+                              const TeacherTypeFilter(null, 'Semua Tipe'),
+                        ),
+                        onChanged: (val) {
+                          setState(() {
+                            _filterTeacherRole = val?.role;
+                            _selectedUsers.clear();
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         ),
+        const SizedBox(height: 4),
         Expanded(
           child: filteredUsers.isEmpty
               ? Center(
@@ -1008,10 +1041,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.only(bottom: 90),
                   itemCount: filteredUsers.length,
                   itemBuilder: (context, index) {
                     final user = filteredUsers[index];
@@ -1059,193 +1089,170 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     final colorPair = colors[user.name.length % colors.length];
 
                     return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppTheme.primaryColor.withOpacity(0.4)
-                                  : Colors.grey.shade200,
-                              width: isSelected ? 2 : 1,
-                            ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.primaryColor.withOpacity(0.06)
+                            : Colors.white,
+                        border: Border(
+                          top: index == 0
+                              ? BorderSide(
+                                  color: Colors.grey.shade200,
+                                  width: 1,
+                                )
+                              : BorderSide.none,
+                          bottom: BorderSide(
+                            color: Colors.grey.shade200,
+                            width: 1,
                           ),
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(24),
-                            clipBehavior: Clip.antiAlias,
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isSelected) {
-                                    _selectedUsers.remove(user);
-                                  } else {
-                                    _selectedUsers.add(user);
-                                  }
-                                });
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    // Checkbox Custom
-                                    GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          if (isSelected) {
-                                            _selectedUsers.remove(user);
-                                          } else {
-                                            _selectedUsers.add(user);
-                                          }
-                                        });
-                                      },
-                                      child: AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 200,
-                                        ),
-                                        width: 24,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: isSelected
-                                              ? AppTheme.primaryColor
-                                              : Colors.transparent,
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? AppTheme.primaryColor
-                                                : Colors.grey.shade400,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: isSelected
-                                            ? const Icon(
-                                                Icons.check,
-                                                size: 16,
-                                                color: Colors.white,
-                                              )
-                                            : null,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                _selectedUsers.remove(user);
+                              } else {
+                                _selectedUsers.add(user);
+                              }
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                            child: Row(
+                              children: [
+                                // Checkbox Lingkaran (seperti pada contoh UI)
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      if (isSelected) {
+                                        _selectedUsers.remove(user);
+                                      } else {
+                                        _selectedUsers.add(user);
+                                      }
+                                    });
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: 22,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isSelected
+                                          ? AppTheme.primaryColor
+                                          : Colors.transparent,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? AppTheme.primaryColor
+                                            : Colors.grey.shade300,
+                                        width: 2,
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
-
-                                    // Avatar dengan Gradient
-                                    Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: colorPair[0].withOpacity(0.15),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          user.name.isNotEmpty
-                                              ? user.name[0].toUpperCase()
-                                              : 'U',
-                                          style: TextStyle(
-                                            color: colorPair[0],
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-
-                                    // Info Pengguna
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            user.name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 16,
-                                              color: AppTheme.textColor,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            user.email,
-                                            style: TextStyle(
-                                              color: Colors.grey.shade600,
-                                              fontSize: 13,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          // Badge Role
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: colorPair[0].withOpacity(
-                                                0.1,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              '${user.role == 'admin'
-                                                  ? 'ADMIN'
-                                                  : user.role == 'siswa'
-                                                  ? 'SISWA'
-                                                  : user.role == 'guru_mapel'
-                                                  ? 'GURU MAPEL'
-                                                  : user.role == 'guru_piket'
-                                                  ? 'GURU PIKET'
-                                                  : 'GURU WALI KELAS'}'
-                                              '$extraInfo',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 11,
-                                                color: colorPair[0],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    // Tombol Hapus Individual (hanya tampil jika tidak dalam mode seleksi)
-                                    if (_selectedUsers.isEmpty)
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline),
-                                        color: Colors.red.shade300,
-                                        onPressed: () =>
-                                            _confirmDeleteUser(user),
-                                      ),
-                                  ],
+                                    child: isSelected
+                                        ? const Icon(
+                                            Icons.check,
+                                            size: 14,
+                                            color: Colors.white,
+                                          )
+                                        : null,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 14),
+
+                                // Avatar Bulat khas desain modern
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: colorPair[0].withOpacity(0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      user.name.isNotEmpty
+                                          ? user.name[0].toUpperCase()
+                                          : 'U',
+                                      style: TextStyle(
+                                        color: colorPair[0],
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+
+                                // Info Pengguna
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                          color: AppTheme.textColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        user.email,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 13,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${user.role == 'admin'
+                                            ? 'ADMIN'
+                                            : user.role == 'siswa'
+                                            ? 'SISWA'
+                                            : user.role == 'guru_mapel'
+                                            ? 'GURU MAPEL'
+                                            : user.role == 'guru_piket'
+                                            ? 'GURU PIKET'
+                                            : 'GURU WALI KELAS'}'
+                                        '$extraInfo',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 11,
+                                          color: colorPair[0],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Tombol aksi individual
+                                if (_selectedUsers.isEmpty) ...[
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, size: 20),
+                                    color: Colors.grey.shade600,
+                                    onPressed: () => _showEditUserDialog(user),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 20),
+                                    color: Colors.red.shade400,
+                                    onPressed: () => _confirmDeleteUser(user),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                        )
-                        .animate()
-                        .slideY(
-                          begin: 0.4,
-                          end: 0,
-                          duration: 500.ms,
-                          curve: Curves.easeOutQuart,
-                          delay: Duration(milliseconds: 70 * index),
-                        )
-                        .fade(
-                          duration: 500.ms,
-                          delay: Duration(milliseconds: 70 * index),
-                        )
-                        .scale(
-                          begin: const Offset(0.9, 0.9),
-                          end: const Offset(1.0, 1.0),
-                          duration: 500.ms,
-                          curve: Curves.easeOutQuart,
-                          delay: Duration(milliseconds: 70 * index),
-                        );
+                        ),
+                      ),
+                    );
                   },
                 ),
         ),
@@ -1267,16 +1274,43 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white, // Pure white background
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Kelola Pengguna',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
+          // Tombol Tambah di kanan atas seperti contoh "+ ADD MORE"
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(Icons.add, size: 16, color: Colors.white),
+              label: const Text(
+                'TAMBAH',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+              onPressed: _showAddUserDialog,
+            ),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
             onSelected: (value) {
@@ -1289,7 +1323,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'download',
-                child: Text(Platform.isAndroid || Platform.isIOS ? 'Bagikan Template Excel' : 'Unduh Template Excel'),
+                child: Text(
+                  Platform.isAndroid || Platform.isIOS
+                      ? 'Bagikan Template Excel'
+                      : 'Unduh Template Excel',
+                ),
               ),
               const PopupMenuItem(
                 value: 'import',
@@ -1299,44 +1337,35 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Column(
-            children: [
-              TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.black54,
-                indicatorSize: TabBarIndicatorSize.label,
-                dividerColor: Colors.transparent,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: AppTheme.primaryColor,
-                ),
-                splashBorderRadius: BorderRadius.circular(25),
-                tabs: const [
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Admin'),
-                    ),
-                  ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Guru'),
-                    ),
-                  ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Siswa'),
-                    ),
-                  ),
-                ],
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200, width: 1),
               ),
-              const SizedBox(height: 8),
-            ],
+            ),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: false,
+              labelColor: AppTheme.primaryColor,
+              unselectedLabelColor: Colors.grey.shade500,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 14,
+              ),
+              indicatorColor: AppTheme.primaryColor,
+              indicatorWeight: 3,
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: 'Admin'),
+                Tab(text: 'Guru'),
+                Tab(text: 'Siswa'),
+              ],
+            ),
           ),
         ),
       ),
@@ -1352,26 +1381,38 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _selectedUsers.isEmpty
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               backgroundColor: AppTheme.primaryColor,
+              elevation: 4,
+              shape: const StadiumBorder(),
               onPressed: _showAddUserDialog,
-              child: const Icon(Icons.add, color: Colors.white),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Tambah Pengguna Baru',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             )
           : Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Row(
                 children: [
                   Expanded(
                     child: FloatingActionButton.extended(
                       heroTag: 'edit_selected',
                       backgroundColor: Colors.amber.shade700,
+                      elevation: 4,
+                      shape: const StadiumBorder(),
                       onPressed: _selectedUsers.length == 1
                           ? () => _showEditUserDialog(_selectedUsers.first)
                           : null,
                       icon: const Icon(Icons.edit, color: Colors.white),
-                      label: const Text(
-                        'Edit',
-                        style: TextStyle(
+                      label: Text(
+                        'Edit (${_selectedUsers.length})',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1383,11 +1424,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     child: FloatingActionButton.extended(
                       heroTag: 'delete_selected',
                       backgroundColor: Colors.redAccent,
+                      elevation: 4,
+                      shape: const StadiumBorder(),
                       onPressed: _confirmDeleteSelectedUsers,
                       icon: const Icon(Icons.delete, color: Colors.white),
-                      label: const Text(
-                        'Hapus',
-                        style: TextStyle(
+                      label: Text(
+                        'Hapus (${_selectedUsers.length})',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
