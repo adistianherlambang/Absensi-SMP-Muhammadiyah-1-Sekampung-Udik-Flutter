@@ -324,7 +324,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                           fileName: fileName,
                           mimeType: 'image/png',
                           subjectText:
-                              'Kartu Presensi QR Siswa - ${student.name} ($className)',
+                              'Kartu Presensi QR Siswa ${student.name} ($className)',
                         );
                       } catch (e) {
                         if (!mounted) return;
@@ -452,7 +452,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
-            title: Text('Batch ZIP Kartu QR - Kelas $className'),
+            title: Text('Batch ZIP Kartu QR Kelas $className'),
             content: Text(
               'Berhasil mengemas ${filesMap.length} Kartu QR Siswa ke dalam berkas ZIP ($zipFileName). Pilih opsi penyimpanan:',
             ),
@@ -470,7 +470,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                     bytes: zipBytes,
                     fileName: zipFileName,
                     mimeType: 'application/zip',
-                    subjectText: 'Batch ZIP Kartu QR Siswa - Kelas $className',
+                    subjectText: 'Batch ZIP Kartu QR Siswa Kelas $className',
                   );
                 },
               ),

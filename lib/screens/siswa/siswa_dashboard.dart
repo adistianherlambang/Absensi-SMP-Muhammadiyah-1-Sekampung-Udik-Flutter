@@ -125,7 +125,7 @@ class _SiswaDashboardState extends State<SiswaDashboard> {
                             bytes: pngBytes,
                             fileName: fileName,
                             mimeType: 'image/png',
-                            subjectText: 'Kartu QR Presensi - $studentName',
+                            subjectText: 'Kartu QR Presensi $studentName',
                           );
                         } catch (e) {
                           if (!mounted) return;

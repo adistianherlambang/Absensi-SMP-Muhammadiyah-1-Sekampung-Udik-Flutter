@@ -20,7 +20,16 @@ class PiketProvider with ChangeNotifier {
   Map<String, AttendanceModel> get sessionAttendances => _sessionAttendances;
   List<LeaveRequestModel> get classLeaveRequests => _classLeaveRequests;
   Map<String, Map<String, AttendanceModel>> get leavesAttendances => _leavesAttendances;
-  bool get isLoading => _isLoading;
+  PiketProvider() {
+    _initRealtimeStream();
+  }
+
+  void _initRealtimeStream() {
+    _dbService.getSessionsStream().listen((sessions) {
+      _sessions = sessions;
+      notifyListeners();
+    });
+  }
 
   // Memuat daftar sesi presensi
   Future<void> fetchSessions() async {
@@ -28,7 +37,7 @@ class PiketProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _sessions = await _dbService.getSessions(type: 'harian');
+      _sessions = await _dbService.getSessions();
     } catch (e) {
       // Handle error
     } finally {

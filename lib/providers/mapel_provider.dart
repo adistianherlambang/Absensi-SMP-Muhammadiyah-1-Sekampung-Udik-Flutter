@@ -16,7 +16,16 @@ class MapelProvider with ChangeNotifier {
   List<SessionModel> get sessions => _sessions;
   List<UserModel> get students => _students;
   Map<String, AttendanceModel> get sessionAttendances => _sessionAttendances;
-  bool get isLoading => _isLoading;
+  MapelProvider() {
+    _initRealtimeStream();
+  }
+
+  void _initRealtimeStream() {
+    _dbService.getSessionsStream().listen((sessions) {
+      _sessions = sessions;
+      notifyListeners();
+    });
+  }
 
   // Memuat daftar sesi presensi mapel yang dibuat oleh guru bersangkutan
   Future<void> fetchSessions(String teacherUid) async {

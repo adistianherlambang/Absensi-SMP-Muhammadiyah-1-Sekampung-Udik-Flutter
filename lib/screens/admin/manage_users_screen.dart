@@ -1442,9 +1442,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                           final cl = adminProvider.classes.firstWhere(
                             (c) => c.id == user.classId,
                           );
-                          classInfo = ' • ${cl.name}';
+                          classInfo = ' (${cl.name})';
                         } catch (_) {
-                          classInfo = ' • Kelas ?';
+                          classInfo = ' (Kelas ?)';
                         }
                       }
                       roleDisplayText = 'Siswa$classInfo';

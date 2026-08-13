@@ -34,7 +34,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
       _classId = args['class_id']!;
       _className = args['class_name']!;
       _sessionStatus = args['status']!;
-      final bool autoScan = args['auto_scan'] ?? true;
+      final bool autoScan = args['auto_scan'] ?? false;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Provider.of<PiketProvider>(context, listen: false)
@@ -74,7 +74,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
               appBar: AppBar(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                title: Text('Scan QR Code Siswa — Kelas $_className'),
+                title: Text('Scan QR Code Siswa Kelas $_className'),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.flash_on),
@@ -121,7 +121,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    '${student.name} - HADIR',
+                                    '${student.name} HADIR',
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold),
                                   ),

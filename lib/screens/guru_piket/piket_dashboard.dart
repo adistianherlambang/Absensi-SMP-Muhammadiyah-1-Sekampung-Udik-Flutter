@@ -6,6 +6,7 @@ import '../../providers/admin_provider.dart';
 import '../../providers/piket_provider.dart';
 import '../../models/class_model.dart';
 import '../../models/user_model.dart';
+import '../../models/session_model.dart';
 import '../../app/routes.dart';
 import '../../app/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -36,103 +37,248 @@ class _PiketDashboardState extends State<PiketDashboard> {
     }
   }
 
-  Future<void> _openClassAttendance(BuildContext context, ClassModel classItem) async {
-    final piketProvider = Provider.of<PiketProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  void _showClassSessionsModal(
+      BuildContext context, ClassModel cls, List<SessionModel> sessions) {
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
 
-    final now = DateTime.now();
-    final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    final sessionId = 'SESS-HARIAN-${classItem.id}-$dateStr';
-
-    try {
-      await piketProvider.openHarianSession(
-        classItem.id,
-        authProvider.currentUser?.uid ?? 'piket',
-      );
-    } catch (_) {}
-
-    if (!context.mounted) return;
-    Navigator.pushNamed(
-      context,
-      AppRoutes.piketValidate,
-      arguments: {
-        'session_id': sessionId,
-        'class_id': classItem.id,
-        'class_name': classItem.name,
-        'status': 'active',
-        'auto_scan': true,
-      },
-    );
-  }
-
-  void _showClassSelectionSheet(BuildContext context, List<ClassModel> classes) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (modalCtx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Pilih Kelas Presensi Harian',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Sesi Presensi Kelas ${cls.name}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textColor,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Dari Seluruh Guru Mapel & Piket',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: sessions.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.calendar_today_outlined,
+                                    size: 48, color: Colors.grey.shade400),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Belum ada sesi presensi dari guru manapun untuk Kelas ${cls.name}.',
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: sessions.length,
+                            itemBuilder: (context, index) {
+                              final session = sessions[index];
+                              final isActive = session.status == 'active';
+
+                              String teacherName = 'Guru';
+                              try {
+                                final teacher = adminProvider.users.firstWhere(
+                                  (u) => u.uid == session.createdBy,
+                                );
+                                teacherName = teacher.name;
+                              } catch (_) {}
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border:
+                                      Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    if (session.type == 'mapel') {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.mapelAttendance,
+                                        arguments: {
+                                          'session_id': session.id,
+                                          'class_id': session.classId,
+                                          'class_name': cls.name,
+                                          'subject': session.subject,
+                                          'status': session.status,
+                                          'auto_scan': false,
+                                        },
+                                      );
+                                    } else {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.piketValidate,
+                                        arguments: {
+                                          'session_id': session.id,
+                                          'class_id': session.classId,
+                                          'class_name': cls.name,
+                                          'status': session.status,
+                                          'auto_scan': false,
+                                        },
+                                      );
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(14.0),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: isActive
+                                              ? AppTheme.hadirColor
+                                                  .withOpacity(0.15)
+                                              : AppTheme.primaryColor
+                                                  .withOpacity(0.12),
+                                          child: Icon(
+                                            session.type == 'mapel'
+                                                ? Icons.menu_book_rounded
+                                                : Icons.badge_outlined,
+                                            color: isActive
+                                                ? AppTheme.hadirColor
+                                                : AppTheme.primaryColor,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      session.subject ?? 'Presensi Harian',
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 15,
+                                                        color:
+                                                            AppTheme.textColor,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: isActive
+                                                          ? AppTheme.hadirColor
+                                                              .withOpacity(0.15)
+                                                          : Colors.grey
+                                                              .shade200,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                    ),
+                                                    child: Text(
+                                                      isActive
+                                                          ? 'Sesi Buka'
+                                                          : 'Ditutup',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: isActive
+                                                            ? AppTheme.hadirColor
+                                                            : Colors.grey
+                                                                .shade700,
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Guru: $teacherName Tanggal: ${session.date} (${session.timeStart})',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        const Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: AppTheme.primaryColor,
+                                          size: 22,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              if (classes.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: Text('Belum ada kelas terdaftar.')),
-                )
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: classes.length,
-                    itemBuilder: (context, index) {
-                      final c = classes[index];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
-                            child: Text(
-                              c.name.isNotEmpty ? c.name[0] : 'K',
-                              style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          title: Text('Kelas ${c.name}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: const Text('Buka presensi QR harian'),
-                          trailing: const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primaryColor),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _openClassAttendance(context, c);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -175,12 +321,13 @@ class _PiketDashboardState extends State<PiketDashboard> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
+    final piketProvider = context.watch<PiketProvider>();
     final mapelProvider = context.watch<MapelProvider>();
     final adminProvider = context.watch<AdminProvider>();
     final teacherUid = authProvider.currentUser?.uid ?? '';
 
     // Hitung metrik Guru Piket
-    final totalSessions = mapelProvider.sessions.length;
+    final totalSessions = piketProvider.sessions.length;
     final totalClasses = adminProvider.classes.length;
 
     return Scaffold(
@@ -353,7 +500,10 @@ class _PiketDashboardState extends State<PiketDashboard> {
                               ),
                             ),
                             onPressed: () {
-                              _showClassSelectionSheet(context, adminProvider.classes);
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.piketOpenSession,
+                              );
                             },
                           ),
                         ),
@@ -420,164 +570,39 @@ class _PiketDashboardState extends State<PiketDashboard> {
                           delay: 50.ms,
                         )
                         .fadeIn(),
-                    const SizedBox(height: 32),
-
-                    // Daftar Sesi Presensi Harian Aktif/Tutup
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Riwayat Presensi Terbaru',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF2D3142),
-                              ),
-                        ),
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/guru/history'),
-                          child: const Text('Lihat Semua'),
-                        ),
-                      ],
-                    ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: 16),
-                    mapelProvider.sessions.isEmpty
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 32),
-                              child: Text(
-                                'Belum ada sesi presensi dicatat.',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: mapelProvider.sessions.length > 5
-                                ? 5
-                                : mapelProvider.sessions.length,
-                            itemBuilder: (context, index) {
-                              final session = mapelProvider.sessions[index];
-
-                              // Ambil nama kelas
-                              String className = 'Tidak diketahui';
-                              try {
-                                final cls = adminProvider.classes.firstWhere(
-                                  (c) => c.id == session.classId,
-                                );
-                                className = cls.name;
-                              } catch (_) {}
-
-                              return Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Colors.grey.shade200,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(20),
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/guru/history',
-                                        );
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: const BoxDecoration(
-                                                color: AppTheme.primaryColor,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.history_edu,
-                                                color: Colors.white,
-                                                size: 20,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    'Kelas $className — ${session.subject}',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15,
-                                                      color: AppTheme.textColor,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    'Tanggal: ${session.date} • Jam: ${session.timeStart}',
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const Icon(
-                                              Icons.chevron_right_rounded,
-                                              color: AppTheme.primaryColor,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  .animate()
-                                  .slideY(begin: 0.05, end: 0, duration: 300.ms)
-                                  .fadeIn();
-                            },
-                          ),
-                    const SizedBox(height: 32),
-                    // Presensi Harian Per Kelas (Langsung Buka Presensi saat diklik)
+                    // Sesi Presensi Harian Section (Per Kelas)
                     Builder(
                       builder: (context) {
+                        final piketProvider = context.watch<PiketProvider>();
+                        final classes = adminProvider.classes;
+
                         if (authProvider.currentUser?.role != 'guru_piket' &&
                             authProvider.currentUser?.role != 'guru_wali_kelas') {
                           return const SizedBox.shrink();
                         }
 
-                        List<ClassModel> targetClasses = adminProvider.classes;
-                        if (authProvider.currentUser?.role == 'guru_wali_kelas') {
-                          targetClasses = adminProvider.classes
-                              .where((c) => c.homeroomTeacherId == authProvider.currentUser?.uid)
-                              .toList();
-                        }
+                        List<ClassModel> displayClasses = classes;
+
+                        const title = 'Sesi Presensi Per Kelas Hari Ini (Seluruh Guru)';
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Presensi Harian Per Kelas',
+                              title,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: const Color(0xFF2D3142),
                                   ),
                             ),
-                            const SizedBox(height: 12),
-                            targetClasses.isEmpty
+                            const SizedBox(height: 16),
+                            displayClasses.isEmpty
                                 ? const Center(
                                     child: Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 24),
+                                      padding: EdgeInsets.symmetric(vertical: 16),
                                       child: Text(
-                                        'Belum ada kelas terdaftar.',
+                                        'Belum ada data kelas terdaftar.',
                                         style: TextStyle(color: Colors.grey),
                                       ),
                                     ),
@@ -585,12 +610,75 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                 : ListView.builder(
                                     shrinkWrap: true,
                                     physics: const NeverScrollableScrollPhysics(),
-                                    itemCount: targetClasses.length,
+                                    itemCount: displayClasses.length,
                                     itemBuilder: (context, index) {
-                                      final classItem = targetClasses[index];
-                                      final studentCount = adminProvider.users
-                                          .where((u) => u.role == 'siswa' && u.classId == classItem.id)
-                                          .length;
+                                      final cls = displayClasses[index];
+                                      final allSessionsMap = <String, SessionModel>{};
+                                      for (var s in piketProvider.sessions) {
+                                        allSessionsMap[s.id] = s;
+                                      }
+                                      for (var s in mapelProvider.sessions) {
+                                        allSessionsMap[s.id] = s;
+                                      }
+
+                                      final now = DateTime.now();
+                                      final todayYMD =
+                                          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+                                      final todayDMY =
+                                          "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
+
+                                      final allSessionsList =
+                                          allSessionsMap.values.where((s) {
+                                        final d = s.date.trim();
+                                        if (d == todayYMD || d == todayDMY) {
+                                          return true;
+                                        }
+                                        try {
+                                          if (d.contains('-')) {
+                                            final parts = d.split('-');
+                                            if (parts[0].length == 4) {
+                                              final yr = int.parse(parts[0]);
+                                              final mo = int.parse(parts[1]);
+                                              final dy = int.parse(parts[2]);
+                                              return yr == now.year &&
+                                                  mo == now.month &&
+                                                  dy == now.day;
+                                            } else {
+                                              final dy = int.parse(parts[0]);
+                                              final mo = int.parse(parts[1]);
+                                              final yr = int.parse(parts[2]);
+                                              return yr == now.year &&
+                                                  mo == now.month &&
+                                                  dy == now.day;
+                                            }
+                                          }
+                                        } catch (_) {}
+                                        return true;
+                                      }).toList();
+
+                                      final sessionsForClass =
+                                          allSessionsList.where((s) {
+                                        if (s.classId == cls.id ||
+                                            s.classId == cls.name) return true;
+                                        final sClean = s.classId
+                                            .toLowerCase()
+                                            .replaceAll('class-', '')
+                                            .replaceAll('kelas', '')
+                                            .trim();
+                                        final cIdClean = cls.id
+                                            .toLowerCase()
+                                            .replaceAll('class-', '')
+                                            .replaceAll('kelas', '')
+                                            .trim();
+                                        final cNameClean = cls.name
+                                            .toLowerCase()
+                                            .replaceAll('kelas', '')
+                                            .trim();
+                                        return sClean == cIdClean ||
+                                            sClean == cNameClean;
+                                      }).toList();
+                                      final hasActiveSession = sessionsForClass
+                                          .any((s) => s.status == 'active');
 
                                       return Container(
                                         margin: const EdgeInsets.only(bottom: 12),
@@ -604,72 +692,65 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                         ),
                                         child: InkWell(
                                           borderRadius: BorderRadius.circular(20),
-                                          onTap: () => _openClassAttendance(context, classItem),
+                                          onTap: () => _showClassSessionsModal(
+                                              context, cls, sessionsForClass),
                                           child: Padding(
                                             padding: const EdgeInsets.all(16.0),
                                             child: Row(
                                               children: [
-                                                CircleAvatar(
-                                                  radius: 20,
-                                                  backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
-                                                  child: Text(
-                                                    classItem.name.isNotEmpty ? classItem.name[0] : 'K',
-                                                    style: const TextStyle(
-                                                      color: AppTheme.primaryColor,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 16,
-                                                    ),
+                                                Container(
+                                                  padding: const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    color: hasActiveSession
+                                                        ? AppTheme.hadirColor
+                                                        : AppTheme.primaryColor
+                                                            .withOpacity(0.12),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.class_outlined,
+                                                    color: hasActiveSession
+                                                        ? Colors.white
+                                                        : AppTheme.primaryColor,
+                                                    size: 20,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 16),
                                                 Expanded(
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
                                                     children: [
                                                       Text(
-                                                        'Kelas ${classItem.name}',
+                                                        'Kelas ${cls.name}',
                                                         style: const TextStyle(
                                                           fontWeight: FontWeight.bold,
-                                                          fontSize: 16,
+                                                          fontSize: 15,
                                                           color: AppTheme.textColor,
                                                         ),
                                                       ),
-                                                      const SizedBox(height: 2),
+                                                      const SizedBox(height: 4),
                                                       Text(
-                                                        '$studentCount Siswa • Tap untuk Buka Presensi QR',
+                                                        '${sessionsForClass.length} Sesi Presensi Guru' +
+                                                            (hasActiveSession
+                                                                ? ' (Ada Sesi Buka)'
+                                                                : ''),
                                                         style: TextStyle(
-                                                          color: Colors.grey.shade600,
+                                                          color: hasActiveSession
+                                                              ? AppTheme.hadirColor
+                                                              : Colors.grey.shade600,
                                                           fontSize: 12,
+                                                          fontWeight: hasActiveSession
+                                                              ? FontWeight.bold
+                                                              : FontWeight.normal,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                  decoration: BoxDecoration(
-                                                    color: AppTheme.primaryColor,
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                  child: const Row(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.qr_code_scanner_rounded,
-                                                        color: Colors.white,
-                                                        size: 16,
-                                                      ),
-                                                      SizedBox(width: 6),
-                                                      Text(
-                                                        'Presensi',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                const Icon(
+                                                  Icons.chevron_right_rounded,
+                                                  color: AppTheme.primaryColor,
                                                 ),
                                               ],
                                             ),

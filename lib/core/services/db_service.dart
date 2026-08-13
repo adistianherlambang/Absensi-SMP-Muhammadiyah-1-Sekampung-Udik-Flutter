@@ -82,6 +82,15 @@ class DBService {
     await _firestore.collection('sessions').doc(session.id).set(session.toMap(), SetOptions(merge: true));
   }
 
+  // Stream daftar sesi presensi real-time
+  Stream<List<SessionModel>> getSessionsStream() {
+    return _firestore.collection('sessions').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return SessionModel.fromMap(doc.id, doc.data() as Map<dynamic, dynamic>);
+      }).toList();
+    });
+  }
+
   // Ambil daftar sesi (Filter kelas/tipe jika dibutuhkan)
   Future<List<SessionModel>> getSessions({String? classId, String? type, bool activeOnly = false}) async {
     Query query = _firestore.collection('sessions');

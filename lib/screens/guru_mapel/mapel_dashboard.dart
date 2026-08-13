@@ -370,7 +370,7 @@ class _MapelDashboardState extends State<MapelDashboard> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    'Kelas $className — ${session.subject}',
+                                                    'Kelas $className ${session.subject}',
                                                     style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
@@ -380,7 +380,7 @@ class _MapelDashboardState extends State<MapelDashboard> {
                                                   ),
                                                   const SizedBox(height: 4),
                                                   Text(
-                                                    'Tanggal: ${session.date} • Jam: ${session.timeStart}',
+                                                    'Tanggal: ${session.date} Jam: ${session.timeStart}',
                                                     style: TextStyle(
                                                       color:
                                                           Colors.grey.shade600,

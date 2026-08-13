@@ -35,7 +35,7 @@ class _MapelAttendanceScreenState extends State<MapelAttendanceScreen> {
       _className = args['class_name']!;
       _subject = args['subject']!;
       _sessionStatus = args['status']!;
-      final bool autoScan = args['auto_scan'] ?? true;
+      final bool autoScan = args['auto_scan'] ?? false;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Provider.of<MapelProvider>(context, listen: false)
@@ -75,7 +75,7 @@ class _MapelAttendanceScreenState extends State<MapelAttendanceScreen> {
               appBar: AppBar(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                title: Text('Scan QR Code Siswa — Kelas $_className'),
+                title: Text('Scan QR Code Siswa Kelas $_className'),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.flash_on),
@@ -122,7 +122,7 @@ class _MapelAttendanceScreenState extends State<MapelAttendanceScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    '${student.name} - HADIR',
+                                    '${student.name} HADIR',
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold),
                                   ),

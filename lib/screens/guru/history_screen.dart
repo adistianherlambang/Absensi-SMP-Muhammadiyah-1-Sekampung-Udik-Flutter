@@ -217,7 +217,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Mata Pelajaran: ${_editingSession!.subject}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('Tanggal: ${_editingSession!.date} - Mulai: ${_editingSession!.timeStart}', style: const TextStyle(color: Colors.grey)),
+                        Text('Tanggal: ${_editingSession!.date} Mulai: ${_editingSession!.timeStart}', style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
                   ),
@@ -401,12 +401,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Kelas $className - ${session.subject}',
+                                        'Kelas $className ${session.subject}',
                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textColor),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Tanggal: ${session.date} • Jam: ${session.timeStart}',
+                                        'Tanggal: ${session.date} Jam: ${session.timeStart}',
                                         style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 12),
                                       ),
                                     ],
