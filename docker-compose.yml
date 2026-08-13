@@ -1,0 +1,12 @@
+services:
+  flutter-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flutter-3.35.4:latest
+    container_name: flutter_app_3_35_4
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    working_dir: /app
