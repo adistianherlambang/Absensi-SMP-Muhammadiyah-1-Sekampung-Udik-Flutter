@@ -5,7 +5,6 @@ import 'package:excel/excel.dart' hide Border;
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/searchable_select.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/user_model.dart';
@@ -1432,7 +1431,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                   itemCount: filteredUsers.length,
                   itemBuilder: (context, index) {
                     final user = filteredUsers[index];
-                    final isSiswa = user.role == 'siswa';
 
                     String roleDisplayText = '';
                     if (user.role == 'admin') {
@@ -1778,7 +1776,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
       floatingActionButton: _selectedUsers.isEmpty
           ? FloatingActionButton.extended(
               backgroundColor: AppTheme.primaryColor,
-              elevation: 4,
+              elevation: 0,
               shape: const StadiumBorder(),
               onPressed: _showAddUserDialog,
               icon: const Icon(Icons.add, color: Colors.white),
@@ -1799,7 +1797,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     child: FloatingActionButton.extended(
                       heroTag: 'edit_selected',
                       backgroundColor: Colors.amber.shade700,
-                      elevation: 4,
+                      elevation: 0,
                       shape: const StadiumBorder(),
                       onPressed: _selectedUsers.length == 1
                           ? () => _showEditUserDialog(_selectedUsers.first)
@@ -1819,7 +1817,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     child: FloatingActionButton.extended(
                       heroTag: 'delete_selected',
                       backgroundColor: Colors.redAccent,
-                      elevation: 4,
+                      elevation: 0,
                       shape: const StadiumBorder(),
                       onPressed: _confirmDeleteSelectedUsers,
                       icon: const Icon(Icons.delete, color: Colors.white),

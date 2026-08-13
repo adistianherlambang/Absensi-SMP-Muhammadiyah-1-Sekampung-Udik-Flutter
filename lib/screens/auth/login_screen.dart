@@ -80,6 +80,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _quickFill(String emailPrefix, String password) {
+    setState(() {
+      _emailController.text = emailPrefix;
+      _passwordController.text = password;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<AuthProvider>().isLoading;
@@ -207,6 +214,44 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                             ),
+
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Demo Quick Fill:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textMutedColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () => _quickFill('admin', 'admin123'),
+                            child: const Text('Admin'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => _quickFill('piket', 'piket123'),
+                            child: const Text('Guru Piket'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => _quickFill('mapel', 'mapel123'),
+                            child: const Text('Guru Mapel'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => _quickFill('wali', 'wali123'),
+                            child: const Text('Wali Kelas'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => _quickFill('siswa1', 'siswa123'),
+                            child: const Text('Siswa'),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ).animate().slideY(

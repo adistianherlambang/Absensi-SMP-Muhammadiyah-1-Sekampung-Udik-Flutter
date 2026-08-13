@@ -6,7 +6,6 @@ import '../../providers/mapel_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/attendance_model.dart';
 import '../../core/services/qr_service.dart';
-import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
 
 class MapelAttendanceScreen extends StatefulWidget {

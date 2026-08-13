@@ -6,7 +6,6 @@ import '../../providers/piket_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/attendance_model.dart';
 import '../../core/services/qr_service.dart';
-import '../../widgets/searchable_select.dart';
 import '../../app/theme.dart';
 
 class ValidateAttendanceScreen extends StatefulWidget {
@@ -313,7 +312,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                   onPressed: () async {
                     Navigator.pop(context);
                     try {
-                      await piketProvider.overrideAttendance(
+                      await piketProvider.updateAttendanceManual(
                         sessionId: _sessionId,
                         studentId: student.uid,
                         status: selectedStatus,
@@ -348,11 +347,9 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
 
   Future<void> _handleCloseSession() async {
     final piketProvider = Provider.of<PiketProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      await piketProvider.closeHarianSession(
-          _sessionId, authProvider.currentUser!.uid);
+      await piketProvider.closeHarianSession(_sessionId);
       setState(() {
         _sessionStatus = 'closed';
       });
