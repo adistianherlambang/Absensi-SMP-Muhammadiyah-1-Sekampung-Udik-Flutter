@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/mapel_provider.dart';
 import '../../models/session_model.dart';
+import '../../app/routes.dart';
 import '../../app/theme.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -383,49 +384,80 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withOpacity(0.15),
-                                    shape: BoxShape.circle,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              if (session.type == 'mapel') {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.mapelAttendance,
+                                  arguments: {
+                                    'session_id': session.id,
+                                    'class_id': session.classId,
+                                    'class_name': className,
+                                    'subject': session.subject ?? 'Mata Pelajaran',
+                                    'status': session.status,
+                                    'auto_scan': false,
+                                  },
+                                );
+                              } else {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.piketValidate,
+                                  arguments: {
+                                    'session_id': session.id,
+                                    'class_id': session.classId,
+                                    'class_name': className,
+                                    'status': session.status,
+                                    'auto_scan': false,
+                                  },
+                                );
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.history_edu, color: AppTheme.primaryColor),
                                   ),
-                                  child: const Icon(Icons.history_edu, color: AppTheme.primaryColor),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Kelas $className ${session.subject}',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textColor),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Tanggal: ${session.date} Jam: ${session.timeStart}',
+                                          style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        'Kelas $className ${session.subject}',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textColor),
+                                      IconButton(
+                                        icon: const Icon(Icons.edit_outlined, color: AppTheme.primaryColor),
+                                        onPressed: () => _startEditing(session),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Tanggal: ${session.date} Jam: ${session.timeStart}',
-                                        style: const TextStyle(color: AppTheme.textMutedColor, fontSize: 12),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                        onPressed: () => _confirmDelete(session),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit_outlined, color: AppTheme.primaryColor),
-                                      onPressed: () => _startEditing(session),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                      onPressed: () => _confirmDelete(session),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );

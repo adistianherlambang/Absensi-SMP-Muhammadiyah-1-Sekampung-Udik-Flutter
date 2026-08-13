@@ -285,14 +285,20 @@ class _MapelDashboardState extends State<MapelDashboard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Riwayat Presensi Terbaru',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF2D3142),
-                              ),
+                        Expanded(
+                          child: Text(
+                            'Riwayat Presensi Terbaru',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                  color: const Color(0xFF2D3142),
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         TextButton(
                           onPressed: () =>
                               Navigator.pushNamed(context, '/guru/history'),
@@ -344,7 +350,15 @@ class _MapelDashboardState extends State<MapelDashboard> {
                                       onTap: () {
                                         Navigator.pushNamed(
                                           context,
-                                          '/guru/history',
+                                          AppRoutes.mapelAttendance,
+                                          arguments: {
+                                            'session_id': session.id,
+                                            'class_id': session.classId,
+                                            'class_name': className,
+                                            'subject': session.subject ?? 'Mata Pelajaran',
+                                            'status': session.status,
+                                            'auto_scan': false,
+                                          },
                                         );
                                       },
                                       child: Padding(
