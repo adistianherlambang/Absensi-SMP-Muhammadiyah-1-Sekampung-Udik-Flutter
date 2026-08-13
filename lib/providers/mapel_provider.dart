@@ -16,6 +16,8 @@ class MapelProvider with ChangeNotifier {
   List<SessionModel> get sessions => _sessions;
   List<UserModel> get students => _students;
   Map<String, AttendanceModel> get sessionAttendances => _sessionAttendances;
+  bool get isLoading => _isLoading;
+
   MapelProvider() {
     _initRealtimeStream();
   }

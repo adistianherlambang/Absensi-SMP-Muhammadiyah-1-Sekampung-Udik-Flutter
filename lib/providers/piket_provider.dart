@@ -20,6 +20,8 @@ class PiketProvider with ChangeNotifier {
   Map<String, AttendanceModel> get sessionAttendances => _sessionAttendances;
   List<LeaveRequestModel> get classLeaveRequests => _classLeaveRequests;
   Map<String, Map<String, AttendanceModel>> get leavesAttendances => _leavesAttendances;
+  bool get isLoading => _isLoading;
+
   PiketProvider() {
     _initRealtimeStream();
   }
@@ -91,7 +93,11 @@ class PiketProvider with ChangeNotifier {
   }
 
   // Buka Sesi Harian Baru
-  Future<void> openHarianSession(String classId, String creatorUid) async {
+  Future<String> openHarianSession({
+    required String classId,
+    required String creatorUid,
+    String? subject,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
@@ -99,12 +105,13 @@ class PiketProvider with ChangeNotifier {
       final now = DateTime.now();
       final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-      final sessionId = 'SESS-HARIAN-$classId-$dateStr';
+      final sessionId = 'SESS-HARIAN-$classId-${now.millisecondsSinceEpoch}';
 
       final newSession = SessionModel(
         id: sessionId,
         type: 'harian',
         classId: classId,
+        subject: (subject != null && subject.isNotEmpty) ? subject : 'Presensi Harian',
         createdBy: creatorUid,
         date: dateStr,
         timeStart: timeStr,
@@ -113,6 +120,7 @@ class PiketProvider with ChangeNotifier {
 
       await _dbService.createSession(newSession);
       await fetchSessions();
+      return sessionId;
     } catch (e) {
       rethrow;
     } finally {

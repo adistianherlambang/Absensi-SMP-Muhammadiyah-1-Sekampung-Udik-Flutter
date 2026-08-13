@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/mapel_provider.dart';
+import '../../providers/piket_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../widgets/searchable_select.dart';
 import '../../app/routes.dart';
@@ -54,7 +55,7 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
       return;
     }
 
-    final mapelProvider = Provider.of<MapelProvider>(context, listen: false);
+    final piketProvider = Provider.of<PiketProvider>(context, listen: false);
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
@@ -62,12 +63,14 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
       final className = adminProvider.classes
           .firstWhere((c) => c.id == _selectedClassId)
           .name;
-      final subjectText = _subjectController.text.trim();
+      final subjectText = _subjectController.text.trim().isEmpty
+          ? 'Presensi Harian'
+          : _subjectController.text.trim();
 
-      final sessionId = await mapelProvider.openMapelSession(
+      final sessionId = await piketProvider.openHarianSession(
         classId: _selectedClassId!,
-        subject: subjectText,
         creatorUid: authProvider.currentUser!.uid,
+        subject: subjectText,
       );
 
       if (!mounted) return;
@@ -80,12 +83,11 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
       // Navigasi langsung ke layar presensi & otomatis buka QR Scanner Kamera
       Navigator.pushReplacementNamed(
         context,
-        AppRoutes.mapelAttendance,
+        AppRoutes.piketValidate,
         arguments: {
           'session_id': sessionId,
           'class_id': _selectedClassId!,
           'class_name': className,
-          'subject': subjectText,
           'status': 'active',
           'auto_scan': true,
         },
