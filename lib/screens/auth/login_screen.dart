@@ -30,8 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
+      String rawEmail = _emailController.text.trim();
+      String emailToUse = rawEmail.contains('@') ? rawEmail : '$rawEmail@smpm1.sch.id';
+
       await authProvider.signIn(
-        _emailController.text.trim(),
+        emailToUse,
         _passwordController.text.trim(),
       );
 
@@ -131,6 +134,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(
                           labelText: 'Email',
                           prefixIcon: Icon(Icons.email_outlined, color: AppTheme.primaryColor),
+                          suffixText: '@smpm1.sch.id',
+                          suffixStyle: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -139,11 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
+                          if (value == null || value.trim().isEmpty) {
                             return 'Masukkan email Anda';
-                          }
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                            return 'Masukkan format email yang valid';
                           }
                           return null;
                         },

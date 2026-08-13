@@ -380,6 +380,130 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
+  // Perbarui Beberapa User Sekaligus (Batch Update)
+  Future<void> updateUsersBatch({
+    required List<UserModel> usersToUpdate,
+    String? newRole,
+    bool updateRole = false,
+    String? newClassId,
+    bool updateClass = false,
+    List<String>? newSubjects,
+    bool updateSubjects = false,
+    String? newStatus,
+    bool updateStatus = false,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      for (final user in usersToUpdate) {
+        final targetRole = updateRole ? (newRole ?? user.role) : user.role;
+        final targetClassId = updateClass ? newClassId : user.classId;
+        final targetSubjects = updateSubjects ? newSubjects : user.subjects;
+        final targetStatus = updateStatus ? (newStatus ?? user.status) : user.status;
+
+        // 1. Update list kelas jika role siswa dan kelasnya berubah
+        if (user.role == 'siswa' && user.classId != targetClassId) {
+          if (user.classId != null) {
+            try {
+              final oldCl = _classes.firstWhere((c) => c.id == user.classId);
+              final updatedStudentIds = List<String>.from(oldCl.studentIds)..remove(user.uid);
+              final updatedClass = ClassModel(
+                id: oldCl.id,
+                name: oldCl.name,
+                homeroomTeacherId: oldCl.homeroomTeacherId,
+                studentIds: updatedStudentIds,
+              );
+              await _dbService.saveClass(updatedClass);
+            } catch (_) {}
+          }
+          if (targetClassId != null) {
+            try {
+              final newCl = _classes.firstWhere((c) => c.id == targetClassId);
+              final updatedStudentIds = List<String>.from(newCl.studentIds);
+              if (!updatedStudentIds.contains(user.uid)) {
+                updatedStudentIds.add(user.uid);
+              }
+              final updatedClass = ClassModel(
+                id: newCl.id,
+                name: newCl.name,
+                homeroomTeacherId: newCl.homeroomTeacherId,
+                studentIds: updatedStudentIds,
+              );
+              await _dbService.saveClass(updatedClass);
+            } catch (_) {}
+          }
+        }
+
+        // 2. Update kelas jika role guru_wali_kelas dan kelas bimbingannya berubah
+        if (targetRole == 'guru_wali_kelas') {
+          for (final cl in _classes) {
+            if (cl.homeroomTeacherId == user.uid && cl.id != targetClassId) {
+              try {
+                final updatedClass = ClassModel(
+                  id: cl.id,
+                  name: cl.name,
+                  homeroomTeacherId: '',
+                  studentIds: cl.studentIds,
+                );
+                await _dbService.saveClass(updatedClass);
+              } catch (_) {}
+            }
+          }
+
+          if (targetClassId != null && targetClassId.isNotEmpty) {
+            try {
+              final targetCl = _classes.firstWhere((c) => c.id == targetClassId);
+              final updatedClass = ClassModel(
+                id: targetCl.id,
+                name: targetCl.name,
+                homeroomTeacherId: user.uid,
+                studentIds: targetCl.studentIds,
+              );
+              await _dbService.saveClass(updatedClass);
+            } catch (_) {}
+          }
+        } else if (user.role == 'guru_wali_kelas') {
+          for (final cl in _classes) {
+            if (cl.homeroomTeacherId == user.uid) {
+              try {
+                final updatedClass = ClassModel(
+                  id: cl.id,
+                  name: cl.name,
+                  homeroomTeacherId: '',
+                  studentIds: cl.studentIds,
+                );
+                await _dbService.saveClass(updatedClass);
+              } catch (_) {}
+            }
+          }
+        }
+
+        // 3. Simpan data user ke database
+        final updatedUser = UserModel(
+          uid: user.uid,
+          name: user.name,
+          email: user.email,
+          role: targetRole,
+          classId: targetClassId,
+          subjects: targetSubjects,
+          qrCodeId: user.qrCodeId,
+          status: targetStatus,
+        );
+
+        await _dbService.saveUserProfile(updatedUser);
+      }
+
+      await fetchData();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+
   // Dapatkan String Data QR untuk Siswa
   String getStudentQRData(UserModel student) {
     if (student.qrCodeId == null) return '';

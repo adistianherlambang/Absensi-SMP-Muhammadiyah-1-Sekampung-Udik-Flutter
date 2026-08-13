@@ -32,17 +32,17 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
     // Filter siswa
     final allStudents = allUsers.where((u) => u.role == 'siswa').toList();
     final filteredStudents = allStudents.where((s) {
-      final matchesClass = _selectedClassId == null || s.classId == _selectedClassId;
-      final matchesQuery = s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesClass =
+          _selectedClassId == null || s.classId == _selectedClassId;
+      final matchesQuery =
+          s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           s.email.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesClass && matchesQuery;
     }).toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Cetak Kartu QR Siswa'),
-      ),
+      appBar: AppBar(title: const Text('Cetak Kartu QR Siswa')),
       body: adminProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
@@ -59,7 +59,10 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                           items: allClasses,
                           itemLabel: (c) => c.name,
                           selectedValue: _selectedClassId != null
-                              ? allClasses.firstWhere((c) => c.id == _selectedClassId, orElse: () => allClasses.first)
+                              ? allClasses.firstWhere(
+                                  (c) => c.id == _selectedClassId,
+                                  orElse: () => allClasses.first,
+                                )
                               : null,
                           onChanged: (val) {
                             setState(() {
@@ -72,7 +75,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.clear, color: Colors.grey),
-                          tooltip: 'Tampilkan Semua Kelas',
+                          tooltip: 'Tampilkan Pilih',
                           onPressed: () {
                             setState(() {
                               _selectedClassId = null;
@@ -92,7 +95,10 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                     onChanged: (val) {
                       setState(() {
@@ -109,13 +115,18 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                         backgroundColor: const Color(0xFF1E88E5),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       icon: _isProcessingBatch
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : const Icon(Icons.folder_zip_rounded),
                       label: Text(
@@ -126,7 +137,11 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                       ),
                       onPressed: _isProcessingBatch
                           ? null
-                          : () => _handleBatchZipDownload(_selectedClassId!, allClasses, allStudents),
+                          : () => _handleBatchZipDownload(
+                              _selectedClassId!,
+                              allClasses,
+                              allStudents,
+                            ),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -137,7 +152,11 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                     children: [
                       Text(
                         'Daftar Kartu QR Siswa (${filteredStudents.length})',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textColor),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppTheme.textColor,
+                        ),
                       ),
                     ],
                   ),
@@ -146,12 +165,17 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                   // List Siswa
                   Expanded(
                     child: filteredStudents.isEmpty
-                        ? const Center(child: Text('Tidak ada siswa ditemukan.'))
+                        ? const Center(
+                            child: Text('Tidak ada siswa ditemukan.'),
+                          )
                         : ListView.builder(
                             itemCount: filteredStudents.length,
                             itemBuilder: (context, index) {
                               final student = filteredStudents[index];
-                              final className = _getClassName(student.classId, allClasses);
+                              final className = _getClassName(
+                                student.classId,
+                                allClasses,
+                              );
                               final qrData = _qrService.generateQRContent(
                                 student.uid,
                                 student.qrCodeId ?? student.uid,
@@ -162,28 +186,51 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
                                 ),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
-                                    child: const Icon(Icons.person, color: AppTheme.primaryColor),
+                                    backgroundColor: AppTheme.primaryColor
+                                        .withOpacity(0.15),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: AppTheme.primaryColor,
+                                    ),
                                   ),
                                   title: Text(
                                     student.name,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.textColor,
+                                    ),
                                   ),
-                                  subtitle: Text('Kelas: $className', style: const TextStyle(color: AppTheme.textMutedColor)),
+                                  subtitle: Text(
+                                    'Kelas: $className',
+                                    style: const TextStyle(
+                                      color: AppTheme.textMutedColor,
+                                    ),
+                                  ),
                                   trailing: ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppTheme.primaryColor,
                                       foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
                                     ),
                                     icon: const Icon(Icons.qr_code, size: 18),
                                     label: const Text('Kartu QR'),
-                                    onPressed: () => _showQRPrintDialog(student, className, qrData),
+                                    onPressed: () => _showQRPrintDialog(
+                                      student,
+                                      className,
+                                      qrData,
+                                    ),
                                   ),
                                 ),
                               );
@@ -206,7 +253,11 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
   }
 
   /// Tampilkan Dialog Preview Kartu QR Siswa dengan 2 Opsi (Unduh Folder Download & Bagikan)
-  Future<void> _showQRPrintDialog(UserModel student, String className, String qrData) async {
+  Future<void> _showQRPrintDialog(
+    UserModel student,
+    String className,
+    String qrData,
+  ) async {
     Uint8List? pngBytes;
     try {
       pngBytes = await renderStudentQRCardToPng(
@@ -217,20 +268,26 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal merender gambar QR: $e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text('Gagal merender gambar QR: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
 
     if (!mounted) return;
 
-    final fileName = 'QR_Siswa_${student.name.replaceAll(' ', '_')}_$className.png';
+    final fileName =
+        'QR_Siswa_${student.name.replaceAll(' ', '_')}_$className.png';
 
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           contentPadding: const EdgeInsets.all(24),
           content: SingleChildScrollView(
             child: Column(
@@ -251,7 +308,9 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                   height: 46,
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       side: const BorderSide(color: AppTheme.primaryColor),
                       foregroundColor: AppTheme.primaryColor,
                     ),
@@ -264,12 +323,16 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                           bytes: pngBytes!,
                           fileName: fileName,
                           mimeType: 'image/png',
-                          subjectText: 'Kartu Presensi QR Siswa - ${student.name} ($className)',
+                          subjectText:
+                              'Kartu Presensi QR Siswa - ${student.name} ($className)',
                         );
                       } catch (e) {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Gagal membagikan: $e'), backgroundColor: Colors.redAccent),
+                          SnackBar(
+                            content: Text('Gagal membagikan: $e'),
+                            backgroundColor: Colors.redAccent,
+                          ),
                         );
                       }
                     },
@@ -284,21 +347,26 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     icon: const Icon(Icons.download_rounded, size: 20),
                     label: const Text('2. Unduh ke Folder Downloads'),
                     onPressed: () async {
                       Navigator.pop(dialogCtx);
                       try {
-                        final savedPath = await FileDownloadHelper.saveToPublicDownloads(
-                          bytes: pngBytes!,
-                          fileName: fileName,
-                        );
+                        final savedPath =
+                            await FileDownloadHelper.saveToPublicDownloads(
+                              bytes: pngBytes!,
+                              fileName: fileName,
+                            );
                         if (savedPath != null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}'),
+                              content: Text(
+                                'Berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}',
+                              ),
                               backgroundColor: Colors.green.shade600,
                             ),
                           );
@@ -306,7 +374,10 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                       } catch (e) {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Gagal mengunduh: $e'), backgroundColor: Colors.redAccent),
+                          SnackBar(
+                            content: Text('Gagal mengunduh: $e'),
+                            backgroundColor: Colors.redAccent,
+                          ),
                         );
                       }
                     },
@@ -332,11 +403,15 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
     List<UserModel> allStudents,
   ) async {
     final className = _getClassName(classId, classes);
-    final classStudents = allStudents.where((s) => s.classId == classId).toList();
+    final classStudents = allStudents
+        .where((s) => s.classId == classId)
+        .toList();
 
     if (classStudents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak ada siswa di kelas ini untuk di-zip.')),
+        const SnackBar(
+          content: Text('Tidak ada siswa di kelas ini untuk di-zip.'),
+        ),
       );
       return;
     }
@@ -349,13 +424,18 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
       final Map<String, Uint8List> filesMap = {};
 
       for (var student in classStudents) {
-        final qrData = _qrService.generateQRContent(student.uid, student.qrCodeId ?? student.uid);
+        final qrData = _qrService.generateQRContent(
+          student.uid,
+          student.qrCodeId ?? student.uid,
+        );
         final pngBytes = await renderStudentQRCardToPng(
           qrData: qrData,
           studentName: student.name,
           className: className,
         );
-        final safeName = student.name.replaceAll(RegExp(r'[^\w\s\-]'), '').replaceAll(' ', '_');
+        final safeName = student.name
+            .replaceAll(RegExp(r'[^\w\s\-]'), '')
+            .replaceAll(' ', '_');
         filesMap['$safeName.png'] = pngBytes;
       }
 
@@ -369,7 +449,9 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
         context: context,
         builder: (dialogCtx) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             title: Text('Batch ZIP Kartu QR - Kelas $className'),
             content: Text(
               'Berhasil mengemas ${filesMap.length} Kartu QR Siswa ke dalam berkas ZIP ($zipFileName). Pilih opsi penyimpanan:',
@@ -393,19 +475,24 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                 },
               ),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                ),
                 icon: const Icon(Icons.download_rounded),
                 label: const Text('Unduh ZIP'),
                 onPressed: () async {
                   Navigator.pop(dialogCtx);
-                  final savedPath = await FileDownloadHelper.saveToPublicDownloads(
-                    bytes: zipBytes,
-                    fileName: zipFileName,
-                  );
+                  final savedPath =
+                      await FileDownloadHelper.saveToPublicDownloads(
+                        bytes: zipBytes,
+                        fileName: zipFileName,
+                      );
                   if (savedPath != null && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('ZIP berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}'),
+                        content: Text(
+                          'ZIP berhasil disimpan di ${FileDownloadHelper.getUserFriendlyPath(savedPath)}',
+                        ),
                         backgroundColor: Colors.green.shade600,
                       ),
                     );
@@ -419,7 +506,10 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal membuat batch ZIP: $e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text('Gagal membuat batch ZIP: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } finally {
       if (mounted) {

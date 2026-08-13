@@ -13,7 +13,8 @@ class ValidateAttendanceScreen extends StatefulWidget {
   const ValidateAttendanceScreen({super.key});
 
   @override
-  State<ValidateAttendanceScreen> createState() => _ValidateAttendanceScreenState();
+  State<ValidateAttendanceScreen> createState() =>
+      _ValidateAttendanceScreenState();
 }
 
 class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
@@ -28,15 +29,20 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final args =
+          ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
       _sessionId = args['session_id']!;
       _classId = args['class_id']!;
       _className = args['class_name']!;
       _sessionStatus = args['status']!;
+      final bool autoScan = args['auto_scan'] ?? true;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Provider.of<PiketProvider>(context, listen: false)
             .loadSessionDetails(_sessionId, _classId);
+        if (autoScan && _sessionStatus == 'active') {
+          _openStudentQRScanner();
+        }
       });
       _initialized = true;
     }
@@ -69,7 +75,7 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
               appBar: AppBar(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                title: const Text('Scan QR Code Siswa'),
+                title: Text('Scan QR Code Siswa — Kelas $_className'),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.flash_on),
@@ -95,7 +101,8 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                       });
 
                       final parsed = _qrService.parseQRContent(qrVal);
-                      final studentId = parsed != null ? parsed['student_id']! : qrVal;
+                      final studentId =
+                          parsed != null ? parsed['student_id']! : qrVal;
 
                       try {
                         final student = await piketProvider.scanStudentQR(
@@ -110,12 +117,14 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                           SnackBar(
                             content: Row(
                               children: [
-                                const Icon(Icons.check_circle, color: Colors.white),
+                                const Icon(Icons.check_circle,
+                                    color: Colors.white),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     '${student.name} - HADIR',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -130,9 +139,13 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                           SnackBar(
                             content: Row(
                               children: [
-                                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                                const Icon(Icons.warning_amber_rounded,
+                                    color: Colors.white),
                                 const SizedBox(width: 8),
-                                Expanded(child: Text(e.toString().replaceAll('Exception: ', ''))),
+                                Expanded(
+                                    child: Text(e
+                                        .toString()
+                                        .replaceAll('Exception: ', ''))),
                               ],
                             ),
                             backgroundColor: Colors.redAccent,
@@ -149,34 +162,34 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                       }
                     },
                   ),
-
                   Center(
                     child: Container(
                       width: 260,
                       height: 260,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.greenAccent, width: 4),
-                        borderRadius: BorderRadius.circular(24),
+                        border:
+                            Border.all(color: AppTheme.primaryColor, width: 4),
+                        borderRadius: BorderRadius.circular(28),
                       ),
                     ),
                   ),
-
                   if (isProcessingScan)
                     Container(
                       color: Colors.black45,
                       child: const Center(
-                        child: CircularProgressIndicator(color: Colors.greenAccent),
+                        child: CircularProgressIndicator(
+                            color: AppTheme.primaryColor),
                       ),
                     ),
-
                   Positioned(
                     bottom: 40,
                     left: 20,
                     right: 20,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 20),
                       decoration: BoxDecoration(
-                        color: Colors.black87,
+                        color: Colors.black.withOpacity(0.85),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white24),
                       ),
@@ -186,13 +199,17 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                           Text(
                             'Arahkan kamera ke QR Siswa Kelas $_className',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'Siswa otomatis bertambah HADIR saat QR berhasil dipindai.',
+                            'Siswa otomatis tercatat HADIR begitu QR Code terdeteksi.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 11),
                           ),
                         ],
                       ),
@@ -207,25 +224,23 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
     );
   }
 
-  void _showOverrideDialog(UserModel student, AttendanceModel? currentAttendance) {
+  void _showOverrideDialog(
+      UserModel student, AttendanceModel? currentAttendance) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUser?.role == 'guru_wali_kelas') {
+    if (_sessionStatus != 'active' &&
+        authProvider.currentUser?.role != 'guru_piket') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Guru Wali Kelas hanya memiliki hak akses melihat presensi.')),
-      );
-      return;
-    }
-    if (_sessionStatus != 'active') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sesi sudah ditutup. Tidak dapat mengubah kehadiran.')),
+        const SnackBar(
+            content: Text(
+                'Sesi presensi sudah ditutup. Tidak dapat mengubah absensi.')),
       );
       return;
     }
 
     final piketProvider = Provider.of<PiketProvider>(context, listen: false);
-    
-    String selectedStatus = currentAttendance?.status ?? 'hadir';
-    final noteController = TextEditingController(text: currentAttendance?.note ?? '');
+    String selectedStatus = currentAttendance?.status ?? 'alpa';
+    final noteController =
+        TextEditingController(text: currentAttendance?.note ?? '');
 
     showDialog(
       context: context,
@@ -233,44 +248,53 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Text('Presensi Manual: ${student.name}'),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                'Edit Presensi: ${student.name}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Pilih Status Kehadiran:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Status Kehadiran:',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   const SizedBox(height: 8),
-                  SearchableSelect<Map<String, String>>(
-                    labelText: 'Status Kehadiran',
+                  DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
                     items: const [
-                      {'value': 'hadir', 'label': 'Hadir'},
-                      {'value': 'izin', 'label': 'Izin'},
-                      {'value': 'sakit', 'label': 'Sakit'},
-                      {'value': 'alpa', 'label': 'Alpa'},
+                      DropdownMenuItem(value: 'hadir', child: Text('Hadir')),
+                      DropdownMenuItem(value: 'izin', child: Text('Izin')),
+                      DropdownMenuItem(value: 'sakit', child: Text('Sakit')),
+                      DropdownMenuItem(value: 'alpa', child: Text('Alpa')),
                     ],
-                    itemLabel: (item) => item['label']!,
-                    selectedValue: {
-                      'value': selectedStatus,
-                      'label': selectedStatus == 'hadir' ? 'Hadir' :
-                               selectedStatus == 'izin' ? 'Izin' :
-                               selectedStatus == 'sakit' ? 'Sakit' : 'Alpa'
-                    },
                     onChanged: (val) {
                       if (val != null) {
                         setDialogState(() {
-                          selectedStatus = val['value']!;
+                          selectedStatus = val;
                         });
                       }
                     },
                   ),
                   const SizedBox(height: 16),
-                  const Text('Catatan Tambahan:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Catatan (opsional):',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: noteController,
-                    decoration: const InputDecoration(
-                      hintText: 'Contoh: Izin acara keluarga, Sakit demam',
+                    decoration: InputDecoration(
+                      hintText: 'Contoh: Koreksi manual guru piket',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ],
@@ -281,27 +305,34 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
                   child: const Text('Batal'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
                   onPressed: () async {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Menyimpan perubahan kehadiran...')),
-                    );
                     try {
-                      await piketProvider.updateAttendanceManual(
+                      await piketProvider.overrideAttendance(
                         sessionId: _sessionId,
                         studentId: student.uid,
                         status: selectedStatus,
                         recorderUid: authProvider.currentUser!.uid,
-                        note: noteController.text.trim().isNotEmpty ? noteController.text.trim() : null,
+                        note: noteController.text.trim().isNotEmpty
+                            ? noteController.text.trim()
+                            : null,
                       );
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Presensi berhasil diperbarui!')),
+                        const SnackBar(
+                            content: Text('Presensi berhasil diperbarui!')),
                       );
                     } catch (e) {
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Gagal menyimpan: $e'), backgroundColor: Colors.red),
+                        SnackBar(
+                            content: Text('Gagal menyimpan: $e'),
+                            backgroundColor: Colors.red),
                       );
                     }
                   },
@@ -317,64 +348,81 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
 
   Future<void> _handleCloseSession() async {
     final piketProvider = Provider.of<PiketProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     try {
-      await piketProvider.closeHarianSession(_sessionId);
+      await piketProvider.closeHarianSession(
+          _sessionId, authProvider.currentUser!.uid);
       setState(() {
         _sessionStatus = 'closed';
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sesi presensi harian berhasil ditutup.')),
+        const SnackBar(
+            content: Text('Sesi presensi harian berhasil ditutup.')),
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menutup sesi: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Gagal menutup sesi: $e'),
+            backgroundColor: Colors.red),
       );
     }
   }
 
-  // Helper untuk mendapatkan representasi status tanpa menggunakan badge
-  Widget _buildStatusWidget(String status) {
-    Color color;
+  Widget _buildStatusBadge(String status) {
+    Color bg;
+    Color fg;
     IconData icon;
     String label;
 
     switch (status.toLowerCase()) {
       case 'hadir':
-        color = AppTheme.hadirColor;
-        icon = Icons.check_circle_outline;
+        bg = AppTheme.hadirColor.withOpacity(0.12);
+        fg = AppTheme.hadirColor;
+        icon = Icons.check_circle;
         label = 'Hadir';
         break;
       case 'izin':
-        color = AppTheme.izinColor;
-        icon = Icons.info_outline;
+        bg = AppTheme.izinColor.withOpacity(0.15);
+        fg = AppTheme.izinColor;
+        icon = Icons.info;
         label = 'Izin';
         break;
       case 'sakit':
-        color = AppTheme.sakitColor;
-        icon = Icons.warning_amber_outlined;
+        bg = AppTheme.sakitColor.withOpacity(0.15);
+        fg = AppTheme.sakitColor;
+        icon = Icons.warning_amber_rounded;
         label = 'Sakit';
         break;
       case 'alpa':
       default:
-        color = AppTheme.alpaColor;
-        icon = Icons.highlight_off;
+        bg = AppTheme.alpaColor.withOpacity(0.15);
+        fg = AppTheme.alpaColor;
+        icon = Icons.cancel;
         label = 'Alpa';
         break;
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: fg, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+        ],
+      ),
     );
   }
 
@@ -385,108 +433,293 @@ class _ValidateAttendanceScreenState extends State<ValidateAttendanceScreen> {
     final isActive = _sessionStatus == 'active';
     final isWali = authProvider.currentUser?.role == 'guru_wali_kelas';
 
+    final totalStudents = piketProvider.students.length;
+    final totalHadir = piketProvider.students
+        .where(
+            (s) => piketProvider.sessionAttendances[s.uid]?.status == 'hadir')
+        .length;
+    final totalIzin = piketProvider.students
+        .where(
+            (s) => piketProvider.sessionAttendances[s.uid]?.status == 'izin')
+        .length;
+    final totalSakit = piketProvider.students
+        .where(
+            (s) => piketProvider.sessionAttendances[s.uid]?.status == 'sakit')
+        .length;
+    final totalAlpa = piketProvider.students.where((s) {
+      final st = piketProvider.sessionAttendances[s.uid]?.status;
+      return st == null || st == 'alpa';
+    }).length;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Sesi Kelas $_className'),
+        centerTitle: true,
       ),
       body: piketProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Detail Sesi Card
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Detail Sesi Presensi', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppTheme.textColor)),
-                          const SizedBox(height: 8),
-                          Text('ID Sesi: $_sessionId', style: const TextStyle(color: AppTheme.textMutedColor)),
-                          const Text('Tipe: Harian Pagi', style: TextStyle(color: AppTheme.textMutedColor)),
-                          Text(
-                            isActive ? 'Status: Sesi Terbuka' : 'Status: Sesi Ditutup',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: isActive ? AppTheme.hadirColor : Colors.grey,
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Kelas $_className',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textColor,
+                              ),
                             ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? AppTheme.hadirColor.withOpacity(0.15)
+                                    : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                isActive ? 'Sesi Aktif' : 'Ditutup',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isActive
+                                      ? AppTheme.hadirColor
+                                      : Colors.grey.shade700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Sesi Presensi Harian Pagi',
+                          style: TextStyle(
+                            color: AppTheme.textMutedColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(height: 1),
+                        const SizedBox(height: 16),
+
+                        // Stats Summary Row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatBox(
+                                  'Total', '$totalStudents', Colors.grey.shade800),
+                            ),
+                            Expanded(
+                              child: _buildStatBox(
+                                  'Hadir', '$totalHadir', AppTheme.hadirColor),
+                            ),
+                            Expanded(
+                              child: _buildStatBox(
+                                  'Izin', '$totalIzin', AppTheme.izinColor),
+                            ),
+                            Expanded(
+                              child: _buildStatBox(
+                                  'Sakit', '$totalSakit', AppTheme.sakitColor),
+                            ),
+                            Expanded(
+                              child: _buildStatBox(
+                                  'Alpa', '$totalAlpa', AppTheme.alpaColor),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
-                  // Tombol Utama: Scan QR Code Siswa
+                  // Tombol Utama Scan QR Siswa
                   if (isActive && !isWali) ...[
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1E88E5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 4,
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        icon: const Icon(Icons.qr_code_scanner_rounded, size: 24),
+                        label: const Text(
+                          'Scan QR Code Siswa',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: _openStudentQRScanner,
                       ),
-                      icon: const Icon(Icons.qr_code_scanner_rounded, size: 26),
-                      label: const Text(
-                        'SCAN QR CODE SISWA',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
-                      ),
-                      onPressed: _openStudentQRScanner,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                   ],
 
+                  // Header List Siswa
                   Text(
-                    'Daftar Kehadiran Siswa',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    'Daftar Presensi Siswa',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textColor,
+                        ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+
+                  // List Siswa
                   Expanded(
                     child: piketProvider.students.isEmpty
-                        ? const Center(child: Text('Tidak ada siswa di kelas ini.'))
+                        ? const Center(
+                            child:
+                                Text('Tidak ada siswa terdaftar di kelas ini.'))
                         : ListView.builder(
                             itemCount: piketProvider.students.length,
                             itemBuilder: (context, index) {
                               final student = piketProvider.students[index];
-                              final attendance = piketProvider.sessionAttendances[student.uid];
+                              final attendance =
+                                  piketProvider.sessionAttendances[student.uid];
                               final statusText = attendance?.status ?? 'alpa';
 
-                               return Container(
-                                 margin: const EdgeInsets.only(bottom: 8),
-                                 decoration: BoxDecoration(
-                                   color: Colors.white,
-                                   borderRadius: BorderRadius.circular(16),
-                                   border: Border.all(color: Colors.grey.shade200),
-                                 ),
-                                 child: ListTile(
-                                   title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textColor)),
-                                   subtitle: attendance?.note != null ? Text('Catatan: ${attendance!.note}', style: const TextStyle(color: AppTheme.textMutedColor)) : null,
-                                   trailing: _buildStatusWidget(statusText),
-                                   onTap: () => _showOverrideDialog(student, attendance),
-                                 ),
-                               );
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border:
+                                      Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () =>
+                                      _showOverrideDialog(student, attendance),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 18,
+                                          backgroundColor: AppTheme.primaryColor
+                                              .withOpacity(0.12),
+                                          child: Text(
+                                            student.name.isNotEmpty
+                                                ? student.name[0]
+                                                : 'S',
+                                            style: const TextStyle(
+                                              color: AppTheme.primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                student.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                  color: AppTheme.textColor,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                attendance?.note != null
+                                                    ? 'Catatan: ${attendance!.note}'
+                                                    : (statusText == 'alpa'
+                                                        ? 'Belum di-scan'
+                                                        : 'Terpresensi via QR'),
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        _buildStatusBadge(statusText),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
                             },
                           ),
                   ),
+
+                  // Tombol Selesaikan & Tutup Sesi
                   if (isActive && !isWali) ...[
-                    const SizedBox(height: 16),
-                    ElevatedButton(
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
                       onPressed: _handleCloseSession,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.alpaColor),
-                      child: const Text('Tutup Sesi Presensi'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.alpaColor,
+                        side: const BorderSide(color: AppTheme.alpaColor),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Icon(Icons.lock_clock_outlined),
+                      label: const Text(
+                        'Selesaikan & Tutup Sesi Presensi',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildStatBox(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

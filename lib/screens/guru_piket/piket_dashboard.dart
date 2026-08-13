@@ -241,8 +241,8 @@ class _PiketDashboardState extends State<PiketDashboard> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            icon: const Icon(Icons.history_rounded),
-                            label: const Text('Riwayat Presensi Guru'),
+                            icon: const Icon(Icons.qr_code_scanner_rounded),
+                            label: const Text('Buka Presensi Harian'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
@@ -252,37 +252,39 @@ class _PiketDashboardState extends State<PiketDashboard> {
                               ),
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/guru/history');
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.piketOpenSession,
+                              );
                             },
                           ),
                         ),
-                        if (authProvider.currentUser?.role == 'guru_piket') ...[
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.add_alarm_outlined),
-                                  label: const Text('Buka Sesi Harian'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.hadirColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                icon: const Icon(Icons.history_rounded),
+                                label: const Text('Riwayat Presensi'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primaryColor,
+                                  side: const BorderSide(
+                                    color: AppTheme.primaryColor,
                                   ),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.piketOpenSession,
-                                    );
-                                  },
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/guru/history');
+                                },
                               ),
-                              const SizedBox(width: 16),
+                            ),
+                            if (authProvider.currentUser?.role == 'guru_piket') ...[
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: OutlinedButton.icon(
                                   icon: const Icon(Icons.view_week_outlined),
@@ -308,46 +310,18 @@ class _PiketDashboardState extends State<PiketDashboard> {
                                 ),
                               ),
                             ],
-                          ),
-                        ] else if (authProvider.currentUser?.role == 'guru_wali_kelas') ...[
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.view_week_outlined),
-                                  label: const Text('Rekap Kelas Saya'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primaryColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.piketWeeklyRecap,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ],
                     )
-                    .animate()
-                    .slideY(
-                      begin: 0.05,
-                      end: 0,
-                      duration: 300.ms,
-                      delay: 50.ms,
-                    )
-                    .fadeIn(),
+                        .animate()
+                        .slideY(
+                          begin: 0.05,
+                          end: 0,
+                          duration: 300.ms,
+                          delay: 50.ms,
+                        )
+                        .fadeIn(),
                     const SizedBox(height: 32),
 
                     // Daftar Sesi Presensi Harian Aktif/Tutup

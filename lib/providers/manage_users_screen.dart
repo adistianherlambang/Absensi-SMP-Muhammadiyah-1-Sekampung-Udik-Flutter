@@ -262,15 +262,15 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Tambah Pengguna Baru (${_selectedRole == "admin"
+                          'Pilihuna Baru (${_selectedRole == "admin"
                               ? "Administrator"
                               : _selectedRole == "siswa"
                               ? "Siswa"
                               : _selectedRole == "guru_piket"
-                              ? "Guru Piket"
+                              ? "Pilih"
                               : _selectedRole == "guru_mapel"
                               ? "Guru Mapel"
-                              : "Wali Kelas"})',
+                              : "Guru Wali Kelas"})',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 20),
@@ -290,7 +290,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                               ),
                               DropdownMenuItem(
                                 value: 'guru_piket',
-                                child: Text('Guru Piket'),
+                                child: Text('Pilih'),
                               ),
                               DropdownMenuItem(
                                 value: 'guru_wali_kelas',
@@ -583,7 +583,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                               ),
                               DropdownMenuItem(
                                 value: 'guru_piket',
-                                child: Text('Guru Piket'),
+                                child: Text('Pilih'),
                               ),
                               DropdownMenuItem(
                                 value: 'guru_wali_kelas',
@@ -1372,7 +1372,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                         items: const [
                           TeacherTypeFilter(null, 'Pilih'),
                           TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
-                          TeacherTypeFilter('guru_piket', 'Guru Piket'),
+                          TeacherTypeFilter('guru_piket', 'Pilih'),
                           TeacherTypeFilter('guru_wali_kelas', 'Wali Kelas'),
                         ],
                         itemLabel: (t) => t.name,
@@ -1380,7 +1380,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                             const [
                               TeacherTypeFilter(null, 'Pilih'),
                               TeacherTypeFilter('guru_mapel', 'Guru Mapel'),
-                              TeacherTypeFilter('guru_piket', 'Guru Piket'),
+                              TeacherTypeFilter('guru_piket', 'Pilih'),
                               TeacherTypeFilter(
                                 'guru_wali_kelas',
                                 'Wali Kelas',
@@ -1567,9 +1567,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                   ),
                                   child: Center(
                                     child: Text(
-                                      user.name.isNotEmpty
-                                          ? user.name[0]
-                                          : 'U',
+                                      user.name.isNotEmpty ? user.name[0] : 'U',
                                       style: TextStyle(
                                         color: colorPair[0],
                                         fontWeight: FontWeight.bold,
@@ -1783,7 +1781,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
               onPressed: _showAddUserDialog,
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text(
-                'Tambah Pengguna Baru',
+                'Pilihuna Baru',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
