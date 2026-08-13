@@ -52,59 +52,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Custom Header
-                    // Row(
-                    //   children: [
-                    //     CircleAvatar(
-                    //       radius: 24,
-                    //       backgroundColor: AppTheme.primaryColor.withOpacity(
-                    //         0.2,
-                    //       ),
-                    //       child: Icon(
-                    //         Icons.person_rounded,
-                    //         color: AppTheme.primaryColor,
-                    //         size: 28,
-                    //       ),
-                    //     ),
-                    //     const SizedBox(width: 12),
-                    //     Expanded(
-                    //       child: Column(
-                    //         crossAxisAlignment: CrossAxisAlignment.start,
-                    //         children: [
-                    //           Text(
-                    //             'Selamat Datang,',
-                    //             style: TextStyle(
-                    //               fontSize: 14,
-                    //               color: Colors.grey.shade600,
-                    //               fontWeight: FontWeight.w500,
-                    //             ),
-                    //           ),
-                    //           Text(
-                    //             authProvider.currentUser?.name ??
-                    //                 'Admin Sekolah',
-                    //             style: TextStyle(
-                    //               fontSize: 16,
-                    //               fontWeight: FontWeight.bold,
-                    //               color: AppTheme.textColor,
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //     Container(
-                    //       padding: const EdgeInsets.all(10),
-                    //       decoration: BoxDecoration(
-                    //         color: Colors.grey.shade100,
-                    //         shape: BoxShape.circle,
-                    //       ),
-                    //       child: Icon(
-                    //         Icons.notifications_outlined,
-                    //         color: AppTheme.textColor,
-                    //         size: 22,
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ).animate().fadeIn(),
                     const SizedBox(height: 24),
                     Text(
                           'Kelola Sekolah dan Lihat Presensi Hari Ini',
