@@ -237,46 +237,46 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
 
                           const SizedBox(height: 20),
-                          // const Text(
-                          //   'Pilih Login:',
-                          //   style: TextStyle(
-                          //     fontSize: 12,
-                          //     fontWeight: FontWeight.bold,
-                          //     color: AppTheme.textMutedColor,
-                          //   ),
-                          // ),
-                          // const SizedBox(height: 8),
-                          // Wrap(
-                          //   spacing: 8,
-                          //   runSpacing: 8,
-                          //   alignment: WrapAlignment.center,
-                          //   children: [
-                          //     OutlinedButton(
-                          //       onPressed: () =>
-                          //           _quickFill('admin', 'admin123'),
-                          //       child: const Text('Admin'),
-                          //     ),
-                          //     OutlinedButton(
-                          //       onPressed: () =>
-                          //           _quickFill('piket', 'piket123'),
-                          //       child: const Text('Guru Piket'),
-                          //     ),
-                          //     OutlinedButton(
-                          //       onPressed: () =>
-                          //           _quickFill('mapel', 'mapel123'),
-                          //       child: const Text('Guru Mapel'),
-                          //     ),
-                          //     OutlinedButton(
-                          //       onPressed: () => _quickFill('wali', 'wali123'),
-                          //       child: const Text('Wali Kelas'),
-                          //     ),
-                          //     OutlinedButton(
-                          //       onPressed: () =>
-                          //           _quickFill('siswa1', 'siswa123'),
-                          //       child: const Text('Siswa'),
-                          //     ),
-                          //   ],
-                          // ),
+                          const Text(
+                            'Pilih Login:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textMutedColor,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              OutlinedButton(
+                                onPressed: () =>
+                                    _quickFill('admin', 'admin123'),
+                                child: const Text('Admin'),
+                              ),
+                              OutlinedButton(
+                                onPressed: () =>
+                                    _quickFill('piket', 'piket123'),
+                                child: const Text('Guru Piket'),
+                              ),
+                              OutlinedButton(
+                                onPressed: () =>
+                                    _quickFill('mapel', 'mapel123'),
+                                child: const Text('Guru Mapel'),
+                              ),
+                              OutlinedButton(
+                                onPressed: () => _quickFill('wali', 'wali123'),
+                                child: const Text('Wali Kelas'),
+                              ),
+                              OutlinedButton(
+                                onPressed: () =>
+                                    _quickFill('siswa1', 'siswa123'),
+                                child: const Text('Siswa'),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     )

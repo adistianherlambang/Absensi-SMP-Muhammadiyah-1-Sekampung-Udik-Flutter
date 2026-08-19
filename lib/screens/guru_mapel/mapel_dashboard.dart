@@ -281,143 +281,194 @@ class _MapelDashboardState extends State<MapelDashboard> {
                         .fadeIn(),
                     const SizedBox(height: 32),
 
-                    // Daftar Sesi
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Riwayat Presensi Terbaru',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                  color: const Color(0xFF2D3142),
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/guru/history'),
-                          child: const Text('Lihat Semua'),
-                        ),
-                      ],
-                    ).animate().fadeIn(delay: 100.ms),
-                    const SizedBox(height: 16),
-                    mapelProvider.sessions.isEmpty
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 32),
-                              child: Text(
-                                'Belum ada sesi presensi dicatat.',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: mapelProvider.sessions.length > 5
-                                ? 5
-                                : mapelProvider.sessions.length,
-                            itemBuilder: (context, index) {
-                              final session = mapelProvider.sessions[index];
+                    // Filter Sesi Hari Ini untuk Dashboard
+                    Builder(
+                      builder: (context) {
+                        final now = DateTime.now();
+                        final todayYMD =
+                            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+                        final todayDMY =
+                            "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
 
-                              // Ambil nama kelas
-                              String className = 'Tidak diketahui';
-                              try {
-                                final cls = adminProvider.classes.firstWhere(
-                                  (c) => c.id == session.classId,
-                                );
-                                className = cls.name;
-                              } catch (_) {}
+                        final todaySessions = mapelProvider.sessions.where((s) {
+                          final d = s.date.trim();
+                          if (d == todayYMD || d == todayDMY) return true;
+                          try {
+                            if (d.contains('-')) {
+                              final parts = d.split('-');
+                              if (parts[0].length == 4) {
+                                final yr = int.parse(parts[0]);
+                                final mo = int.parse(parts[1]);
+                                final dy = int.parse(parts[2]);
+                                return yr == now.year &&
+                                    mo == now.month &&
+                                    dy == now.day;
+                              } else {
+                                final dy = int.parse(parts[0]);
+                                final mo = int.parse(parts[1]);
+                                final yr = int.parse(parts[2]);
+                                return yr == now.year &&
+                                    mo == now.month &&
+                                    dy == now.day;
+                              }
+                            }
+                          } catch (_) {}
+                          return false;
+                        }).toList();
+                        todaySessions.sort((a, b) => b.id.compareTo(a.id));
 
-                              return Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Colors.grey.shade200,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(20),
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.mapelAttendance,
-                                          arguments: {
-                                            'session_id': session.id,
-                                            'class_id': session.classId,
-                                            'class_name': className,
-                                            'subject': session.subject ?? 'Mata Pelajaran',
-                                            'status': session.status,
-                                            'auto_scan': false,
-                                          },
-                                        );
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: const BoxDecoration(
-                                                color: AppTheme.primaryColor,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.history_edu,
-                                                color: Colors.white,
-                                                size: 20,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    'Kelas $className ${session.subject}',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15,
-                                                      color: AppTheme.textColor,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    'Tanggal: ${session.date} Jam: ${session.timeStart}',
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const Icon(
-                                              Icons.chevron_right_rounded,
-                                              color: AppTheme.primaryColor,
-                                            ),
-                                          ],
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Riwayat Presensi Hari Ini',
+                                    style: Theme.of(context).textTheme.titleLarge
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17,
+                                          color: const Color(0xFF2D3142),
                                         ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                TextButton(
+                                  onPressed: () => Navigator.pushNamed(
+                                    context,
+                                    '/guru/history',
+                                  ),
+                                  child: const Text('Lihat Semua'),
+                                ),
+                              ],
+                            ).animate().fadeIn(delay: 100.ms),
+                            const SizedBox(height: 16),
+                            todaySessions.isEmpty
+                                ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 32),
+                                      child: Text(
+                                        'Belum ada sesi presensi dicatat hari ini.',
+                                        style: TextStyle(color: Colors.grey),
                                       ),
                                     ),
                                   )
-                                  .animate()
-                                  .slideY(begin: 0.05, end: 0, duration: 300.ms)
-                                  .fadeIn();
-                            },
-                          ),
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: todaySessions.length > 5
+                                        ? 5
+                                        : todaySessions.length,
+                                    itemBuilder: (context, index) {
+                                      final session = todaySessions[index];
+
+                                      // Ambil nama kelas
+                                      String className = 'Tidak diketahui';
+                                      try {
+                                        final cls = adminProvider.classes.firstWhere(
+                                          (c) => c.id == session.classId,
+                                        );
+                                        className = cls.name;
+                                      } catch (_) {}
+
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade50,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: Colors.grey.shade200,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(20),
+                                          onTap: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              AppRoutes.mapelAttendance,
+                                              arguments: {
+                                                'session_id': session.id,
+                                                'class_id': session.classId,
+                                                'class_name': className,
+                                                'subject':
+                                                    session.subject ??
+                                                    'Mata Pelajaran',
+                                                'status': session.status,
+                                                'auto_scan': false,
+                                              },
+                                            );
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(10),
+                                                  decoration: const BoxDecoration(
+                                                    color: AppTheme.primaryColor,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.history_edu,
+                                                    color: Colors.white,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        'Kelas $className ${session.subject}',
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 15,
+                                                          color: AppTheme.textColor,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        'Tanggal: ${session.date} Jam: ${session.timeStart}',
+                                                        style: TextStyle(
+                                                          color: Colors
+                                                              .grey.shade600,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.chevron_right_rounded,
+                                                  color: AppTheme.primaryColor,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                          .animate()
+                                          .slideY(
+                                            begin: 0.05,
+                                            end: 0,
+                                            duration: 300.ms,
+                                          )
+                                          .fadeIn();
+                                    },
+                                  ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
