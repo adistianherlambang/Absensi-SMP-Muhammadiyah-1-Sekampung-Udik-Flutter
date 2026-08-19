@@ -31,12 +31,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
       String rawEmail = _emailController.text.trim();
-      String emailToUse = rawEmail.contains('@') ? rawEmail : '$rawEmail@smpm1.sch.id';
+      String emailToUse = rawEmail.contains('@')
+          ? rawEmail
+          : '$rawEmail@smpm1.sch.id';
 
-      await authProvider.signIn(
-        emailToUse,
-        _passwordController.text.trim(),
-      );
+      await authProvider.signIn(emailToUse, _passwordController.text.trim());
 
       // Setelah login berhasil, arahkan ke dashboard yang sesuai
       if (!mounted) return;
@@ -44,21 +43,26 @@ class _LoginScreenState extends State<LoginScreen> {
       _navigateToDashboard(role);
     } catch (e) {
       if (!mounted) return;
-      String userFriendlyMessage = 'Terjadi kesalahan. Silakan periksa koneksi internet Anda dan coba lagi.';
+      String userFriendlyMessage =
+          'Terjadi kesalahan. Silakan periksa koneksi internet Anda dan coba lagi.';
       final errorStr = e.toString().toLowerCase();
-      if (errorStr.contains('invalid-email') || 
-          errorStr.contains('user-not-found') || 
-          errorStr.contains('wrong-password') || 
+      if (errorStr.contains('invalid-email') ||
+          errorStr.contains('user-not-found') ||
+          errorStr.contains('wrong-password') ||
           errorStr.contains('invalid-credential')) {
-        userFriendlyMessage = 'Email atau password salah. Silakan periksa kembali.';
+        userFriendlyMessage =
+            'Email atau password salah. Silakan periksa kembali.';
       } else if (errorStr.contains('user-disabled')) {
-        userFriendlyMessage = 'Akun Anda telah dinonaktifkan. Hubungi admin sekolah.';
+        userFriendlyMessage =
+            'Akun Anda telah dinonaktifkan. Hubungi admin sekolah.';
       } else if (errorStr.contains('too-many-requests')) {
-        userFriendlyMessage = 'Terlalu banyak percobaan masuk yang gagal. Silakan coba lagi nanti.';
+        userFriendlyMessage =
+            'Terlalu banyak percobaan masuk yang gagal. Silakan coba lagi nanti.';
       } else if (errorStr.contains('network-request-failed')) {
-        userFriendlyMessage = 'Koneksi internet bermasalah. Pastikan perangkat Anda terhubung ke internet.';
+        userFriendlyMessage =
+            'Koneksi internet bermasalah. Pastikan perangkat Anda terhubung ke internet.';
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(userFriendlyMessage),
@@ -111,156 +115,179 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Sistem Presensi QR',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textColor,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textColor,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'SMP Muhammadiyah 1 Sekampung Udik',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textMutedColor,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    color: AppTheme.textMutedColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
                 Container(
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined, color: AppTheme.primaryColor),
-                          suffixText: '@smpm1.sch.id',
-                          suffixStyle: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Masukkan email Anda';
-                          }
-                          return null;
-                        },
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: Icon(Icons.lock_outlined, color: AppTheme.primaryColor),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              color: AppTheme.textMutedColor,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
+                                color: AppTheme.primaryColor,
+                              ),
+                              suffixText: '@smpm1.sch.id',
+                              suffixStyle: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Masukkan email Anda';
+                              }
+                              return null;
                             },
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan password Anda';
-                          }
-                          if (value.length < 6) {
-                            return 'Password minimal 6 karakter';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primaryColor,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                minimumSize: const Size(double.infinity, 50),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: Icon(
+                                Icons.lock_outlined,
+                                color: AppTheme.primaryColor,
                               ),
-                              onPressed: _handleLogin,
-                              child: const Text(
-                                'Login',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: AppTheme.textMutedColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
                               ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Masukkan password Anda';
+                              }
+                              if (value.length < 6) {
+                                return 'Password minimal 6 karakter';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 32),
+                          isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      50,
+                                    ),
+                                  ),
+                                  onPressed: _handleLogin,
+                                  child: const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
 
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Demo Quick Fill:',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textMutedColor,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () => _quickFill('admin', 'admin123'),
-                            child: const Text('Admin'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('piket', 'piket123'),
-                            child: const Text('Guru Piket'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('mapel', 'mapel123'),
-                            child: const Text('Guru Mapel'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('wali', 'wali123'),
-                            child: const Text('Wali Kelas'),
-                          ),
-                          OutlinedButton(
-                            onPressed: () => _quickFill('siswa1', 'siswa123'),
-                            child: const Text('Siswa'),
-                          ),
+                          const SizedBox(height: 20),
+                          // const Text(
+                          //   'Pilih Login:',
+                          //   style: TextStyle(
+                          //     fontSize: 12,
+                          //     fontWeight: FontWeight.bold,
+                          //     color: AppTheme.textMutedColor,
+                          //   ),
+                          // ),
+                          // const SizedBox(height: 8),
+                          // Wrap(
+                          //   spacing: 8,
+                          //   runSpacing: 8,
+                          //   alignment: WrapAlignment.center,
+                          //   children: [
+                          //     OutlinedButton(
+                          //       onPressed: () =>
+                          //           _quickFill('admin', 'admin123'),
+                          //       child: const Text('Admin'),
+                          //     ),
+                          //     OutlinedButton(
+                          //       onPressed: () =>
+                          //           _quickFill('piket', 'piket123'),
+                          //       child: const Text('Guru Piket'),
+                          //     ),
+                          //     OutlinedButton(
+                          //       onPressed: () =>
+                          //           _quickFill('mapel', 'mapel123'),
+                          //       child: const Text('Guru Mapel'),
+                          //     ),
+                          //     OutlinedButton(
+                          //       onPressed: () => _quickFill('wali', 'wali123'),
+                          //       child: const Text('Wali Kelas'),
+                          //     ),
+                          //     OutlinedButton(
+                          //       onPressed: () =>
+                          //           _quickFill('siswa1', 'siswa123'),
+                          //       child: const Text('Siswa'),
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
-                    ],
-                  ),
-                ).animate().slideY(
-                  begin: 0.05, end: 0, 
-                  duration: 400.ms, 
-                  curve: Curves.easeOut,
-                ).fade(
-                  duration: 400.ms,
-                ),
+                    )
+                    .animate()
+                    .slideY(
+                      begin: 0.05,
+                      end: 0,
+                      duration: 400.ms,
+                      curve: Curves.easeOut,
+                    )
+                    .fade(duration: 400.ms),
               ],
             ),
           ),
