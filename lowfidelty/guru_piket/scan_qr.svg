@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Camera View Dark Background -->
+  <rect x="12" y="45" width="336" height="680" fill="#222222" clip-path="inset(0px round 0px 0px 32px 32px)"/>
+
+  <!-- Header Text overlay -->
+  <path d="M 35 60 L 25 70 L 35 80" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="72" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">Scan QR Code Siswa Kelas IX-A</text>
+
+  <!-- Camera Viewport / QR Card Simulated View -->
+  <rect x="30" y="110" width="300" height="420" rx="16" fill="#ffffff" stroke="#888888" stroke-width="2"/>
+  
+  <!-- School Title on Card -->
+  <text x="180" y="140" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222" text-anchor="middle">SMP MUHAMMADIYAH 1</text>
+  <text x="180" y="155" font-family="sans-serif" font-size="12" font-weight="bold" fill="#666666" text-anchor="middle">SEKAMPUNG UDIK</text>
+
+  <!-- Big QR Code Box -->
+  <rect x="65" y="175" width="230" height="230" rx="12" fill="#fafafa" stroke="#666666" stroke-width="2"/>
+  <!-- QR position marks -->
+  <rect x="80" y="190" width="45" height="45" fill="none" stroke="#222222" stroke-width="3"/>
+  <rect x="90" y="200" width="25" height="25" fill="#222222"/>
+  <rect x="235" y="190" width="45" height="45" fill="none" stroke="#222222" stroke-width="3"/>
+  <rect x="245" y="200" width="25" height="25" fill="#222222"/>
+  <rect x="80" y="345" width="45" height="45" fill="none" stroke="#222222" stroke-width="3"/>
+  <rect x="90" y="355" width="25" height="25" fill="#222222"/>
+  <!-- QR pattern pixels -->
+  <rect x="140" y="200" width="80" height="15" fill="#444444"/>
+  <rect x="140" y="230" width="135" height="15" fill="#444444"/>
+  <rect x="80" y="250" width="195" height="20" fill="#444444"/>
+  <rect x="140" y="280" width="135" height="20" fill="#444444"/>
+  <rect x="140" y="310" width="135" height="15" fill="#444444"/>
+  <rect x="140" y="340" width="135" height="40" fill="#444444"/>
+
+  <!-- Card Footer Details -->
+  <text x="180" y="430" font-family="sans-serif" font-size="10" fill="#888888" text-anchor="middle">KARTU PRESENSI SISWA</text>
+  <text x="180" y="450" font-family="sans-serif" font-size="15" font-weight="bold" fill="#222222" text-anchor="middle">Ahmad Fauzi (Siswa IX-A)</text>
+  <text x="180" y="468" font-family="sans-serif" font-size="12" font-weight="bold" fill="#666666" text-anchor="middle">KELAS: Kelas IX-A</text>
+  <text x="180" y="490" font-family="sans-serif" font-size="9" fill="#888888" text-anchor="middle">Tunjukkan QR Code ini kepada Guru untuk dicatat kehadirannya.</text>
+
+  <!-- Target Finder Overlay Box -->
+  <rect x="60" y="170" width="240" height="240" rx="16" fill="none" stroke="#888888" stroke-width="2.5" stroke-dasharray="8 8"/>
+
+  <!-- Scanner Toast overlay -->
+  <rect x="25" y="630" width="310" height="36" rx="8" fill="#111111"/>
+  <text x="180" y="653" font-family="sans-serif" font-size="11" fill="#ffffff" text-anchor="middle">Arahkan kamera ke QR Siswa Kelas IX-A</text>
+
+  <!-- Success Toast Result Banner -->
+  <rect x="12" y="675" width="336" height="50" fill="#555555"/>
+  <circle cx="38" cy="700" r="10" fill="#ffffff"/>
+  <path d="M 33 700 L 37 704 L 44 695" fill="none" stroke="#555555" stroke-width="2" stroke-linecap="round"/>
+  <text x="58" y="705" font-family="sans-serif" font-size="12" font-weight="bold" fill="#ffffff">Ahmad Fauzi (Siswa IX-A) HADIR</text>
+</svg>

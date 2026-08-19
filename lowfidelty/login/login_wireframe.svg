@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- QR Icon Placeholder -->
+  <rect x="135" y="150" width="90" height="90" rx="16" fill="#fafafa" stroke="#666666" stroke-width="2" stroke-dasharray="4 4"/>
+  <rect x="155" y="170" width="50" height="50" rx="4" fill="none" stroke="#666666" stroke-width="2"/>
+  <rect x="165" y="180" width="30" height="30" fill="#999999"/>
+
+  <!-- Title & Subtitle -->
+  <text x="180" y="275" font-family="sans-serif" font-size="20" font-weight="bold" fill="#222222" text-anchor="middle">Sistem Presensi QR</text>
+  <text x="180" y="298" font-family="sans-serif" font-size="12" fill="#666666" text-anchor="middle">SMP Muhammadiyah 1 Sekampung Udik</text>
+
+  <!-- Card Container -->
+  <rect x="35" y="330" width="290" height="240" rx="20" fill="#ffffff" stroke="#aaaaaa" stroke-width="2"/>
+
+  <!-- Input Field 1: Email -->
+  <rect x="55" y="355" width="250" height="48" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.5"/>
+  <rect x="70" y="369" width="20" height="20" rx="3" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <path d="M 70 371 L 80 380 L 90 371" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <text x="100" y="385" font-family="sans-serif" font-size="14" fill="#888888">Email</text>
+
+  <!-- Input Field 2: Password -->
+  <rect x="55" y="420" width="250" height="48" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.5"/>
+  <rect x="70" y="434" width="20" height="20" rx="4" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <circle cx="285" cy="444" r="9" fill="none" stroke="#666666" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="100" y="450" font-family="sans-serif" font-size="14" fill="#888888">Password</text>
+
+  <!-- Button Login -->
+  <rect x="55" y="495" width="250" height="48" rx="14" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <text x="180" y="525" font-family="sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">Login</text>
+</svg>

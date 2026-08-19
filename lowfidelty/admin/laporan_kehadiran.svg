@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Top App Bar -->
+  <path d="M 35 60 L 25 70 L 35 80" fill="none" stroke="#222222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222" text-anchor="middle">Laporan Kehadiran</text>
+
+  <!-- Select Class Dropdown Input -->
+  <rect x="30" y="120" width="300" height="50" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="116" font-family="sans-serif" font-size="11" fill="#666666">Pilih Kelas</text>
+  <text x="48" y="150" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">IX-A</text>
+  <path d="M 305 142 L 310 148 L 315 142" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Section Title -->
+  <text x="30" y="210" font-family="sans-serif" font-size="16" font-weight="bold" fill="#222222">Rincian Laporan</text>
+
+  <!-- Summary Card -->
+  <rect x="30" y="225" width="300" height="130" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  
+  <!-- Row 1: Jumlah Siswa -->
+  <circle cx="60" cy="260" r="16" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <circle cx="60" cy="256" r="4" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <path d="M 53 266 C 53 262 56 261 60 261 C 64 261 67 262 67 266" fill="none" stroke="#666666" stroke-width="1.2"/>
+  
+  <text x="90" y="265" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333333">Jumlah Siswa Terdata</text>
+  <text x="310" y="265" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222" text-anchor="end">3 orang</text>
+
+  <line x1="45" y1="290" x2="315" y2="290" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Row 2: Total Sesi -->
+  <circle cx="60" cy="320" r="16" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <circle cx="60" cy="320" r="7" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <path d="M 60 316 L 60 320 L 63 322" fill="none" stroke="#666666" stroke-width="1.2"/>
+  
+  <text x="90" y="325" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333333">Total Sesi Presensi</text>
+  <text x="310" y="325" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222" text-anchor="end">8 sesi</text>
+
+  <!-- Bottom Buttons -->
+  <!-- Export Excel Button -->
+  <rect x="30" y="580" width="300" height="48" rx="14" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <rect x="68" y="597" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <line x1="68" y1="602" x2="82" y2="602" stroke="#ffffff" stroke-width="1.5"/>
+  <line x1="75" y1="597" x2="75" y2="611" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="92" y="610" font-family="sans-serif" font-size="13" fill="#ffffff" font-weight="bold">Ekspor Laporan Presensi (Excel)</text>
+
+  <!-- Reset Data Button -->
+  <rect x="30" y="640" width="300" height="48" rx="14" fill="#ffffff" stroke="#666666" stroke-width="1.5"/>
+  <path d="M 72 660 A 6 6 0 1 1 77 666" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <path d="M 77 658 L 77 662 L 73 662" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <text x="88" y="670" font-family="sans-serif" font-size="13" fill="#666666" font-weight="bold">Reset Data Tahun Ajaran Baru</text>
+</svg>

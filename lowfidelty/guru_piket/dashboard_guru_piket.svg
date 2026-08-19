@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- App Bar -->
+  <text x="180" y="70" font-family="sans-serif" font-size="17" font-weight="bold" fill="#222222" text-anchor="middle">Dashboard Guru Piket</text>
+  <!-- Logout icon -->
+  <path d="M 315 62 L 325 62 M 321 58 L 325 62 L 321 66" fill="none" stroke="#666666" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 318 57 H 312 V 67 H 318" fill="none" stroke="#666666" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Title Greeting -->
+  <text x="30" y="115" font-family="sans-serif" font-size="17" font-weight="bold" fill="#222222">Kelola Absensi Harian</text>
+  <text x="30" y="135" font-family="sans-serif" font-size="17" font-weight="bold" fill="#222222">&amp; Rekapitulasi Kelas</text>
+
+  <!-- Section: Overview -->
+  <text x="30" y="178" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Overview Presensi Guru Piket</text>
+  
+  <!-- Stats Card Box -->
+  <rect x="30" y="192" width="300" height="75" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  
+  <!-- Stat 1: Total Sesi -->
+  <circle cx="56" cy="230" r="14" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <circle cx="56" cy="230" r="3" fill="#666666"/>
+  <text x="80" y="225" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">16 Sesi</text>
+  <text x="80" y="240" font-family="sans-serif" font-size="10" fill="#666666">Total Sesi Saya</text>
+
+  <!-- Vertical Divider -->
+  <line x1="180" y1="205" x2="180" y2="255" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Stat 2: Total Kelas -->
+  <circle cx="206" cy="230" r="14" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <circle cx="206" cy="230" r="3" fill="#666666"/>
+  <text x="230" y="225" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">1 Kelas</text>
+  <text x="230" y="240" font-family="sans-serif" font-size="10" fill="#666666">Total Kelas</text>
+
+  <!-- Primary Button: Buka Presensi Harian -->
+  <rect x="30" y="285" width="300" height="48" rx="14" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <!-- QR Icon -->
+  <rect x="110" y="301" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <rect x="114" y="305" width="8" height="8" fill="#ffffff"/>
+  <text x="136" y="315" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ffffff">Buka Presensi Harian</text>
+
+  <!-- Secondary Buttons Row -->
+  <!-- Riwayat Presensi -->
+  <rect x="30" y="348" width="142" height="44" rx="14" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="52" cy="370" r="7" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <path d="M 52 366 L 52 370 L 55 372" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <text x="65" y="375" font-family="sans-serif" font-size="11" font-weight="bold" fill="#666666">Riwayat Presensi</text>
+
+  <!-- Rekap Mingguan -->
+  <rect x="188" y="348" width="142" height="44" rx="14" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <rect x="208" y="363" width="12" height="14" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <line x1="212" y1="363" x2="212" y2="377" stroke="#666666" stroke-width="1.2"/>
+  <text x="226" y="375" font-family="sans-serif" font-size="11" font-weight="bold" fill="#666666">Rekap Mingguan</text>
+
+  <!-- Section: Riwayat Sesi Saya -->
+  <text x="30" y="425" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Riwayat Sesi Saya</text>
+  <text x="310" y="425" font-family="sans-serif" font-size="12" fill="#888888" text-anchor="end">Lihat Semua</text>
+
+  <!-- Empty state message -->
+  <text x="180" y="470" font-family="sans-serif" font-size="12" fill="#aaaaaa" text-anchor="middle">Belum ada sesi presensi yang dibuka.</text>
+
+  <!-- Section: Semua Sesi Presensi -->
+  <text x="30" y="525" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Semua Sesi Presensi</text>
+
+  <!-- Card Item: Kelas IX-A -->
+  <rect x="30" y="540" width="300" height="70" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <rect x="48" y="555" width="32" height="40" rx="8" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <!-- Book/Class Icon -->
+  <rect x="58" y="565" width="12" height="16" rx="1" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <text x="92" y="572" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Kelas IX-A</text>
+  <text x="92" y="590" font-family="sans-serif" font-size="11" fill="#666666">0 Sesi Presensi Guru</text>
+
+  <path d="M 305 570 L 310 575 L 305 580" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+</svg>

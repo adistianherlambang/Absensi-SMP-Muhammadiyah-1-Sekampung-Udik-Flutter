@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Top App Bar -->
+  <path d="M 35 60 L 25 70 L 35 80" fill="none" stroke="#222222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222" text-anchor="middle">Kelola Kelas</text>
+
+  <!-- Class Card Item -->
+  <rect x="30" y="120" width="300" height="90" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  
+  <!-- Class Icon Container -->
+  <rect x="45" y="135" width="40" height="60" rx="10" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <!-- Door Icon -->
+  <rect x="58" y="148" width="14" height="24" rx="1" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <circle cx="68" cy="160" r="1.5" fill="#666666"/>
+
+  <!-- Class Details -->
+  <text x="100" y="152" font-family="sans-serif" font-size="15" font-weight="bold" fill="#222222">IX-A</text>
+  <text x="100" y="170" font-family="sans-serif" font-size="12" fill="#666666">Wali Kelas: wali excel</text>
+  <text x="100" y="187" font-family="sans-serif" font-size="12" font-weight="bold" fill="#666666">Jumlah Siswa: 3</text>
+
+  <!-- Trash Icon -->
+  <rect x="295" y="152" width="12" height="14" rx="1" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <line x1="292" y1="152" x2="310" y2="152" stroke="#666666" stroke-width="1.5"/>
+  <line x1="298" y1="149" x2="304" y2="149" stroke="#666666" stroke-width="1.5"/>
+
+  <!-- Floating Add Button (FAB) -->
+  <circle cx="295" cy="660" r="24" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <text x="295" y="668" font-family="sans-serif" font-size="24" fill="#ffffff" font-weight="bold" text-anchor="middle">+</text>
+</svg>

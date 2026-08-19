@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Top App Bar -->
+  <path d="M 35 60 L 25 70 L 35 80" fill="none" stroke="#222222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222" text-anchor="middle">Buka Sesi Mata Pelajaran</text>
+
+  <!-- Header QR Icon Illustration -->
+  <rect x="135" y="125" width="90" height="90" rx="16" fill="#fafafa" stroke="#666666" stroke-width="2" stroke-dasharray="4 4"/>
+  <rect x="155" y="145" width="50" height="50" rx="4" fill="none" stroke="#666666" stroke-width="2"/>
+  <rect x="165" y="155" width="30" height="30" fill="#999999"/>
+
+  <!-- Title & Description -->
+  <text x="180" y="245" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222" text-anchor="middle">Buka Sesi Mata Pelajaran</text>
+  <text x="180" y="270" font-family="sans-serif" font-size="11" fill="#666666" text-anchor="middle">Pilih kelas dan masukkan mata pelajaran, lalu tekan Buka</text>
+  <text x="180" y="285" font-family="sans-serif" font-size="11" fill="#666666" text-anchor="middle">Sesi Sekarang untuk langsung menuju ke scanner QR code.</text>
+
+  <!-- Input Field 1: Pilih Kelas -->
+  <rect x="30" y="320" width="300" height="50" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="316" font-family="sans-serif" font-size="11" fill="#666666">Pilih Kelas</text>
+  <text x="48" y="350" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">IX-A</text>
+  <path d="M 305 342 L 310 348 L 315 342" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Input Field 2: Mata Pelajaran -->
+  <rect x="30" y="390" width="300" height="50" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="386" font-family="sans-serif" font-size="11" fill="#666666">Mata Pelajaran</text>
+  <!-- Book Icon -->
+  <rect x="46" y="407" width="16" height="16" rx="2" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <line x1="50" y1="407" x2="50" y2="423" stroke="#666666" stroke-width="1.5"/>
+  <text x="72" y="420" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Matematika</text>
+
+  <!-- Primary Button: Buka Sesi Sekarang -->
+  <rect x="30" y="475" width="300" height="48" rx="14" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <!-- QR Icon -->
+  <rect x="95" y="491" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <rect x="99" y="495" width="8" height="8" fill="#ffffff"/>
+  <text x="122" y="505" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ffffff">Buka Sesi Sekarang</text>
+</svg>

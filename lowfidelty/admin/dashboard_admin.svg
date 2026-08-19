@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Top App Bar -->
+  <text x="30" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222">Dashboard Admin</text>
+  <!-- Logout Icon -->
+  <path d="M 315 65 L 325 65 M 321 61 L 325 65 L 321 69" fill="none" stroke="#666666" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 318 60 H 312 V 70 H 318" fill="none" stroke="#666666" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Greeting Banner Title -->
+  <text x="30" y="115" font-family="sans-serif" font-size="16" font-weight="bold" fill="#222222">Kelola Sekolah dan Lihat</text>
+  <text x="30" y="135" font-family="sans-serif" font-size="16" font-weight="bold" fill="#222222">Presensi Hari Ini</text>
+
+  <!-- Section: Statistik Sistem -->
+  <text x="30" y="180" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Statistik Sistem</text>
+  
+  <!-- Stats Container Box -->
+  <rect x="30" y="195" width="300" height="120" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  
+  <!-- Stat Row 1 -->
+  <!-- Total User -->
+  <circle cx="52" cy="222" r="6" fill="#888888"/>
+  <text x="66" y="220" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">128</text>
+  <text x="66" y="233" font-family="sans-serif" font-size="10" fill="#666666">Total User</text>
+  
+  <!-- Total Kelas -->
+  <circle cx="202" cy="222" r="6" fill="#888888"/>
+  <text x="216" y="220" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">6</text>
+  <text x="216" y="233" font-family="sans-serif" font-size="10" fill="#666666">Total Kelas</text>
+
+  <!-- Divider -->
+  <line x1="60" y1="250" x2="300" y2="250" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Stat Row 2 -->
+  <!-- Siswa Terdaftar -->
+  <circle cx="52" cy="282" r="6" fill="#888888"/>
+  <text x="66" y="280" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">115</text>
+  <text x="66" y="293" font-family="sans-serif" font-size="10" fill="#666666">Siswa Terdaftar</text>
+
+  <!-- Guru / Staf -->
+  <circle cx="202" cy="282" r="6" fill="#888888"/>
+  <text x="216" y="280" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">13</text>
+  <text x="216" y="293" font-family="sans-serif" font-size="10" fill="#666666">Guru / Staf</text>
+
+  <!-- Section: Layanan Administrasi -->
+  <text x="30" y="350" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Layanan Administrasi</text>
+
+  <!-- Card 1: Kelola Pengguna (Full Width) -->
+  <rect x="30" y="365" width="300" height="75" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="62" cy="402" r="16" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <!-- User Icon -->
+  <circle cx="62" cy="398" r="4" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <path d="M 55 408 C 55 404 58 403 62 403 C 66 403 69 404 69 408" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <text x="90" y="396" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Kelola Pengguna</text>
+  <text x="90" y="414" font-family="sans-serif" font-size="10" fill="#666666">Tambah, edit, dan kelola guru &amp; siswa</text>
+
+  <!-- Card 2: Kelola Kelas (Half Width) -->
+  <rect x="30" y="455" width="142" height="90" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="55" cy="485" r="14" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <rect x="50" y="478" width="10" height="14" rx="1" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <text x="45" y="518" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">Kelola Kelas</text>
+  <text x="45" y="533" font-family="sans-serif" font-size="9" fill="#666666">Atur kelas &amp; wali</text>
+
+  <!-- Card 3: Laporan Presensi (Half Width) -->
+  <rect x="188" y="455" width="142" height="90" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="213" cy="485" r="14" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <rect x="208" y="478" width="10" height="14" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <text x="203" y="518" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">Laporan Presensi</text>
+  <text x="203" y="533" font-family="sans-serif" font-size="9" fill="#666666">Unduh rekap</text>
+</svg>

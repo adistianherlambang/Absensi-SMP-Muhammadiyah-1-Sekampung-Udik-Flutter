@@ -91,7 +91,7 @@ class _PiketDashboardState extends State<PiketDashboard> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Dari Seluruh Guru Mapel & Piket',
+                              'Dari Seluruh Sesi',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -351,9 +351,11 @@ class _PiketDashboardState extends State<PiketDashboard> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Dashboard Guru Piket',
-          style: TextStyle(
+        title: Text(
+          authProvider.currentUser?.role == 'guru_wali_kelas'
+              ? 'Dashboard Wali Kelas'
+              : 'Dashboard Guru Piket',
+          style: const TextStyle(
             color: Color(0xFF2D3142),
             fontWeight: FontWeight.bold,
           ),

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Dimmed Background Overlay -->
+  <rect x="12" y="45" width="336" height="680" fill="#777777" opacity="0.6" clip-path="inset(0px round 0px 0px 32px 32px)"/>
+
+  <!-- Bottom Sheet Card Modal -->
+  <path d="M 12 360 C 12 335 30 335 50 335 L 310 335 C 330 335 348 335 348 360 L 348 725 L 12 725 Z" fill="#ffffff" stroke="#666666" stroke-width="2"/>
+  
+  <!-- Modal Drag Handle Notch -->
+  <rect x="160" y="348" width="40" height="4" rx="2" fill="#cccccc"/>
+
+  <!-- Sheet Header Title & Subtitle -->
+  <text x="180" y="375" font-family="sans-serif" font-size="16" font-weight="bold" fill="#222222" text-anchor="middle">Kartu Presensi QR Saya</text>
+  <text x="180" y="392" font-family="sans-serif" font-size="11" fill="#666666" text-anchor="middle">Tunjukkan QR ini kepada Guru saat presensi pelajaran</text>
+
+  <!-- QR Code Container Card -->
+  <rect x="50" y="410" width="260" height="200" rx="16" fill="#fafafa" stroke="#888888" stroke-width="1.5"/>
+
+  <!-- Big QR Code Pattern -->
+  <rect x="85" y="422" width="190" height="150" rx="8" fill="#ffffff" stroke="#666666" stroke-width="1.5"/>
+  <!-- QR position marks -->
+  <rect x="95" y="432" width="35" height="35" fill="none" stroke="#222222" stroke-width="2.5"/>
+  <rect x="102" y="439" width="21" height="21" fill="#222222"/>
+  <rect x="230" y="432" width="35" height="35" fill="none" stroke="#222222" stroke-width="2.5"/>
+  <rect x="237" y="439" width="21" height="21" fill="#222222"/>
+  <rect x="95" y="527" width="35" height="35" fill="none" stroke="#222222" stroke-width="2.5"/>
+  <rect x="102" y="534" width="21" height="21" fill="#222222"/>
+  <!-- QR pattern pixels -->
+  <rect x="140" y="440" width="80" height="12" fill="#444444"/>
+  <rect x="140" y="462" width="125" height="12" fill="#444444"/>
+  <rect x="95" y="480" width="170" height="15" fill="#444444"/>
+  <rect x="140" y="502" width="125" height="15" fill="#444444"/>
+  <rect x="140" y="525" width="125" height="12" fill="#444444"/>
+  <rect x="140" y="545" width="125" height="20" fill="#444444"/>
+
+  <!-- Student Name on Card -->
+  <text x="180" y="582" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222" text-anchor="middle">Ahmad Fauzi (Siswa IX-A)</text>
+  <text x="180" y="598" font-family="sans-serif" font-size="11" font-weight="bold" fill="#666666" text-anchor="middle">Kelas IX-A</text>
+
+  <!-- Action Buttons Row -->
+  <!-- Bagikan (Outlined) -->
+  <rect x="35" y="630" width="138" height="44" rx="14" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="68" cy="652" r="3" fill="#666666"/>
+  <circle cx="78" cy="646" r="3" fill="#666666"/>
+  <circle cx="78" cy="658" r="3" fill="#666666"/>
+  <line x1="68" y1="652" x2="78" y2="646" stroke="#666666" stroke-width="1"/>
+  <line x1="68" y1="652" x2="78" y2="658" stroke="#666666" stroke-width="1"/>
+  <text x="88" y="656" font-family="sans-serif" font-size="13" font-weight="bold" fill="#666666">Bagikan</text>
+
+  <!-- Unduh QR (Filled) -->
+  <rect x="187" y="630" width="138" height="44" rx="14" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <path d="M 218 646 L 218 655 M 215 652 L 218 656 L 221 652" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="213" y1="658" x2="223" y2="658" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="230" y="656" font-family="sans-serif" font-size="13" font-weight="bold" fill="#ffffff">Unduh QR</text>
+</svg>

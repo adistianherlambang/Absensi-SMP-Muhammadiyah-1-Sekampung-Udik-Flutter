@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Top App Bar -->
+  <path d="M 35 60 L 25 70 L 35 80" fill="none" stroke="#222222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222" text-anchor="middle">Kelola Pengguna</text>
+  <circle cx="325" cy="65" r="2" fill="#222222"/>
+  <circle cx="325" cy="72" r="2" fill="#222222"/>
+  <circle cx="325" cy="79" r="2" fill="#222222"/>
+
+  <!-- Tabs Header -->
+  <text x="70" y="120" font-family="sans-serif" font-size="14" font-weight="bold" fill="#666666" text-anchor="middle">Admin</text>
+  <line x1="45" y1="130" x2="95" y2="130" stroke="#666666" stroke-width="3" stroke-linecap="round"/>
+  
+  <text x="180" y="120" font-family="sans-serif" font-size="14" fill="#999999" text-anchor="middle">Guru</text>
+  <text x="290" y="120" font-family="sans-serif" font-size="14" fill="#999999" text-anchor="middle">Siswa</text>
+  <line x1="12" y1="131" x2="348" y2="131" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Info & Search -->
+  <text x="30" y="160" font-family="sans-serif" font-size="12" fill="#888888">1 pengguna tersedia</text>
+  
+  <!-- Search Box -->
+  <rect x="30" y="175" width="300" height="44" rx="22" fill="#f9f9f9" stroke="#888888" stroke-width="1.5"/>
+  <circle cx="54" cy="197" r="6" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <line x1="58" y1="201" x2="64" y2="207" stroke="#666666" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="74" y="201" font-family="sans-serif" font-size="13" fill="#888888">Cari nama atau email...</text>
+
+  <!-- Divider -->
+  <line x1="12" y1="235" x2="348" y2="235" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- User Card Item -->
+  <circle cx="42" cy="275" r="10" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <circle cx="80" cy="275" r="20" fill="#e5e5e5" stroke="#888888" stroke-width="1"/>
+  <text x="80" y="280" font-family="sans-serif" font-size="15" font-weight="bold" fill="#555555" text-anchor="middle">E</text>
+
+  <text x="115" y="267" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Elen (Admin)</text>
+  <text x="115" y="283" font-family="sans-serif" font-size="12" fill="#666666">admin@smpm1.sch.id</text>
+  <text x="115" y="297" font-family="sans-serif" font-size="11" font-weight="bold" fill="#666666">Admin</text>
+
+  <!-- Edit & Delete Icons -->
+  <path d="M 265 272 L 273 264 L 277 268 L 269 276 Z" fill="none" stroke="#666666" stroke-width="1.5" stroke-linejoin="round"/>
+  <line x1="264" y1="277" x2="269" y2="276" stroke="#666666" stroke-width="1.5"/>
+  
+  <rect x="306" y="265" width="12" height="13" rx="1" fill="none" stroke="#666666" stroke-width="1.5"/>
+  <line x1="304" y1="265" x2="320" y2="265" stroke="#666666" stroke-width="1.5"/>
+  <line x1="310" y1="262" x2="314" y2="262" stroke="#666666" stroke-width="1.5"/>
+
+  <line x1="12" y1="315" x2="348" y2="315" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Bottom Floating Action Button (Pill Button) -->
+  <rect x="70" y="645" width="220" height="46" rx="23" fill="#888888" stroke="#666666" stroke-width="2"/>
+  <text x="96" y="674" font-family="sans-serif" font-size="18" fill="#ffffff" font-weight="bold">+</text>
+  <text x="112" y="673" font-family="sans-serif" font-size="13" fill="#ffffff" font-weight="bold">Tambah Pengguna Baru</text>
+</svg>

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Top App Bar -->
+  <path d="M 35 60 L 25 70 L 35 80" fill="none" stroke="#222222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="75" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222222" text-anchor="middle">Pengajuan Izin Digital</text>
+
+  <!-- Form Box Card Container -->
+  <rect x="30" y="105" width="300" height="315" rx="16" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="132" font-family="sans-serif" font-size="14" font-weight="bold" fill="#666666">Formulir Pengajuan Kehadiran</text>
+
+  <!-- Field 1: Tanggal Izin -->
+  <text x="55" y="165" font-family="sans-serif" font-size="12" font-weight="bold" fill="#222222">Tanggal Izin</text>
+  <text x="55" y="182" font-family="sans-serif" font-size="13" fill="#666666">19/8/2026</text>
+  <!-- Calendar Icon -->
+  <rect x="290" y="165" width="16" height="16" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <line x1="290" y1="170" x2="306" y2="170" stroke="#666666" stroke-width="1.2"/>
+
+  <!-- Field 2: Pilih Status Kehadiran Dropdown -->
+  <text x="55" y="218" font-family="sans-serif" font-size="12" font-weight="bold" fill="#222222">Pilih Status Kehadiran</text>
+  <rect x="45" y="228" width="270" height="44" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.2"/>
+  <text x="60" y="255" font-family="sans-serif" font-size="13" fill="#222222">Izin</text>
+  <path d="M 295 248 L 300 254 L 305 248" fill="none" stroke="#666666" stroke-width="1.5"/>
+
+  <!-- Field 3: Alasan Tidak Hadir Text Area -->
+  <rect x="45" y="285" width="270" height="65" rx="12" fill="#f9f9f9" stroke="#888888" stroke-width="1.2"/>
+  <text x="60" y="310" font-family="sans-serif" font-size="13" fill="#888888">Alasan Tidak Hadir</text>
+
+  <!-- Submit Button -->
+  <rect x="45" y="362" width="270" height="44" rx="12" fill="#888888" stroke="#666666" stroke-width="1.5"/>
+  <text x="180" y="388" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">Kirim Pengajuan</text>
+
+  <!-- Section: Riwayat Pengajuan Izin -->
+  <text x="30" y="448" font-family="sans-serif" font-size="14" font-weight="bold" fill="#666666">Riwayat Pengajuan Izin</text>
+
+  <!-- Card 1 -->
+  <rect x="30" y="462" width="300" height="55" rx="14" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="484" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">Tanggal Izin: 2026-07-05</text>
+  <text x="45" y="501" font-family="sans-serif" font-size="11" fill="#888888">Alasan: sakit</text>
+  <rect x="235" y="478" width="55" height="22" rx="11" fill="#f0f0f0"/>
+  <text x="262" y="493" font-family="sans-serif" font-size="10" font-weight="bold" fill="#666666" text-anchor="middle">Izin</text>
+
+  <!-- Card 2 -->
+  <rect x="30" y="527" width="300" height="55" rx="14" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="549" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">Tanggal Izin: 2026-07-09</text>
+  <text x="45" y="566" font-family="sans-serif" font-size="11" fill="#888888">Alasan: males</text>
+  <rect x="235" y="543" width="55" height="22" rx="11" fill="#f0f0f0"/>
+  <text x="262" y="558" font-family="sans-serif" font-size="10" font-weight="bold" fill="#666666" text-anchor="middle">Izin</text>
+
+  <!-- Card 3 -->
+  <rect x="30" y="592" width="300" height="55" rx="14" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+  <text x="45" y="614" font-family="sans-serif" font-size="13" font-weight="bold" fill="#222222">Tanggal Izin: 2026-07-10</text>
+  <text x="45" y="631" font-family="sans-serif" font-size="11" fill="#888888">Alasan: sakit</text>
+  <rect x="235" y="608" width="55" height="22" rx="11" fill="#e5e5e5"/>
+  <text x="262" y="623" font-family="sans-serif" font-size="10" font-weight="bold" fill="#666666" text-anchor="middle">Sakit</text>
+</svg>

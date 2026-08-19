@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 740" width="360" height="740" style="background:#f5f5f5;">
+  <!-- Device Frame -->
+  <rect x="10" y="10" width="340" height="720" rx="36" fill="#ffffff" stroke="#666666" stroke-width="3"/>
+  <rect x="150" y="22" width="60" height="8" rx="4" fill="#cccccc"/>
+
+  <!-- Dimmed Background Overlay -->
+  <rect x="12" y="45" width="336" height="680" fill="#777777" opacity="0.6" clip-path="inset(0px round 0px 0px 32px 32px)"/>
+
+  <!-- Bottom Sheet Card Modal -->
+  <path d="M 12 300 C 12 280 30 280 50 280 L 310 280 C 330 280 348 280 348 300 L 348 725 L 12 725 Z" fill="#ffffff" stroke="#666666" stroke-width="2"/>
+  
+  <!-- Modal Drag Handle Notch -->
+  <rect x="160" y="292" width="40" height="4" rx="2" fill="#cccccc"/>
+
+  <!-- Sheet Header Title & Close button -->
+  <text x="30" y="328" font-family="sans-serif" font-size="16" font-weight="bold" fill="#222222">Sesi Presensi Kelas IX-A</text>
+  <text x="30" y="346" font-family="sans-serif" font-size="11" fill="#666666">Dari Seluruh Sesi</text>
+
+  <!-- Close Icon X -->
+  <path d="M 305 320 L 317 332 M 317 320 L 305 332" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Divider -->
+  <line x1="30" y1="362" x2="330" y2="362" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Session List Card Item -->
+  <rect x="30" y="375" width="300" height="80" rx="16" fill="#fafafa" stroke="#888888" stroke-width="1.5"/>
+  
+  <!-- Card Icon Container -->
+  <rect x="46" y="392" width="36" height="46" rx="10" fill="#f0f0f0" stroke="#888888" stroke-width="1"/>
+  <!-- ID Badge Icon -->
+  <rect x="56" y="405" width="16" height="18" rx="2" fill="none" stroke="#666666" stroke-width="1.2"/>
+  <circle cx="64" cy="411" r="2.5" fill="#666666"/>
+  <line x1="59" y1="418" x2="69" y2="418" stroke="#666666" stroke-width="1"/>
+
+  <!-- Card Details -->
+  <text x="94" y="408" font-family="sans-serif" font-size="14" font-weight="bold" fill="#222222">Matematika</text>
+  <text x="94" y="425" font-family="sans-serif" font-size="10" fill="#666666">Guru: Budi Hartono (Piket) Tanggal:</text>
+  <text x="94" y="438" font-family="sans-serif" font-size="10" fill="#666666">2026-08-19 (18:14)</text>
+
+  <!-- Badge Sesi Buka -->
+  <rect x="230" y="395" width="65" height="20" rx="10" fill="#e5e5e5"/>
+  <text x="262" y="409" font-family="sans-serif" font-size="9" font-weight="bold" fill="#555555" text-anchor="middle">Sesi Buka</text>
+
+  <!-- Arrow Right Icon -->
+  <path d="M 308 420 L 313 425 L 308 430" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round"/>
+</svg>
